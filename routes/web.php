@@ -56,7 +56,9 @@ Route::get('/', [MarketController::class, 'index'])->name('market.home');
 Route::get('/home', function () {
     return redirect()->route('market.home');
 });
-
+Route::get('/git-test', function () {
+    return 'Git deployment working';
+});
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots');
 Route::get('/sitemap', [HtmlSitemapController::class, 'index'])->name('pages.sitemap');

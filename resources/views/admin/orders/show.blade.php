@@ -7,6 +7,7 @@
     <div class="d-flex flex-wrap gap-2 mb-3">
         <a href="{{ route('admin.orders.invoice.print', $order) }}" target="_blank" class="btn btn-outline-secondary">Print Invoice</a>
         <a href="{{ route('admin.orders.invoice.pdf', $order) }}" class="btn btn-outline-secondary">Download Invoice PDF</a>
+        <a href="{{ route('admin.orders.label.print', $order) }}" target="_blank" class="btn btn-outline-secondary">Print Shipping Label</a>
     </div>
 
     <div class="row g-3 mb-4">

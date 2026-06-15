@@ -59,7 +59,7 @@
     <div class="pro-announcement">
         <div class="cb-container">
             <div class="pro-announcement__marquee">
-                <span><i class="bi bi-tag-fill me-1" aria-hidden="true"></i>{{ __('Extra 10% off on prepaid orders · Free delivery above ₹999') }}</span>
+                <span><i class="bi bi-tag-fill me-1" aria-hidden="true"></i>{{ __('Extra 10% off on prepaid orders.') }}</span>
                 <span><i class="bi bi-telephone me-1" aria-hidden="true"></i>{{ __('Support') }}: <a href="tel:+91 9217732670">+91 9217732670</a></span>
             </div>
         </div>
@@ -316,13 +316,11 @@
                         <a href="{{ route('login') }}">{{ __('Track order') }}</a>
                         <a href="{{ route('login') }}">{{ __('Wishlist') }}</a>
                     @endauth
-                    <a href="{{ route('shop.search') }}">{{ __('FAQ') }}</a>
                     <a href="{{ route('legal.terms') }}">{{ __('Terms & conditions') }}</a>
                     <a href="{{ route('legal.privacy') }}">{{ __('Privacy policy') }}</a>
                     <a href="{{ route('legal.refund') }}">{{ __('Refund policy') }}</a>
                     <a href="{{ route('legal.shipping') }}">{{ __('Shipping policy') }}</a>
                     <a href="{{ route('pages.contact') }}">{{ __('Contact us') }}</a>
-                    <a href="{{ route('pages.sitemap') }}">{{ __('Sitemap') }}</a>
                 </div>
                 <div class="col-12 col-md-6 col-xl-3">
                     <h3 class="cb-footer-heading pro-footer-mk__heading">{{ __('Follow us') }}</h3>
@@ -344,9 +342,9 @@
             <div class="pro-footer-mk__bar cb-footer-bottom">
                 <div class="d-flex flex-column flex-md-row align-items-center justify-content-md-between gap-3 py-4">
                     <p class="pro-footer-mk__copy small mb-0 text-center text-md-start">&copy; {{ date('Y') }} {{ config('app.name') }}. {{ __('All rights reserved.') }}</p>
-                    <div class="pro-footer-mk__payments d-flex flex-wrap align-items-center justify-content-center gap-2" aria-label="{{ __('Payment methods') }}">
+                    <!-- <div class="pro-footer-mk__payments d-flex flex-wrap align-items-center justify-content-center gap-2" aria-label="{{ __('Payment methods') }}">
                         <span class="pro-footer-mk__pay">Razorpay</span>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

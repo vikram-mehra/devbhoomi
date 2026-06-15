@@ -92,7 +92,7 @@ class OrderAdminController extends Controller
         }
 
         if ($request->status === 'cancelled' && $previous !== 'cancelled') {
-            app(StockLedgerService::class)->restoreOrderCancellation($order->fresh(), $request->user()?->id);
+            app(StockLedgerService::class)->restoreOrderCancellation($order->fresh(), optional($request->user())->id);
         }
 
         $this->sendOrderStatusEmail($order, $previous);
@@ -197,6 +197,20 @@ class OrderAdminController extends Controller
             'Content-Type' => 'application/octet-stream',
             'Content-Disposition' => 'attachment; filename="invoice-'.$order->order_number.'.html"',
         ]);
+    }
+
+    public function printShippingLabel(Order $order)
+    {
+        $order->load(['user', 'items.variant.product', 'shippingAddress']);
+        $company = $this->companyData();
+
+        $totalWeight = 0;
+        foreach ($order->items as $item) {
+            $weight = $item->weight_kg ?: optional(optional($item->variant)->product)->weight_kg ?: 0;
+            $totalWeight += $weight * $item->qty;
+        }
+
+        return view('admin.orders.shipping-label', compact('order', 'company', 'totalWeight'));
     }
 
     private function sendOrderStatusEmail(Order $order, ?string $previousStatus): void

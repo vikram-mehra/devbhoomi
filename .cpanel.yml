@@ -1,4 +1,4 @@
 deployment:
-tasks:
-- export DEPLOYPATH=/home/devbhoom/public_html/
-- /bin/rsync -av --delete --exclude=".git" ./ $DEPLOYPATH
+  tasks:
+    - export DEPLOYPATH=/home/devbhoom/public_html/
+    - /usr/bin/rsync -av --delete --exclude=".git" --exclude=".env" --exclude="vendor" --exclude="public/storage" --exclude="node_modules" ./ $DEPLOYPATH

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice {{ $order->order_number }}</title>
+    <title>Tax Invoice {{ $order->order_number }}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
         .row { display: flex; justify-content: space-between; gap: 24px; }
@@ -17,7 +17,7 @@
 </head>
 <body>
     <button class="no-print" onclick="window.print()">Print Invoice</button>
-    <h2>Invoice</h2>
+    <h2>Tax Invoice</h2>
     <div class="row">
         <div>
             <strong>{{ $company['name'] }}</strong><br>

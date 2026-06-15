@@ -92,13 +92,14 @@
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
             <strong>Orders</strong>
             <div class="d-flex flex-wrap gap-2">
-                <select name="status" class="form-select form-select-sm" style="min-width: 10rem;" required>
+                <select name="status" class="form-select form-select-sm" style="min-width: 10rem;">
                     <option value="">Bulk Status</option>
                     @foreach(\App\Models\Order::adminStatusOptions() as $k => $v)
                         <option value="{{ $k }}">{{ $v }}</option>
                     @endforeach
                 </select>
                 <button type="submit" class="btn btn-sm btn-outline-primary">Update Selected</button>
+                <button type="submit" formaction="{{ route('admin.orders.bulk-shipping') }}" class="btn btn-sm btn-outline-success">Save Shipping Selected</button>
             </div>
         </div>
         <div class="table-responsive">
@@ -109,10 +110,10 @@
                         <th>Order ID</th>
                         <th>Customer Name</th>
                         <th>Customer Phone</th>
-                        <th>Total Products</th>
                         <th>Total Amount</th>
-                        <th>Payment Method</th>
                         <th>Payment Status</th>
+                        <th>Courier Name</th>
+                        <th>Tracking ID</th>
                         <th>Order Status</th>
                         <th>Order Date</th>
                         <th>Actions</th>
@@ -125,10 +126,14 @@
                             <td class="fw-semibold text-nowrap">{{ $o->order_number }}</td>
                             <td>{{ $o->customer_name ?: ($o->user->name ?? 'N/A') }}</td>
                             <td class="text-nowrap">{{ $o->customer_phone ?: ($o->shippingAddress->phone ?? 'N/A') }}</td>
-                            <td>{{ $o->items->count() }}</td>
                             <td class="fw-semibold text-nowrap">₹{{ number_format((float) $o->total, 2) }}</td>
-                            <td class="text-nowrap">{{ strtoupper((string) $o->payment_method) ?: 'N/A' }}</td>
                             <td><span class="badge bg-{{ $o->payment_status === 'paid' ? 'success' : ($o->payment_status === 'failed' ? 'danger' : 'warning text-dark') }}">{{ ucfirst((string) $o->payment_status) }}</span></td>
+                            <td>
+                                <input type="text" name="courier_name[{{ $o->id }}]" value="{{ old('courier_name.'.$o->id, $o->courier_name) }}" class="form-control form-control-sm" style="min-width: 120px;">
+                            </td>
+                            <td>
+                                <input type="text" name="tracking_id[{{ $o->id }}]" value="{{ old('tracking_id.'.$o->id, $o->tracking_id) }}" class="form-control form-control-sm" style="min-width: 120px;">
+                            </td>
                             <td><span class="badge bg-{{ $statusClasses[$o->status] ?? 'secondary' }}">{{ \App\Models\Order::statusLabel($o->status) }}</span></td>
                             <td class="text-nowrap">{{ $o->created_at?->format('d M Y, h:i A') }}</td>
                             <td class="text-nowrap">

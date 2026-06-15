@@ -129,6 +129,28 @@ class OrderAdminController extends Controller
         return back()->with('status', 'Bulk status updated successfully.');
     }
 
+    public function bulkUpdateShipping(Request $request)
+    {
+        $validated = $request->validate([
+            'order_ids' => ['required', 'array', 'min:1'],
+            'order_ids.*' => ['integer', Rule::exists('orders', 'id')],
+            'courier_name' => ['nullable', 'array'],
+            'tracking_id' => ['nullable', 'array'],
+        ]);
+
+        foreach ($validated['order_ids'] as $id) {
+            $order = Order::find($id);
+            if ($order) {
+                $order->update([
+                    'courier_name' => $request->input("courier_name.$id"),
+                    'tracking_id' => $request->input("tracking_id.$id"),
+                ]);
+            }
+        }
+
+        return back()->with('status', 'Shipping details updated for selected orders.');
+    }
+
     public function export(Request $request)
     {
         $type = $request->input('type', 'csv');

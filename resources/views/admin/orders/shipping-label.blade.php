@@ -298,7 +298,6 @@
             .label-outer-container {
                 max-width: 100% !important;
                 width: 4in !important;
-                height: 6in !important;
                 margin: 0 auto !important;
                 page-break-inside: avoid;
             }
@@ -307,14 +306,44 @@
                 border: 2px solid #000 !important;
                 border-radius: 0 !important;
                 width: 4in !important;
-                height: 6in !important;
-                padding: 0.25in !important;
+                min-height: 6in !important;
+                padding: 0.15in !important;
                 page-break-inside: avoid;
                 transform: none !important;
+                overflow: visible !important;
+            }
+            .label-section {
+                padding-bottom: 6px !important;
+                margin-bottom: 6px !important;
+                border-bottom-width: 1.5px !important;
+            }
+            .barcode-visual {
+                font-size: 40px !important;
+                letter-spacing: 1.5px !important;
+            }
+            .barcode-container {
+                padding: 4px 0 !important;
+            }
+            .address-box {
+                font-size: 10px !important;
+            }
+            .address-box.to {
+                font-size: 11px !important;
+            }
+            .address-box.to strong.name {
+                font-size: 13px !important;
             }
             .packing-slip {
                 background-color: #ffffff !important;
                 border: 1px solid #000 !important;
+                padding: 5px !important;
+            }
+            .packing-slip-title {
+                font-size: 8px !important;
+                margin-bottom: 2px !important;
+            }
+            .packing-item {
+                font-size: 9px !important;
             }
             @page {
                 size: 4in 6in;
@@ -364,8 +393,13 @@
 
             <!-- Barcode representation -->
             <div class="label-section barcode-container">
-                <div class="barcode-visual">*{{ $order->order_number }}*</div>
-                <div class="barcode-text">ORDER #{{ $order->order_number }}</div>
+                @if($order->tracking_id)
+                    <div class="barcode-visual">*{{ $order->tracking_id }}*</div>
+                    <div class="barcode-text">TRACKING #{{ $order->tracking_id }}</div>
+                @else
+                    <div class="barcode-visual">*{{ $order->order_number }}*</div>
+                    <div class="barcode-text">ORDER #{{ $order->order_number }}</div>
+                @endif
             </div>
 
             <!-- Package & Shipping Meta Info -->
@@ -385,27 +419,6 @@
                 </div>
             </div>
 
-            <!-- Payment Badge & Cash collect Info -->
-            <div class="label-section" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
-                <div>
-                    <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Payment Method</span>
-                    <br>
-                    <strong style="font-size: 13px;">{{ strtoupper((string) $order->payment_method) }}</strong>
-                </div>
-                <div>
-                    @if(strtolower((string)$order->payment_method) === 'cod')
-                        <div class="payment-status-badge cod">COD</div>
-                        <div style="font-size: 11px; font-weight: 700; text-align: right; margin-top: 2px;">
-                            Collect: ₹{{ number_format((float)$order->payableAmount(), 2) }}
-                        </div>
-                    @else
-                        <div class="payment-status-badge prepaid">PREPAID</div>
-                        <div style="font-size: 11px; font-weight: 700; text-align: right; margin-top: 2px; color: var(--accent-prepaid);">
-                            Amount Paid
-                        </div>
-                    @endif
-                </div>
-            </div>
 
             <!-- Packing Checklist -->
             <div class="label-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">

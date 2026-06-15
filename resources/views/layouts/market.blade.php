@@ -59,7 +59,7 @@
     <div class="pro-announcement">
         <div class="cb-container">
             <div class="pro-announcement__marquee">
-                <span><i class="bi bi-tag-fill me-1" aria-hidden="true"></i>{{ __('Extra 5% off on prepaid orders · Free delivery above ₹499') }}</span>
+                <span><i class="bi bi-tag-fill me-1" aria-hidden="true"></i>{{ __('Extra 10% off on prepaid orders · Free delivery above ₹999') }}</span>
                 <span><i class="bi bi-telephone me-1" aria-hidden="true"></i>{{ __('Support') }}: <a href="tel:+91 9217732670">+91 9217732670</a></span>
             </div>
         </div>

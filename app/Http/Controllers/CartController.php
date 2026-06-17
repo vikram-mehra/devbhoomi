@@ -7,6 +7,7 @@ use App\Models\ProductVariant;
 use App\Services\CartService;
 use App\Services\CheckoutPricingService;
 use App\Services\ShippingService;
+use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,6 +44,7 @@ class CartController extends Controller
             return back()->with('error', __('Only :qty in stock for this option.', ['qty' => $variant->stock_qty]));
         }
         $cart->add((int) $request->product_variant_id, $qty);
+        GoogleAnalyticsService::flashAddToCart($variant, $qty, $request->boolean('buy_now'));
 
         if ($request->boolean('buy_now')) {
             if (auth()->check()) {

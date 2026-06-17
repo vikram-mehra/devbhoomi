@@ -45,6 +45,13 @@
   gtag('js', new Date());
   gtag('config', '{{ $gaId }}');
 </script>
+@if(session('ga_events'))
+<script>
+  @foreach(session('ga_events') as $event)
+    gtag('event', '{{ $event['name'] }}', {!! json_encode($event['data'], JSON_UNESCAPED_SLASHES) !!});
+  @endforeach
+</script>
+@endif
 @endif
 <body class="cb-body cb-market-pro">
     <div id="mkPagePreloader" class="mk-page-preloader" role="alert" aria-live="polite" aria-busy="true" aria-label="{{ __('Loading') }}">

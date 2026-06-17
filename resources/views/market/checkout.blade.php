@@ -581,11 +581,11 @@ document.addEventListener('DOMContentLoaded', function () {
         items: [
             @foreach($items as $item)
             {
-                item_id: '{{ $item->variant->sku ?: $item->variant->id }}',
-                item_name: '{{ $item->variant->product->name }}',
+                item_id: {!! json_encode($item->variant->sku ?: $item->variant->id, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
+                item_name: {!! json_encode($item->variant->product->name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!},
                 price: {{ (float) $item->variant->effectivePrice() }},
                 quantity: {{ (int) $item->qty }},
-                item_variant: '{{ $item->variant->label() }}'
+                item_variant: {!! json_encode($item->variant->label(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}
             },
             @endforeach
         ]

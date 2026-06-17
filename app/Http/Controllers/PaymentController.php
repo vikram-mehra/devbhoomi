@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Services\CouponService;
 use App\Services\OrderConfirmationMailService;
 use App\Services\StockLedgerService;
+use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -54,6 +55,7 @@ class PaymentController extends Controller
         }
 
         $this->markOrderPaid($order, 'demo_'.Str::lower(Str::random(14)));
+        GoogleAnalyticsService::flashPurchase($order);
 
         return redirect()->route('orders.show', $order)->with('status', __('Payment successful (demo).'));
     }
@@ -94,6 +96,7 @@ class PaymentController extends Controller
         }
 
         $this->markOrderPaid($order, $request->razorpay_payment_id);
+        GoogleAnalyticsService::flashPurchase($order);
 
         return redirect()->route('orders.show', $order)->with('status', __('Payment successful.'));
     }

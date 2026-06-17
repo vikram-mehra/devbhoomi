@@ -16,6 +16,7 @@ use App\Services\CouponService;
 use App\Services\OrderConfirmationMailService;
 use App\Services\ShippingService;
 use App\Services\StockLedgerService;
+use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -320,7 +321,10 @@ class CheckoutController extends Controller
             $coupons->markUsed($couponCode);
         }
 
+        GoogleAnalyticsService::flashPlaceOrder($order);
+
         if ($payable <= 0) {
+            GoogleAnalyticsService::flashPurchase($order);
             app(OrderConfirmationMailService::class)->dispatchForOrder($order->fresh());
 
             return redirect()->route('orders.show', $order)->with('status', __('Order placed successfully.'));

@@ -150,4 +150,26 @@
 })();
 </script>
 @endpush
+@push('scripts')
+@php $gaId = app(\App\Services\SeoService::class)->global('google_analytics_id'); @endphp
+@if(filled($gaId))
+<script>
+    gtag('event', 'view_cart', {
+        currency: 'INR',
+        value: {{ (float) $total }},
+        items: [
+            @foreach($items as $citem)
+            {
+                item_id: '{{ $citem->variant->sku ?: $citem->variant->id }}',
+                item_name: '{{ $citem->variant->product->name }}',
+                price: {{ (float) $citem->variant->effectivePrice() }},
+                quantity: {{ (int) $citem->qty }},
+                item_variant: '{{ $citem->variant->label() }}'
+            },
+            @endforeach
+        ]
+    });
+</script>
+@endif
+@endpush
 @endif

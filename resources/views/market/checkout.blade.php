@@ -571,4 +571,26 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+@push('scripts')
+@php $gaId = app(\App\Services\SeoService::class)->global('google_analytics_id'); @endphp
+@if(filled($gaId))
+<script>
+    gtag('event', 'begin_checkout', {
+        currency: 'INR',
+        value: {{ (float) $estTotal }},
+        items: [
+            @foreach($items as $item)
+            {
+                item_id: '{{ $item->variant->sku ?: $item->variant->id }}',
+                item_name: '{{ $item->variant->product->name }}',
+                price: {{ (float) $item->variant->effectivePrice() }},
+                quantity: {{ (int) $item->qty }},
+                item_variant: '{{ $item->variant->label() }}'
+            },
+            @endforeach
+        ]
+    });
+</script>
+@endif
+@endpush
 @endsection

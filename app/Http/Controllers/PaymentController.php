@@ -185,6 +185,7 @@ class PaymentController extends Controller
         $couponCode = $order->coupon_code;
 
         $order->update([
+            'status' => 'confirmed',
             'payment_status' => 'paid',
             'payment_ref' => $paymentRef,
             'razorpay_payment_id' => Str::startsWith($paymentRef, 'pay_') ? $paymentRef : $order->razorpay_payment_id,

@@ -37,6 +37,81 @@ class Order extends Model
         'user_id' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::created(function ($order) {
+            try {
+                DB::table('order_activity_logs')->insert([
+                    'order_id' => $order->id,
+                    'user_id' => auth()->id(),
+                    'activity' => 'Order placed',
+                    'description' => "Order was created with status: " . ucfirst($order->status) . 
+                                     ", payment method: " . strtoupper($order->payment_method) . 
+                                     ", total: ₹" . number_format((float) $order->total, 2) . ".",
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        });
+
+        static::updating(function ($order) {
+            try {
+                $dirty = $order->getDirty();
+                $original = $order->getOriginal();
+                $userId = auth()->id();
+
+                if (isset($dirty['status'])) {
+                    DB::table('order_activity_logs')->insert([
+                        'order_id' => $order->id,
+                        'user_id' => $userId,
+                        'activity' => 'Order status updated',
+                        'description' => "Status changed from " . ucfirst($original['status'] ?? 'N/A') . " to " . ucfirst($dirty['status']) . ".",
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+
+                if (isset($dirty['payment_status'])) {
+                    DB::table('order_activity_logs')->insert([
+                        'order_id' => $order->id,
+                        'user_id' => $userId,
+                        'activity' => 'Payment status updated',
+                        'description' => "Payment status changed from " . ucfirst($original['payment_status'] ?? 'N/A') . " to " . ucfirst($dirty['payment_status']) . ".",
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+
+                if (isset($dirty['courier_name']) || isset($dirty['tracking_id'])) {
+                    $newCourier = isset($dirty['courier_name']) ? $dirty['courier_name'] : ($original['courier_name'] ?? null);
+                    $newTracking = isset($dirty['tracking_id']) ? $dirty['tracking_id'] : ($original['tracking_id'] ?? null);
+                    $oldCourier = $original['courier_name'] ?? 'N/A';
+                    $oldTracking = $original['tracking_id'] ?? 'N/A';
+
+                    if (($newCourier !== ($original['courier_name'] ?? null)) || ($newTracking !== ($original['tracking_id'] ?? null))) {
+                        DB::table('order_activity_logs')->insert([
+                            'order_id' => $order->id,
+                            'user_id' => $userId,
+                            'activity' => 'Shipping details updated',
+                            'description' => "Courier: " . ($newCourier ?: 'N/A') . ", Tracking ID: " . ($newTracking ?: 'N/A') . " (previously: Courier: {$oldCourier}, Tracking ID: {$oldTracking}).",
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        });
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(OrderActivityLog::class)->latest();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -112,12 +112,34 @@
 
     <div class="card border-0 shadow-sm mt-4">
         <div class="card-body">
-            <h6 class="mb-3">Order Notes</h6>
-            <form method="post" action="{{ route('admin.orders.notes', $order) }}">
-                @csrf
-                <textarea name="notes" rows="3" class="form-control mb-2" placeholder="Add internal admin note...">{{ old('notes', $order->notes) }}</textarea>
-                <button class="btn btn-primary btn-sm">Save Notes</button>
-            </form>
+            <h6 class="mb-4 fw-bold">Order Activity History</h6>
+            @if($order->activityLogs->isEmpty())
+                <p class="text-muted mb-0 small">No activities recorded for this order yet.</p>
+            @else
+                <div class="position-relative ps-4" style="border-left: 2px solid #e9ecef; margin-left: 10px;">
+                    @foreach($order->activityLogs as $log)
+                        <div class="mb-4 position-relative">
+                            <!-- Timeline Dot Indicator -->
+                            <div class="position-absolute rounded-circle bg-primary" 
+                                 style="width: 12px; height: 12px; left: -37px; top: 5px; border: 2px solid #fff; box-shadow: 0 0 0 2px #cfe2ff;">
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold text-dark">{{ $log->activity }}</span>
+                                <small class="text-muted">{{ $log->created_at->tz('Asia/Kolkata')->format('d M Y, h:i A') }}</small>
+                            </div>
+                            <p class="text-muted mb-1 small">{{ $log->description }}</p>
+                            <small class="text-secondary d-block" style="font-size: 0.75rem;">
+                                By: 
+                                @if($log->user)
+                                    <strong>{{ $log->user->name }}</strong> ({{ ucfirst($log->user->role) }})
+                                @else
+                                    <span class="text-muted italic">System / Customer</span>
+                                @endif
+                            </small>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 @endsection

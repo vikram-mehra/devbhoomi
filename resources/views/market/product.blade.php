@@ -25,6 +25,19 @@
 @endpush
 @endif
 
+@push('head')
+<style>
+    .pdp-review-star {
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.15s ease-in-out, color 0.15s ease-in-out;
+    }
+    .pdp-review-star:hover {
+        transform: scale(1.25);
+    }
+</style>
+@endpush
+
 @push('schema')
 @php
     $schemaImages = $product->images->map(fn ($im) => \App\Models\Product::publicImageUrl($im->path))->filter()->values()->all();
@@ -270,7 +283,16 @@
                     <form action="{{ route('reviews.store', $product) }}" method="post" class="mb-4">
                         @csrf
                         <div class="row g-2">
-                            <div class="col-md-2"><input type="number" name="rating" min="1" max="5" class="form-control" placeholder="1-5" required></div>
+                            <div class="col-md-2 d-flex align-items-center">
+                                <div class="d-flex align-items-center gap-1" id="pdpReviewStars" style="height: 38px;">
+                                    <input type="hidden" name="rating" id="pdpReviewRatingInput" value="5" required>
+                                    <i class="bi bi-star-fill pdp-review-star" data-value="1" title="1 Star"></i>
+                                    <i class="bi bi-star-fill pdp-review-star" data-value="2" title="2 Stars"></i>
+                                    <i class="bi bi-star-fill pdp-review-star" data-value="3" title="3 Stars"></i>
+                                    <i class="bi bi-star-fill pdp-review-star" data-value="4" title="4 Stars"></i>
+                                    <i class="bi bi-star-fill pdp-review-star" data-value="5" title="5 Stars"></i>
+                                </div>
+                            </div>
                             <div class="col-md-4"><input type="text" name="title" class="form-control" placeholder="{{ __('Title') }}"></div>
                             <div class="col-md-6"><input type="text" name="body" class="form-control" placeholder="{{ __('Tell others') }}"></div>
                         </div>
@@ -543,6 +565,52 @@
                 stickyQtyHidden.value = pdpQty.value;
             });
         }
+    })();
+    </script>
+    <script>
+    (function () {
+        var ratingInput = document.getElementById('pdpReviewRatingInput');
+        var stars = document.querySelectorAll('.pdp-review-star');
+        var container = document.getElementById('pdpReviewStars');
+        if (!ratingInput || !stars.length) return;
+
+        var selectedRating = parseInt(ratingInput.value) || 5;
+
+        function updateStars(rating) {
+            stars.forEach(function (star) {
+                var val = parseInt(star.getAttribute('data-value'));
+                if (val <= rating) {
+                    star.classList.remove('bi-star');
+                    star.classList.add('bi-star-fill', 'text-warning');
+                } else {
+                    star.classList.remove('bi-star-fill', 'text-warning');
+                    star.classList.add('bi-star');
+                }
+            });
+        }
+
+        stars.forEach(function (star) {
+            star.addEventListener('click', function () {
+                var val = parseInt(star.getAttribute('data-value'));
+                selectedRating = val;
+                ratingInput.value = val;
+                updateStars(val);
+            });
+
+            star.addEventListener('mouseenter', function () {
+                var val = parseInt(star.getAttribute('data-value'));
+                updateStars(val);
+            });
+        });
+
+        if (container) {
+            container.addEventListener('mouseleave', function () {
+                updateStars(selectedRating);
+            });
+        }
+
+        // Initial setup
+        updateStars(selectedRating);
     })();
     </script>
     @if(!empty($recentPurchaseFeed))

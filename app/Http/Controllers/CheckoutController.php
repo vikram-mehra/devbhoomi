@@ -256,7 +256,7 @@ class CheckoutController extends Controller
                 'order_number' => Order::generateOrderNumber(),
                 'user_id' => $user->id,
                 'address_id' => $addressId,
-                'status' => 'pending',
+                'status' => $payable <= 0 ? 'confirmed' : 'pending',
                 'payment_method' => $request->payment_method,
                 'payment_status' => $payable <= 0 ? 'paid' : 'unpaid',
                 'subtotal' => $subtotalExclusive,

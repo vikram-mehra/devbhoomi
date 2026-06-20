@@ -231,7 +231,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/orders/bulk-status', [OrderAdminController::class, 'bulkUpdateStatus'])->name('orders.bulk-status');
     Route::post('/orders/bulk-shipping', [OrderAdminController::class, 'bulkUpdateShipping'])->name('orders.bulk-shipping');
     Route::get('/orders/{order}', [OrderAdminController::class, 'show'])->name('orders.show');
-    Route::post('/orders/{order}/notes', [OrderAdminController::class, 'updateNotes'])->name('orders.notes');
     Route::get('/orders/{order}/invoice/print', [OrderAdminController::class, 'printInvoice'])->name('orders.invoice.print');
     Route::get('/orders/{order}/invoice/pdf', [OrderAdminController::class, 'downloadInvoicePdf'])->name('orders.invoice.pdf');
     Route::get('/orders/{order}/label/print', [OrderAdminController::class, 'printShippingLabel'])->name('orders.label.print');

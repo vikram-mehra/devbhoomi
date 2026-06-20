@@ -17,7 +17,7 @@
     $taxDisplay = (float) ($taxAmount ?? 0);
     $couponDiscount = (float) ($couponDiscount ?? 0);
     $shippingDisplay = (float) ($shippingCharge ?? 0);
-    $estTotal = max(0, $subtotal + $shippingDisplay + $taxDisplay - $couponDiscount);
+    $estTotal = max(0, $subtotal + $shippingDisplay - $couponDiscount);
     $hasAppliedCoupon = $couponDiscount > 0 && ! empty($appliedCouponCode);
     $showNewAddressForm = true;
 @endphp
@@ -270,10 +270,6 @@
                             <span>{{ __('Coupon discount') }}</span>
                             <span class="pro-checkout-accent-text text-success" id="checkoutDiscount">-₹{{ number_format($couponDiscount, 2) }}</span>
                         </div>
-                        <div class="pro-checkout-totals__row">
-                            <span>{{ __('Tax') }}</span>
-                            <span class="pro-checkout-accent-text" id="checkoutTax">₹{{ number_format($taxDisplay, 2) }}</span>
-                        </div>
                         <div class="pro-checkout-totals__row pro-checkout-totals__row--total">
                             <span>{{ __('Total') }}</span>
                             <span class="pro-checkout-accent-text pro-checkout-accent-text--lg" id="checkoutTotal">₹{{ number_format($estTotal, 2) }}</span>
@@ -398,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var ship = parseFloat(totalsEl.getAttribute('data-shipping')) || 0;
         var tax = taxOverride !== undefined ? parseFloat(taxOverride) : (parseFloat(totalsEl.getAttribute('data-tax')) || 0);
         var disc = parseFloat(discount) || 0;
-        var total = Math.max(0, sub + ship + tax - disc);
+        var total = Math.max(0, sub + ship - disc);
         var taxEl = document.getElementById('checkoutTax');
         if (taxEl) {
             taxEl.textContent = formatMoney(tax);
@@ -572,8 +568,11 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 @endpush
 @push('scripts')
-@php $gaId = app(\App\Services\SeoService::class)->global('google_analytics_id'); @endphp
-@if(filled($gaId))
+@php
+    $gaId = config('services.google.analytics_id');
+    $isLocal = app()->environment('local');
+@endphp
+@if(filled($gaId) && !$isLocal)
 <script>
     gtag('event', 'begin_checkout', {
         currency: 'INR',

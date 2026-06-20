@@ -28,7 +28,7 @@
                     <tbody>
                         @foreach($returns as $r)
                             <tr>
-                                <td class="fw-semibold font-monospace small">#{{ $r->order_id }}</td>
+                                <td class="fw-semibold font-monospace small">#{{ $r->order->order_number ?? $r->order_id }}</td>
                                 <td class="small text-break">{{ $r->user->email }}</td>
                                 <td class="small">{{ Str::limit($r->reason, 80) }}</td>
                                 <td><span class="admin-chip {{ $r->statusChipClass() }}">{{ $r->statusLabel() }}</span></td>

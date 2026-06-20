@@ -25,7 +25,7 @@ class CartController extends Controller
     {
         $items = $cart->query()->get();
 
-        return response()->json($shipping->apiResponse($pricing->subtotal($items)));
+        return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items)));
     }
 
     public function add(Request $request, CartService $cart)
@@ -71,7 +71,7 @@ class CartController extends Controller
         if ($request->wantsJson()) {
             $items = $cart->query()->get();
 
-            return response()->json($shipping->apiResponse($pricing->subtotal($items)));
+            return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items)));
         }
 
         return back()->with('status', 'Cart updated');
@@ -90,7 +90,7 @@ class CartController extends Controller
         if ($request->wantsJson()) {
             $items = $cart->query()->get();
 
-            return response()->json($shipping->apiResponse($pricing->subtotal($items)));
+            return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items)));
         }
 
         return back()->with('status', 'Removed');

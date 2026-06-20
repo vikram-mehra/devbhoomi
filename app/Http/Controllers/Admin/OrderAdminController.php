@@ -64,7 +64,7 @@ class OrderAdminController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['user', 'items.variant.product', 'shippingAddress']);
+        $order->load(['user', 'items.variant.product', 'shippingAddress', 'activityLogs.user']);
 
         return view('admin.orders.show', compact('order'));
     }
@@ -108,14 +108,6 @@ class OrderAdminController extends Controller
         return back()->with('status', 'Payment status updated.');
     }
 
-    public function updateNotes(Request $request, Order $order)
-    {
-        $request->validate(['notes' => 'nullable|string|max:2000']);
-        $order->update(['notes' => $request->notes]);
-
-        return back()->with('status', 'Order note updated.');
-    }
-
     public function bulkUpdateStatus(Request $request)
     {
         $validated = $request->validate([
@@ -124,7 +116,30 @@ class OrderAdminController extends Controller
             'status' => ['required', Rule::in(Order::allowedStatusValues())],
         ]);
 
-        Order::whereIn('id', $validated['order_ids'])->update(['status' => $validated['status']]);
+        foreach (Order::whereIn('id', $validated['order_ids'])->get() as $order) {
+            $previous = $order->status;
+            $order->update(['status' => $validated['status']]);
+
+            if ($validated['status'] === 'confirmed' && $previous !== 'confirmed') {
+                $order->confirmed_at = now();
+                $order->save();
+            }
+            if ($validated['status'] === 'shipped' && $previous !== 'shipped') {
+                $order->shipped_at = now();
+                $order->save();
+            }
+            if ($validated['status'] === 'delivered' && $previous !== 'delivered') {
+                $order->delivered_at = now();
+                $order->delivery_date = now()->toDateString();
+                $order->save();
+            }
+
+            if ($validated['status'] === 'cancelled' && $previous !== 'cancelled') {
+                app(StockLedgerService::class)->restoreOrderCancellation($order->fresh(), optional($request->user())->id);
+            }
+
+            $this->sendOrderStatusEmail($order, $previous);
+        }
 
         return back()->with('status', 'Bulk status updated successfully.');
     }

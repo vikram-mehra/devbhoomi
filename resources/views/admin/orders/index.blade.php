@@ -38,8 +38,8 @@
         <div class="card-body">
             <form method="get" class="row g-2 align-items-end">
                 <div class="col-6 col-md-4 col-xl-2">
-                    <label class="form-label small text-muted mb-1">Order ID</label>
-                    <input type="text" class="form-control" name="order_id" value="{{ request('order_id') }}" placeholder="Order ID">
+                    <label class="form-label small text-muted mb-1">Order Number</label>
+                    <input type="text" class="form-control" name="order_id" value="{{ request('order_id') }}" placeholder="Order Number">
                 </div>
                 <div class="col-6 col-md-4 col-xl-2">
                     <label class="form-label small text-muted mb-1">Customer Name</label>
@@ -107,7 +107,7 @@
                 <thead>
                     <tr>
                         <th style="width: 2.5rem;"><input type="checkbox" onclick="document.querySelectorAll('.order-checkbox').forEach(cb=>cb.checked=this.checked)"></th>
-                        <th>Order ID</th>
+                        <th>Order Number</th>
                         <th>Customer Name</th>
                         <th>Customer Phone</th>
                         <th>Total Amount</th>

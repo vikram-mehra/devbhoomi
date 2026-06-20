@@ -44,7 +44,7 @@ class ShippingService
      */
     public function totalsForCart(Collection $items, CheckoutPricingService $pricing): array
     {
-        return $this->totalsForSubtotal($pricing->subtotal($items));
+        return $this->totalsForSubtotal($pricing->inclusiveSubtotal($items));
     }
 
     public function isFreeShipping(float $subtotal): bool

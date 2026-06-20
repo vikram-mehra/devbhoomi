@@ -35,8 +35,11 @@
     @endif
     @stack('schema')
 </head>
-@php $gaId = app(\App\Services\SeoService::class)->global('google_analytics_id'); @endphp
-@if(filled($gaId))
+@php
+    $gaId = config('services.google.analytics_id');
+    $isLocal = app()->environment('local');
+@endphp
+@if(filled($gaId) && !$isLocal)
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
 <script>

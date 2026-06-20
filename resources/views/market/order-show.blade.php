@@ -211,7 +211,7 @@
                 <div class="pro-order-detail__breakdown">
                     <div class="pro-order-detail__break-line">
                         <span>{{ __('Subtotal') }}</span>
-                        <span>₹{{ number_format($order->subtotal, 2) }}</span>
+                        <span>₹{{ number_format($order->subtotal + $order->tax_amount, 2) }}</span>
                     </div>
                     <div class="pro-order-detail__break-line">
                         <span>{{ __('Shipping') }}</span>

@@ -38,8 +38,9 @@ class CheckoutController extends Controller
 
         $items->loadMissing('variant.product');
         $pricing = app(CheckoutPricingService::class);
-        $subtotal = $pricing->subtotal($items);
+        $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
+        $subtotal = $pricing->inclusiveSubtotal($items);
         $shippingCharge = $shipping->chargeForSubtotal($subtotal);
         $isFreeShipping = $shippingCharge <= 0;
         $addresses = auth()->user()->addresses()->orderByDesc('is_default')->get();
@@ -86,8 +87,9 @@ class CheckoutController extends Controller
 
         $items->loadMissing('variant.product');
         $pricing = app(CheckoutPricingService::class);
-        $subtotal = $pricing->subtotal($items);
+        $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
+        $subtotal = $pricing->inclusiveSubtotal($items);
         $shippingCharge = $shipping->chargeForSubtotal($subtotal);
 
         try {
@@ -102,7 +104,7 @@ class CheckoutController extends Controller
 
         $discount = $resolved['discount'];
         $coupon = $resolved['coupon'];
-        $total = $pricing->grandTotal($subtotal, $shippingCharge, $taxAmount, $discount);
+        $total = $pricing->grandTotal($subtotalExclusive, $shippingCharge, $taxAmount, $discount);
 
         session(['checkout_coupon_code' => $coupon->code]);
 
@@ -135,10 +137,11 @@ class CheckoutController extends Controller
 
         $items->loadMissing('variant.product');
         $pricing = app(CheckoutPricingService::class);
-        $subtotal = $pricing->subtotal($items);
+        $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
+        $subtotal = $pricing->inclusiveSubtotal($items);
         $shippingCharge = $shipping->chargeForSubtotal($subtotal);
-        $total = $pricing->grandTotal($subtotal, $shippingCharge, $taxAmount, 0);
+        $total = $pricing->grandTotal($subtotalExclusive, $shippingCharge, $taxAmount, 0);
 
         return response()->json([
             'message' => __('Coupon removed.'),
@@ -197,8 +200,9 @@ class CheckoutController extends Controller
 
         $items->loadMissing('variant.product');
         $pricing = app(CheckoutPricingService::class);
-        $subtotal = $pricing->subtotal($items);
+        $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
+        $subtotal = $pricing->inclusiveSubtotal($items);
         $shipping = $shipping->chargeForSubtotal($subtotal);
         $discount = 0.0;
         $couponCode = null;
@@ -213,7 +217,7 @@ class CheckoutController extends Controller
             }
         }
 
-        $grand = $pricing->grandTotal($subtotal, $shipping, $taxAmount, $discount);
+        $grand = $pricing->grandTotal($subtotalExclusive, $shipping, $taxAmount, $discount);
         $walletUse = 0.0;
         $payable = round($grand - $walletUse, 2);
 
@@ -243,7 +247,7 @@ class CheckoutController extends Controller
         $ledger = app(StockLedgerService::class);
 
         DB::transaction(function () use (
-            $items, $user, $addressId, $request, $subtotal, $shipping, $taxAmount, $discount, $grand,
+            $items, $user, $addressId, $request, $subtotalExclusive, $shipping, $taxAmount, $discount, $grand,
             $walletUse, $payable, $couponCode, $defaultCommission, &$order, $ledger
         ) {
             $adminCommission = 0.0;
@@ -255,7 +259,7 @@ class CheckoutController extends Controller
                 'status' => 'pending',
                 'payment_method' => $request->payment_method,
                 'payment_status' => $payable <= 0 ? 'paid' : 'unpaid',
-                'subtotal' => $subtotal,
+                'subtotal' => $subtotalExclusive,
                 'shipping' => $shipping,
                 'discount' => $discount,
                 'tax_amount' => $taxAmount,

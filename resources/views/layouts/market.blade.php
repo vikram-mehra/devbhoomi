@@ -18,7 +18,7 @@
     <link rel="preload"
         href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap"
         as="style">
-    <link href="{{ asset('css/market-pro.css') }}?v=93" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=94" rel="stylesheet">
     @stack('head')
     @php $seoService = app(\App\Services\SeoService::class); @endphp
     <script type="application/ld+json">
@@ -33,8 +33,8 @@
     @php $faqSchema = request()->routeIs('market.home') ? $seoService->faqSchemaFromJson($seoService->global('faq_schema_json')) : null; @endphp
     @if($faqSchema)
         <script type="application/ld+json">
-            {!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
-            </script>
+                {!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+                </script>
     @endif
     @stack('schema')
 </head>

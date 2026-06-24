@@ -18,7 +18,7 @@
     <link rel="preload"
         href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap"
         as="style">
-    <link href="{{ asset('css/market-pro.css') }}?v=92" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=93" rel="stylesheet">
     @stack('head')
     @php $seoService = app(\App\Services\SeoService::class); @endphp
     <script type="application/ld+json">
@@ -33,8 +33,8 @@
     @php $faqSchema = request()->routeIs('market.home') ? $seoService->faqSchemaFromJson($seoService->global('faq_schema_json')) : null; @endphp
     @if($faqSchema)
         <script type="application/ld+json">
-        {!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
-        </script>
+            {!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+            </script>
     @endif
     @stack('schema')
 </head>
@@ -375,7 +375,8 @@
                 <div class="col-12 col-md-6 col-xl-3">
                     <h3 class="cb-footer-heading pro-footer-mk__heading">{{ __('Follow us') }}</h3>
                     <p class="pro-footer-mk__news-text small mb-3">
-                        {{ __('Never miss anything from store by signing up to our newsletter.') }}</p>
+                        {{ __('Never miss anything from store by signing up to our newsletter.') }}
+                    </p>
                     <form id="cbFooterNewsForm" class="pro-footer-mk__news-form d-flex flex-column gap-2 mb-3">
                         @csrf
                         <input type="email" name="email" required class="form-control pro-footer-mk__news-input"
@@ -384,7 +385,8 @@
                         <button type="submit" class="btn pro-footer-mk__subscribe w-100">{{ __('Subscribe') }}</button>
                     </form>
                     <p id="cbFooterNewsThanks" class="small text-success mb-0" hidden>
-                        {{ __('Thanks — you are subscribed.') }}</p>
+                        {{ __('Thanks — you are subscribed.') }}
+                    </p>
                     <div class="pro-footer-mk__social d-flex flex-wrap gap-2">
                         <a href="https://www.facebook.com/share/1D7KtFBEGi/?mibextid=wwXIfr"
                             class="pro-footer-mk__social-btn" aria-label="Facebook"><i class="bi bi-facebook"
@@ -405,7 +407,8 @@
             <div class="pro-footer-mk__bar cb-footer-bottom">
                 <div class="d-flex flex-column flex-md-row align-items-center justify-content-md-between gap-3 py-4">
                     <p class="pro-footer-mk__copy small mb-0 text-center text-md-start">&copy; {{ date('Y') }}
-                        {{ config('app.name') }}. {{ __('All rights reserved.') }}</p>
+                        {{ config('app.name') }}. {{ __('All rights reserved.') }}
+                    </p>
                     <!-- <div class="pro-footer-mk__payments d-flex flex-wrap align-items-center justify-content-center gap-2" aria-label="{{ __('Payment methods') }}">
                         <span class="pro-footer-mk__pay">Razorpay</span>
                     </div> -->
@@ -595,8 +598,20 @@
                     document.documentElement.style.setProperty('--pro-mobile-nav-offset', '0px');
                     return;
                 }
-                var offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-                document.documentElement.style.setProperty('--pro-mobile-nav-offset', offset + 'px');
+                var activeEl = document.activeElement;
+                var isInputFocused = activeEl && (
+                    activeEl.tagName === 'INPUT' ||
+                    activeEl.tagName === 'TEXTAREA' ||
+                    activeEl.tagName === 'SELECT' ||
+                    activeEl.hasAttribute('contenteditable')
+                );
+                var diff = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+                // Only shift if an input is focused and the keyboard is actually visible (diff > 100px)
+                if (isInputFocused && diff > 100) {
+                    document.documentElement.style.setProperty('--pro-mobile-nav-offset', diff + 'px');
+                } else {
+                    document.documentElement.style.setProperty('--pro-mobile-nav-offset', '0px');
+                }
             }
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', pinMobileNav);

@@ -3617,12 +3617,12 @@ a.mk-banner-overlay:hover .mk-banner-overlay__cta {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 56px;
+  bottom: calc(var(--pro-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px));
   z-index: 1035;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--pro-border);
-  padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
+  padding: 0.65rem 1rem 0.65rem;
   box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
@@ -3636,9 +3636,9 @@ a.mk-banner-overlay:hover .mk-banner-overlay__cta {
   }
 }
 
-@media (max-width: 991px) {
+@media (max-width: 991.98px) {
   .pro-page-pad-mobile {
-    padding-bottom: 5.5rem;
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 

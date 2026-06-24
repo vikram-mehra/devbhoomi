@@ -240,8 +240,7 @@ body.cb-market-pro.cb-body {
     margin-left: 0.5rem;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-actions {
-    order: 3;
-    margin-left: auto;
+    display: none !important;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-search {
     order: 4;
@@ -257,8 +256,7 @@ body.cb-market-pro.cb-body {
   }
 
   .pro-hero .carousel-control-prev, .pro-hero .carousel-control-next {
-    width: 36px !important;
-    height: 36px !important;
+    display: none !important;
   }
 
   .pro-faq-accordion {
@@ -6732,5 +6730,231 @@ body.cb-market-pro .bi {
       transform: translate3d(0, calc(-1 * var(--pro-mobile-nav-offset, 0px)), 0);
       -webkit-transform: translate3d(0, calc(-1 * var(--pro-mobile-nav-offset, 0px)), 0);
     }
+  }
+}
+
+/* —— Premium Cart Drawer Item Enhancements —— */
+.pro-cart-item {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 12px;
+  padding: 12px !important;
+  margin-bottom: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex !important;
+  gap: 0.75rem;
+}
+.pro-cart-item:hover {
+  background-color: #f8fafc;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+.pro-cart-item img {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px !important;
+}
+.pro-cart-item-title {
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 0.875rem !important;
+  line-height: 1.25;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.pro-cart-item-title:hover {
+  color: var(--pro-primary, #0f766e) !important;
+}
+.pro-cart-item-variant {
+  display: inline-block;
+  font-size: 0.725rem !important;
+  color: #64748b;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-weight: 500;
+}
+.pro-drawer-qty-container {
+  height: 28px;
+  border: 1px solid #cbd5e1;
+  border-radius: 100px;
+  padding: 0 6px;
+  background-color: #f8fafc;
+  display: inline-flex;
+  align-items: center;
+}
+.js-drawer-qty-minus, .js-drawer-qty-plus {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569 !important;
+  transition: transform 0.1s ease, color 0.15s ease;
+}
+.js-drawer-qty-minus:hover, .js-drawer-qty-plus:hover {
+  color: var(--pro-primary, #0f766e) !important;
+  transform: scale(1.15);
+}
+.js-drawer-qty-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 20px;
+  text-align: center;
+}
+.js-drawer-remove-btn {
+  color: #94a3b8 !important;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+.js-drawer-remove-btn:hover {
+  color: #ef4444 !important;
+  transform: scale(1.1);
+}
+.pro-cart-item-total {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.pro-cart-item-each {
+  font-size: 0.725rem;
+  color: #64748b;
+}
+
+/* —— Premium Drawer Summary Block —— */
+#drawerCartSummaryBlock {
+  background-color: #f8fafc;
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 15px;
+  border: 1px solid #e2e8f0;
+}
+#drawerCartSummaryBlock hr {
+  border-color: #cbd5e1;
+  opacity: 0.5;
+}
+#drawerCartSummaryBlock .btn-primary {
+  background-color: #0f766e !important;
+  border-color: #0f766e !important;
+  font-size: 0.95rem;
+  letter-spacing: 0.2px;
+  transition: all 0.25s ease;
+}
+#drawerCartSummaryBlock .btn-primary:hover {
+  background-color: #115e59 !important;
+  border-color: #115e59 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25) !important;
+}
+
+/* Slide arrow transition on checkout button */
+.transition-arrow {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+#drawerCartSummaryBlock .btn-primary:hover .transition-arrow {
+  transform: translateX(4px);
+}
+
+/* Fade out transition when deleting item in drawer */
+.js-drawer-item-fadeout {
+  opacity: 0 !important;
+  transform: scale(0.95) !important;
+  transition: opacity 0.25s ease, transform 0.25s ease !important;
+}
+
+/* Align mobile bottom nav cart badge directly on top of the bag icon */
+.pro-mobile-nav button .position-relative .pro-mobile-nav__badge {
+  position: absolute !important;
+  top: -8px !important;
+  right: -10px !important;
+  font-size: 0.625rem !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  padding: 0 3px !important;
+  border-radius: 50% !important;
+  background-color: var(--pro-primary, #0f766e) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  z-index: 2;
+}
+
+/* WhatsApp social button hover color styling */
+.cb-market-pro .cb-footer.pro-footer-mk a.pro-footer-mk__social-btn.pro-footer-mk__social-btn--whatsapp:hover {
+  background: #25d366 !important;
+  color: #fff !important;
+}
+
+/* Floating WhatsApp FAB chatbot style */
+.pro-whatsapp-fab {
+  position: fixed;
+  left: 1.25rem;
+  bottom: 1.75rem;
+  z-index: 1030;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none !important;
+}
+
+.pro-whatsapp-fab:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+  color: #fff !important;
+}
+
+.pro-whatsapp-fab .bi-whatsapp {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+/* Pulsing ripple effect to draw attention */
+.pro-whatsapp-fab::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6);
+  animation: whatsapp-pulse 2s infinite;
+  z-index: -1;
+}
+
+@keyframes whatsapp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+/* Mobile responsive layout offsets to clear bottom navigation bar */
+@media (max-width: 991.98px) {
+  .pro-whatsapp-fab {
+    bottom: 5.25rem;
+    left: 1rem;
+    width: 3rem;
+    height: 3rem;
+  }
+  .pro-whatsapp-fab .bi-whatsapp {
+    font-size: 1.5rem;
   }
 }

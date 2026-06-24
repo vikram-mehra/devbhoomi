@@ -193,7 +193,7 @@ input.js-cart-qty-input {
                                     <form action="{{ route('cart.update', $item) }}" method="post" class="js-cart-qty-form" data-update-url="{{ route('cart.update', $item) }}">
                                         @csrf @method('PATCH')
                                         <div class="qty-selector">
-                                            <button type="button" class="js-qty-minus" aria-label="Decrease quantity" style="visibility: {{ $item->qty < 2 ? 'hidden' : 'visible' }};"><i class="bi bi-minus"></i></button>
+                                            <button type="button" class="js-qty-minus" aria-label="Decrease quantity" style="visibility: {{ $item->qty < 2 ? 'hidden' : 'visible' }};"><i class="bi bi-dash"></i></button>
                                             <input type="number" name="qty" value="{{ $item->qty }}" min="1" max="99" class="js-cart-qty-input" aria-label="Quantity">
                                             <button type="button" class="js-qty-plus" aria-label="Increase quantity"><i class="bi bi-plus"></i></button>
                                         </div>
@@ -306,7 +306,75 @@ input.js-cart-qty-input {
         .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
         .then(function (res) {
             if (res.ok) {
-                applySummary(res.data);
+                applySummary(res.data.totals);
+                
+                var itemsList = document.getElementById('drawerCartItemsList');
+                if (itemsList && res.data.html) {
+                    itemsList.innerHTML = res.data.html;
+                }
+                
+                if (res.data.totals) {
+                    var drawerSubtotal = document.getElementById('drawerCartSubtotal');
+                    var drawerShipping = document.getElementById('drawerCartShipping');
+                    var drawerTotal = document.getElementById('drawerCartTotal');
+                    var drawerSummaryBlock = document.getElementById('drawerCartSummaryBlock');
+                    
+                    if (drawerSubtotal) drawerSubtotal.textContent = formatMoney(res.data.totals.subtotal);
+                    if (drawerShipping) {
+                        if (res.data.totals.is_free_shipping) {
+                            drawerShipping.textContent = 'FREE';
+                            drawerShipping.className = 'text-success fw-semibold';
+                        } else {
+                            drawerShipping.textContent = formatMoney(res.data.totals.shipping_charge);
+                            drawerShipping.className = 'text-muted';
+                        }
+                    }
+                    if (drawerTotal) drawerTotal.textContent = formatMoney(res.data.totals.total);
+                    
+                    if (drawerSummaryBlock) {
+                        if (res.data.items && res.data.items.length === 0) {
+                            drawerSummaryBlock.style.display = 'none';
+                        } else {
+                            drawerSummaryBlock.style.display = '';
+                        }
+                    }
+                }
+
+                if (res.data.items) {
+                    window.globalCartMap = {};
+                    var totalQty = 0;
+                    res.data.items.forEach(function (it) {
+                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: it.qty };
+                        totalQty += it.qty;
+                    });
+                    
+                    var mobileBadges = document.querySelectorAll('.pro-mobile-nav__badge');
+                    var desktopBadges = document.querySelectorAll('.mk-myntra-bag-badge');
+                    var drawerBadges = document.querySelectorAll('.js-drawer-count-badge');
+
+                    var updateBadge = function(badge, q, isDesktop) {
+                        if (q > 0) {
+                            badge.textContent = isDesktop ? (q > 99 ? '99+' : q) : (q > 9 ? '9+' : q);
+                            badge.style.display = '';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    };
+                    mobileBadges.forEach(function (badge) { updateBadge(badge, totalQty, false); });
+                    desktopBadges.forEach(function (badge) { updateBadge(badge, totalQty, true); });
+                    drawerBadges.forEach(function (badge) {
+                        if (totalQty > 0) {
+                            badge.textContent = totalQty;
+                            badge.style.display = '';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    });
+
+                    if (typeof window.syncCartCTAContainers === 'function') {
+                        window.syncCartCTAContainers(window.globalCartMap);
+                    }
+                }
             }
             return res;
         });

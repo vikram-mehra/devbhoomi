@@ -28,8 +28,12 @@ class CartController extends Controller
         return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items)));
     }
 
-    public function add(Request $request, CartService $cart)
-    {
+    public function add(
+        Request $request,
+        CartService $cart,
+        CheckoutPricingService $pricing,
+        ShippingService $shipping
+    ) {
         $request->validate([
             'product_variant_id' => 'required|exists:product_variants,id',
             'qty' => 'integer|min:1|max:99',
@@ -38,9 +42,15 @@ class CartController extends Controller
         $qty = (int) ($request->qty ?? 1);
         $variant = ProductVariant::query()->findOrFail((int) $request->product_variant_id);
         if (! $variant->isBuyable()) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => __('This option is unavailable or out of stock.')], 422);
+            }
             return back()->with('error', __('This option is unavailable or out of stock.'));
         }
         if ($qty > (int) $variant->stock_qty) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => __('Only :qty in stock for this option.', ['qty' => $variant->stock_qty])], 422);
+            }
             return back()->with('error', __('Only :qty in stock for this option.', ['qty' => $variant->stock_qty]));
         }
         $cart->add((int) $request->product_variant_id, $qty);
@@ -52,6 +62,27 @@ class CartController extends Controller
             }
 
             return redirect()->guest(route('login'));
+        }
+
+        if ($request->wantsJson()) {
+            $items = $cart->query()->get();
+            $cartItem = $items->firstWhere('product_variant_id', (int) $request->product_variant_id);
+            $html = view('market.partials.cart-drawer-items', [
+                'layoutCartItems' => $items,
+            ])->render();
+
+            return response()->json([
+                'success' => true,
+                'cart_item_id' => $cartItem?->id,
+                'qty' => $cartItem?->qty ?? $qty,
+                'html' => $html,
+                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items)),
+                'items' => $items->map(fn ($it) => [
+                    'id' => $it->id,
+                    'product_variant_id' => $it->product_variant_id,
+                    'qty' => $it->qty
+                ])
+            ]);
         }
 
         return back()->with('mk_cart_toast', true);
@@ -70,8 +101,20 @@ class CartController extends Controller
 
         if ($request->wantsJson()) {
             $items = $cart->query()->get();
+            $html = view('market.partials.cart-drawer-items', [
+                'layoutCartItems' => $items,
+            ])->render();
 
-            return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items)));
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items)),
+                'items' => $items->map(fn ($it) => [
+                    'id' => $it->id,
+                    'product_variant_id' => $it->product_variant_id,
+                    'qty' => $it->qty
+                ])
+            ]);
         }
 
         return back()->with('status', 'Cart updated');
@@ -89,8 +132,20 @@ class CartController extends Controller
 
         if ($request->wantsJson()) {
             $items = $cart->query()->get();
+            $html = view('market.partials.cart-drawer-items', [
+                'layoutCartItems' => $items,
+            ])->render();
 
-            return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items)));
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items)),
+                'items' => $items->map(fn ($it) => [
+                    'id' => $it->id,
+                    'product_variant_id' => $it->product_variant_id,
+                    'qty' => $it->qty
+                ])
+            ]);
         }
 
         return back()->with('status', 'Removed');

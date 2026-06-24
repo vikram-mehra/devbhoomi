@@ -740,6 +740,18 @@ html.dark .cb-section-head h2 {
   border-radius: 8px;
 }
 
+@media (max-width: 991.98px) {
+  .cb-slider-btn {
+    display: none !important;
+  }
+  .cb-product-slider__viewport {
+    padding: 0 !important;
+  }
+  .cb-product-slider {
+    margin: 0 !important;
+  }
+}
+
 /* Product card (Chawk-style) */
 .cb-pcard {
   background: var(--anc-surface);

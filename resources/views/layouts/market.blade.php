@@ -141,41 +141,50 @@
         </div>
     </div>
 
-    {{-- Cart sidebar --}}
     <div class="offcanvas offcanvas-end pro-cart-drawer" tabindex="-1" id="cartDrawer" aria-labelledby="cartDrawerLabel">
         <div class="offcanvas-header border-bottom">
-            <h2 class="h5 offcanvas-title" id="cartDrawerLabel">{{ __('Your cart') }}</h2>
+            <h2 class="h5 offcanvas-title fw-bold text-dark d-flex align-items-center gap-2" id="cartDrawerLabel">
+                <span>{{ __('Your cart') }}</span>
+                <span class="badge bg-primary rounded-pill fs-7 js-drawer-count-badge" @if(($layoutCartCount ?? 0) === 0) style="display:none;" @endif>{{ $layoutCartCount }}</span>
+            </h2>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="{{ __('Close') }}"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column">
-            @forelse($layoutCartItems ?? [] as $citem)
-                @php
-                    $p = $citem->variant->product;
-                    $im = $p->images->first();
-                    $cartThumb = \App\Models\Product::publicImageUrl($im?->path) ?? $p->namedPlaceholderUrl();
-                @endphp
-                <div class="pro-cart-item">
-                    <img src="{{ $cartThumb }}" alt="{{ $p->name }}" title="{{ $p->name }}" width="128" height="128" loading="lazy" decoding="async">
-                    <div class="flex-grow-1 min-w-0">
-                        <a href="{{ route('product.show', $p) }}" class="fw-semibold text-decoration-none text-dark text-truncate d-block">{{ $p->name }}</a>
-                        <div class="small text-muted">{{ __('Qty') }}: {{ $citem->qty }} × ₹{{ number_format($citem->variant->effectivePrice(), 0) }}</div>
-                    </div>
+            <div class="flex-grow-1 overflow-y-auto pe-1" id="drawerCartItemsList">
+                @include('market.partials.cart-drawer-items')
+            </div>
+            
+            <div class="mt-auto pt-3 border-top" id="drawerCartSummaryBlock" @if(($layoutCartCount ?? 0) === 0) style="display:none;" @endif>
+                <div class="d-flex justify-content-between text-muted mb-2 small">
+                    <span>{{ __('Subtotal') }}</span>
+                    <span id="drawerCartSubtotal">₹{{ number_format($layoutCartSubtotal ?? 0, 2) }}</span>
                 </div>
-            @empty
-                <p class="text-muted">{{ __('Your cart is empty.') }}</p>
-            @endforelse
-            <div class="mt-auto pt-3 border-top">
-                @if(($layoutCartCount ?? 0) > 0)
-                    <div class="d-flex justify-content-between fw-bold mb-3">
-                        <span>{{ __('Subtotal') }}</span>
-                        <span>₹{{ number_format($layoutCartSubtotal ?? 0, 0) }}</span>
-                    </div>
-                @endif
-                <a href="{{ route('cart.index') }}" class="btn btn-primary w-100 rounded-pill mb-2">{{ __('View cart') }}</a>
+                <div class="d-flex justify-content-between text-muted mb-2 small">
+                    <span>{{ __('Shipping Charge') }}</span>
+                    <span id="drawerCartShipping" class="text-success fw-semibold">
+                        @if(($layoutCartShipping ?? 0) <= 0)
+                            {{ __('FREE') }}
+                        @else
+                            ₹{{ number_format($layoutCartShipping ?? 0, 2) }}
+                        @endif
+                    </span>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between fw-bold mb-3">
+                    <span>{{ __('Total') }}</span>
+                    <span class="text-primary" id="drawerCartTotal">₹{{ number_format($layoutCartTotal ?? 0, 2) }}</span>
+                </div>
+                
                 @auth
-                    <a href="{{ route('checkout.index') }}" class="btn btn-outline-primary w-100 rounded-pill">{{ __('Checkout') }}</a>
+                    <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold mb-2 shadow-sm d-flex align-items-center justify-content-center gap-1">
+                        {{ __('Proceed to checkout') }}
+                        <i class="bi bi-arrow-right-short fs-5 transition-arrow"></i>
+                    </a>
                 @else
-                    <a href="{{ route('login') }}" class="btn btn-outline-primary w-100 rounded-pill">{{ __('Login to checkout') }}</a>
+                    <a href="{{ route('login') }}" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold mb-2 shadow-sm d-flex align-items-center justify-content-center gap-1">
+                        {{ __('Login to checkout') }}
+                        <i class="bi bi-arrow-right-short fs-5 transition-arrow"></i>
+                    </a>
                 @endauth
             </div>
         </div>
@@ -346,6 +355,7 @@
                         <a href="#" class="pro-footer-mk__social-btn" aria-label="Twitter"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
                         <a href="https://www.instagram.com/dev_bhoominaturals?igsh=MXJwZXYzeDQwamNjMw%3D%3D" class="pro-footer-mk__social-btn" aria-label="Instagram"><i class="bi bi-instagram" aria-hidden="true"></i></a>
                         <a href="#" class="pro-footer-mk__social-btn" aria-label="Pinterest"><i class="bi bi-pinterest" aria-hidden="true"></i></a>
+                        <a href="https://wa.me/919217732670?text=Hi" class="pro-footer-mk__social-btn pro-footer-mk__social-btn--whatsapp" aria-label="WhatsApp" target="_blank" rel="noopener"><i class="bi bi-whatsapp" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
@@ -504,13 +514,14 @@
     <nav class="pro-mobile-nav d-lg-none" id="proMobileNav" aria-label="{{ __('Bottom navigation') }}">
         <a href="{{ route('market.home') }}" class="{{ request()->routeIs('market.home') ? 'active' : '' }}"><i class="bi bi-house-door" aria-hidden="true"></i>{{ __('Home') }}</a>
         <a href="{{ route('shop.search') }}"><i class="bi bi-search" aria-hidden="true"></i>{{ __('Search') }}</a>
-        <span class="pro-mobile-nav__wrap position-relative d-inline-flex flex-column align-items-center">
+        <span class="pro-mobile-nav__wrap">
             <button type="button" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer" class="text-center border-0 bg-transparent p-0 d-flex flex-column align-items-center" style="color:inherit;">
-                <i class="bi bi-bag" aria-hidden="true"></i><span class="mt-1">{{ __('Cart') }}</span>
+                <span class="position-relative d-inline-flex">
+                    <i class="bi bi-bag" aria-hidden="true"></i>
+                    <span class="pro-mobile-nav__badge" @if(($layoutCartCount ?? 0) === 0) style="display:none;" @endif>{{ $layoutCartCount > 9 ? '9+' : $layoutCartCount }}</span>
+                </span>
+                <span class="mt-1">{{ __('Cart') }}</span>
             </button>
-            @if(($layoutCartCount ?? 0) > 0)
-                <span class="pro-mobile-nav__badge">{{ $layoutCartCount > 9 ? '9+' : $layoutCartCount }}</span>
-            @endif
         </span>
         @auth
             <a href="{{ route('account.dashboard') }}" class="{{ request()->routeIs('account.*', 'orders.*') ? 'active' : '' }}"><i class="bi bi-person" aria-hidden="true"></i>{{ __('Account') }}</a>
@@ -550,5 +561,478 @@
         pinMobileNav();
     })();
     </script>
+    <script>
+    (function () {
+        var csrf = document.querySelector('meta[name="csrf-token"]');
+        if (!csrf) return;
+
+        var csrfToken = csrf.getAttribute('content');
+
+        window.globalCartMap = @json(($layoutCartItems ?? collect())->mapWithKeys(fn($item) => [$item->product_variant_id => ['id' => $item->id, 'qty' => $item->qty]]));
+
+        function formatMoney(n) {
+            return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatMoneyInt(n) {
+            return '₹' + Math.round(n).toLocaleString('en-IN');
+        }
+
+        function updateCartBadges(count) {
+            var mobileBadges = document.querySelectorAll('.pro-mobile-nav__badge');
+            var desktopBadges = document.querySelectorAll('.mk-myntra-bag-badge');
+            var drawerBadges = document.querySelectorAll('.js-drawer-count-badge');
+
+            mobileBadges.forEach(function (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+
+            desktopBadges.forEach(function (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+
+            drawerBadges.forEach(function (badge) {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = '';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+        }
+
+        function updateDrawerTotals(data, totalQty) {
+            var subtotalEl = document.getElementById('drawerCartSubtotal');
+            var shippingEl = document.getElementById('drawerCartShipping');
+            var totalEl = document.getElementById('drawerCartTotal');
+
+            if (subtotalEl) subtotalEl.textContent = formatMoney(data.subtotal);
+            if (shippingEl) {
+                if (data.is_free_shipping) {
+                    shippingEl.textContent = 'FREE';
+                    shippingEl.className = 'text-success fw-semibold';
+                } else {
+                    shippingEl.textContent = formatMoney(data.shipping_charge);
+                    shippingEl.className = 'text-muted';
+                }
+            }
+            if (totalEl) totalEl.textContent = formatMoney(data.total);
+
+            // Calculate count dynamically from UI quantities if not provided
+            if (typeof totalQty === 'undefined') {
+                totalQty = 0;
+                document.querySelectorAll('.js-drawer-qty-val').forEach(function (el) {
+                    totalQty += parseInt(el.textContent, 10) || 0;
+                });
+            }
+
+            updateCartBadges(totalQty);
+
+            var summaryBlock = document.getElementById('drawerCartSummaryBlock');
+            var emptyState = document.getElementById('drawerCartEmptyState');
+
+            if (totalQty === 0) {
+                if (summaryBlock) summaryBlock.style.display = 'none';
+                if (emptyState) {
+                    emptyState.style.display = 'block';
+                } else {
+                    var itemsList = document.getElementById('drawerCartItemsList');
+                    if (itemsList) {
+                        itemsList.innerHTML = '<div class="text-center py-5" id="drawerCartEmptyState">' +
+                            '<i class="bi bi-bag-x text-muted mb-2" style="font-size: 3rem; opacity: 0.4; display: block;"></i>' +
+                            '<p class="text-muted small mb-0">Your cart is empty.</p>' +
+                            '</div>';
+                    }
+                }
+            } else {
+                if (summaryBlock) summaryBlock.style.display = '';
+                if (emptyState) emptyState.style.display = 'none';
+            }
+        }
+
+        window.syncCartCTAContainers = function (cartMap) {
+            document.querySelectorAll('.js-cart-add-container').forEach(function (container) {
+                var variantId = parseInt(container.getAttribute('data-variant-id'), 10);
+                if (!variantId) return;
+
+                var isHoverIcon = container.classList.contains('d-inline-block'); // Hover icon wrapper in card
+                var isPdp = container.getAttribute('data-pdp') === '1';
+                var isSticky = container.getAttribute('data-sticky') === '1';
+                var item = cartMap[variantId];
+
+                // Remove existing selector if any
+                var oldSelector = container.querySelector('.js-qty-pill-selector');
+                if (oldSelector) oldSelector.remove();
+
+                var form = container.querySelector('form');
+                var pdpCtas = container.querySelector('.js-default-pdp-ctas');
+                var pdpQtyCol = document.getElementById('pdpQtyCol');
+
+                if (item) {
+                    if (form) form.classList.add('d-none');
+                    if (pdpCtas) pdpCtas.classList.add('d-none');
+                    if (isPdp && pdpQtyCol) pdpQtyCol.classList.add('d-none');
+
+                    var html = '';
+                    if (isHoverIcon) {
+                        html = '<div class="js-qty-pill-selector d-inline-flex align-items-center bg-light border rounded-pill px-1" style="height: 38px;" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 0.95rem; width: 24px; line-height: 1;"><i class="bi bi-dash"></i></button>' +
+                            '<span class="fw-semibold px-1 js-selector-qty-val" style="font-size: 0.85rem; min-width: 16px; text-align: center;">' + item.qty + '</span>' +
+                            '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 0.95rem; width: 24px; line-height: 1;"><i class="bi bi-plus"></i></button>' +
+                            '</div>';
+                    } else if (isPdp) {
+                        html = '<div class="js-qty-pill-selector d-flex gap-2" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            '<div class="d-inline-flex align-items-center bg-light border rounded-pill px-2" style="height: 48px; min-width: 130px;">' +
+                            '<button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-dash"></i></button>' +
+                            '<span class="fw-bold px-2 js-selector-qty-val" style="font-size: 1.1rem; min-width: 30px; text-align: center;">' + item.qty + '</span>' +
+                            '<button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>' +
+                            '</div>' +
+                            '</div>';
+                    } else if (isSticky) {
+                        html = '<div class="js-qty-pill-selector d-flex gap-2 align-items-center" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            '<div class="d-inline-flex align-items-center bg-light border rounded-pill px-2" style="height: 38px; min-width: 100px;">' +
+                            '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-dash"></i></button>' +
+                            '<span class="fw-bold px-2 js-selector-qty-val" style="font-size: 0.95rem; min-width: 20px; text-align: center;">' + item.qty + '</span>' +
+                            '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>' +
+                            '</div>' +
+                            '</div>';
+                    } else {
+                        html = '<div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            '<div class="d-flex align-items-center justify-content-between border rounded-pill bg-light px-2" style="height: 38px; width: 100%;">' +
+                            '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-dash"></i></button>' +
+                            '<span class="fw-semibold js-selector-qty-val" style="font-size: 0.95rem; min-width: 24px; text-align: center;">' + item.qty + '</span>' +
+                            '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>' +
+                            '</div>' +
+                            '</div>';
+                    }
+
+                    container.insertAdjacentHTML('beforeend', html);
+                } else {
+                    if (form) form.classList.remove('d-none');
+                    if (pdpCtas) pdpCtas.classList.remove('d-none');
+                    if (isPdp && pdpQtyCol) pdpQtyCol.classList.remove('d-none');
+                }
+            });
+        };
+
+        function patchDrawerCart(itemId, qty, card) {
+            var url = '/cart/' + itemId;
+            return fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ qty: qty })
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('Failed to update quantity');
+                return r.json();
+            })
+            .then(function (data) {
+                window.globalCartMap = {};
+                var totalQty = 0;
+                if (data.items) {
+                    data.items.forEach(function (it) {
+                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: it.qty };
+                        totalQty += it.qty;
+                    });
+                }
+                window.syncCartCTAContainers(window.globalCartMap);
+
+                // If updated from outside the drawer (e.g. PDP or product card listing), replace the HTML
+                var isFromDrawer = card && card.classList.contains('js-drawer-item-card');
+                if (!isFromDrawer) {
+                    var itemsList = document.getElementById('drawerCartItemsList');
+                    if (itemsList && data.html) {
+                        itemsList.innerHTML = data.html;
+                    }
+                }
+
+                updateDrawerTotals(data.totals, totalQty);
+
+                var mainCard = document.querySelector('.js-cart-item-card[data-item-id="' + itemId + '"]');
+                if (mainCard) {
+                    var mainInput = mainCard.querySelector('.js-cart-qty-input');
+                    if (mainInput) {
+                        mainInput.value = qty;
+                        var unitPriceMain = parseFloat(mainCard.querySelector('.js-item-unit').getAttribute('data-unit-price')) || 0;
+                        var mainItemTotalEl = mainCard.querySelector('.js-item-total');
+                        if (mainItemTotalEl) mainItemTotalEl.textContent = '₹' + Math.round(unitPriceMain * qty).toLocaleString('en-IN');
+                        var subtotalEl = document.getElementById('cartSubtotal');
+                        var shippingEl = document.getElementById('cartShipping');
+                        var totalEl = document.getElementById('cartTotal');
+                        if (subtotalEl) subtotalEl.textContent = formatMoney(data.totals.subtotal);
+                        if (shippingEl) shippingEl.textContent = data.totals.is_free_shipping ? 'FREE' : formatMoney(data.totals.shipping_charge);
+                        if (totalEl) totalEl.textContent = formatMoney(data.totals.total);
+                        var minusBtn = mainCard.querySelector('.js-qty-minus');
+                        if (minusBtn) {
+                            minusBtn.style.visibility = qty < 2 ? 'hidden' : 'visible';
+                        }
+                    }
+                }
+            })
+            .catch(function (err) {
+                console.error(err);
+            });
+        }
+
+        function deleteDrawerCart(itemId, card) {
+            if (card) {
+                card.classList.add('js-drawer-item-fadeout');
+            }
+            var url = '/cart/' + itemId;
+            return fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function (r) {
+                if (!r.ok) {
+                    if (card) card.classList.remove('js-drawer-item-fadeout');
+                    throw new Error('Failed to delete item');
+                }
+                return r.json();
+            })
+            .then(function (data) {
+                if (card) {
+                    card.remove();
+                }
+                window.globalCartMap = {};
+                var totalQty = 0;
+                if (data.items) {
+                    data.items.forEach(function (it) {
+                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: it.qty };
+                        totalQty += it.qty;
+                    });
+                }
+                window.syncCartCTAContainers(window.globalCartMap);
+
+                // If deleted from outside the drawer, replace the HTML
+                var isFromDrawer = card && card.classList.contains('js-drawer-item-card');
+                if (!isFromDrawer) {
+                    var itemsList = document.getElementById('drawerCartItemsList');
+                    if (itemsList && data.html) {
+                        itemsList.innerHTML = data.html;
+                    }
+                }
+
+                updateDrawerTotals(data.totals, totalQty);
+
+                var mainCard = document.querySelector('.js-cart-item-card[data-item-id="' + itemId + '"]');
+                if (mainCard) {
+                    window.location.reload();
+                }
+            })
+            .catch(function (err) {
+                console.error(err);
+            });
+        }
+
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (!form.classList.contains('js-ajax-add-to-cart')) return;
+
+            if (e.submitter && e.submitter.getAttribute('name') === 'buy_now') {
+                return;
+            }
+
+            e.preventDefault();
+
+            var variantInput = form.querySelector('[name="product_variant_id"]');
+            var qtyInput = form.querySelector('[name="qty"]');
+            if (!variantInput) return;
+
+            var variantId = parseInt(variantInput.value, 10);
+            var qty = parseInt(qtyInput ? qtyInput.value : 1, 10) || 1;
+
+            var submitBtn = e.submitter || form.querySelector('[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            fetch(form.getAttribute('action') || '/cart', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    product_variant_id: variantId,
+                    qty: qty
+                })
+            })
+            .then(function (r) {
+                if (submitBtn) submitBtn.disabled = false;
+                if (!r.ok) return r.json().then(function (err) { throw new Error(err.error || 'Failed to add to cart'); });
+                return r.json();
+            })
+            .then(function (data) {
+                window.globalCartMap = {};
+                var totalQty = 0;
+                if (data.items) {
+                    data.items.forEach(function (it) {
+                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: it.qty };
+                        totalQty += it.qty;
+                    });
+                }
+                window.syncCartCTAContainers(window.globalCartMap);
+
+                var itemsList = document.getElementById('drawerCartItemsList');
+                if (itemsList && data.html) {
+                    itemsList.innerHTML = data.html;
+                }
+
+                updateDrawerTotals(data.totals, totalQty);
+
+                var drawerEl = document.getElementById('cartDrawer');
+                if (drawerEl && window.bootstrap) {
+                    var offcanvas = bootstrap.Offcanvas.getInstance(drawerEl) || new bootstrap.Offcanvas(drawerEl);
+                    offcanvas.show();
+                }
+            })
+            .catch(function (err) {
+                alert(err.message || 'Error adding to cart');
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            var target = e.target;
+            
+            var buyNowBtn = target.closest('.js-pdp-direct-buynow');
+            if (buyNowBtn) {
+                window.location.href = '/checkout';
+                return;
+            }
+
+            var plusBtn = target.closest('.js-selector-qty-plus');
+            if (plusBtn) {
+                var selector = plusBtn.closest('.js-qty-pill-selector');
+                var itemId = selector.getAttribute('data-item-id');
+                var valEl = selector.querySelector('.js-selector-qty-val');
+                if (valEl) {
+                    var qty = parseInt(valEl.textContent, 10) || 1;
+                    if (qty < 99) {
+                        qty++;
+                        valEl.textContent = qty;
+                        patchDrawerCart(itemId, qty, selector);
+                    }
+                }
+                return;
+            }
+
+            var minusBtn = target.closest('.js-selector-qty-minus');
+            if (minusBtn) {
+                var selector = minusBtn.closest('.js-qty-pill-selector');
+                var itemId = selector.getAttribute('data-item-id');
+                var valEl = selector.querySelector('.js-selector-qty-val');
+                if (valEl) {
+                    var qty = parseInt(valEl.textContent, 10) || 1;
+                    if (qty > 1) {
+                        qty--;
+                        valEl.textContent = qty;
+                        patchDrawerCart(itemId, qty, selector);
+                    } else {
+                        deleteDrawerCart(itemId, selector);
+                    }
+                }
+                return;
+            }
+        });
+
+        var drawerList = document.getElementById('drawerCartItemsList');
+        if (drawerList) {
+            drawerList.addEventListener('click', function (e) {
+                var target = e.target;
+                
+                var plusBtn = target.closest('.js-drawer-qty-plus');
+                if (plusBtn) {
+                    var card = plusBtn.closest('.js-drawer-item-card');
+                    var valEl = card.querySelector('.js-drawer-qty-val');
+                    var minusBtn = card.querySelector('.js-drawer-qty-minus');
+                    if (valEl) {
+                        var qty = parseInt(valEl.textContent, 10) || 1;
+                        if (qty < 99) {
+                            qty++;
+                            valEl.textContent = qty;
+                            if (minusBtn) minusBtn.style.visibility = 'visible';
+                            
+                            var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
+                            var totalEl = card.querySelector('.js-drawer-item-total');
+                            if (totalEl) {
+                                totalEl.textContent = '₹' + Math.round(unitPrice * qty).toLocaleString('en-IN');
+                            }
+                            var compareEl = card.querySelector('.js-drawer-item-compare');
+                            if (compareEl) {
+                                var compareUnit = parseFloat(compareEl.getAttribute('data-compare-unit')) || 0;
+                                compareEl.textContent = '₹' + Math.round(compareUnit * qty).toLocaleString('en-IN');
+                            }
+
+                            patchDrawerCart(card.getAttribute('data-item-id'), qty, card);
+                        }
+                    }
+                    return;
+                }
+
+                var minusBtn = target.closest('.js-drawer-qty-minus');
+                if (minusBtn) {
+                    var card = minusBtn.closest('.js-drawer-item-card');
+                    var valEl = card.querySelector('.js-drawer-qty-val');
+                    if (valEl) {
+                        var qty = parseInt(valEl.textContent, 10) || 1;
+                        if (qty > 1) {
+                            qty--;
+                            valEl.textContent = qty;
+                            if (qty < 2 && minusBtn) minusBtn.style.visibility = 'hidden';
+                            
+                            var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
+                            var totalEl = card.querySelector('.js-drawer-item-total');
+                            if (totalEl) {
+                                totalEl.textContent = '₹' + Math.round(unitPrice * qty).toLocaleString('en-IN');
+                            }
+                            var compareEl = card.querySelector('.js-drawer-item-compare');
+                            if (compareEl) {
+                                var compareUnit = parseFloat(compareEl.getAttribute('data-compare-unit')) || 0;
+                                compareEl.textContent = '₹' + Math.round(compareUnit * qty).toLocaleString('en-IN');
+                            }
+
+                            patchDrawerCart(card.getAttribute('data-item-id'), qty, card);
+                        }
+                    }
+                    return;
+                }
+
+                var removeBtn = target.closest('.js-drawer-remove-btn');
+                if (removeBtn) {
+                    var card = removeBtn.closest('.js-drawer-item-card');
+                    deleteDrawerCart(card.getAttribute('data-item-id'), card);
+                    return;
+                }
+            });
+        }
+
+        window.syncCartCTAContainers(window.globalCartMap);
+    })();
+    </script>
+    
+    <!-- Floating WhatsApp chatbot FAB -->
+    <a href="https://wa.me/919217732670?text=Hi" class="pro-whatsapp-fab" aria-label="Chat on WhatsApp" target="_blank" rel="noopener">
+        <i class="bi bi-whatsapp" aria-hidden="true"></i>
+    </a>
 </body>
 </html>

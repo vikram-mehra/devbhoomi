@@ -93,12 +93,17 @@ class AppServiceProvider extends ServiceProvider
                 $subtotal += $item->variant->effectivePrice() * $item->qty;
             }
 
+            $shippingService = app(\App\Services\ShippingService::class);
+            $shippingTotals = $shippingService->totalsForSubtotal($subtotal);
+
             $menus = app(MenuItemService::class);
 
             $view->with([
                 'layoutCartItems' => $items,
                 'layoutCartCount' => (int) $items->sum('qty'),
                 'layoutCartSubtotal' => $subtotal,
+                'layoutCartShipping' => $shippingTotals['shipping_charge'],
+                'layoutCartTotal' => $shippingTotals['total'],
                 'layoutHeaderMenu' => $menus->headerTree(),
                 'layoutFooterMenu' => $menus->footerLinks(),
                 'siteLogoUrl' => SiteLogo::url(),

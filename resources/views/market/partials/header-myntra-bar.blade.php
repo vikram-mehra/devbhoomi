@@ -78,9 +78,7 @@
         <button type="button" class="mk-myntra-action mk-myntra-action--bag border-0 bg-transparent p-0 text-dark" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer" aria-controls="cartDrawer" title="{{ __('Cart') }}">
             <span class="mk-myntra-action__iconwrap">
                 <i class="bi bi-bag mk-myntra-action__icon" aria-hidden="true"></i>
-                @if(($layoutCartCount ?? 0) > 0)
-                    <span class="mk-myntra-bag-badge">{{ $layoutCartCount > 99 ? '99+' : $layoutCartCount }}</span>
-                @endif
+                <span class="mk-myntra-bag-badge" @if(($layoutCartCount ?? 0) === 0) style="display:none;" @endif>{{ $layoutCartCount > 99 ? '99+' : $layoutCartCount }}</span>
             </span>
             <span class="mk-myntra-action__label">{{ __('Bag') }}</span>
         </button>

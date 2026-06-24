@@ -79,13 +79,6 @@
                         <a href="{{ route('login') }}" class="zm-pro-icon-btn" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
                     @endauth
                 @endif
-                @if($v)
-                    <form action="{{ route('cart.add') }}" method="post" class="d-inline">@csrf
-                        <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
-                        <input type="hidden" name="qty" value="1">
-                        <button type="submit" class="zm-pro-icon-btn {{ $listing ? 'zm-pro-icon-btn--round' : '' }}" title="{{ __('Add to cart') }}"><i class="bi bi-bag-plus"></i></button>
-                    </form>
-                @endif
             </div>
         </div>
     </div>
@@ -130,14 +123,28 @@
                 @endif
             </div>
         @endif
-        @if(!$listing && $v)
-            <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2">
-                @csrf
-                <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
-                <input type="hidden" name="qty" value="1">
-                <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
-                <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
-            </form>
+        @if($v)
+            <div class="js-cart-add-container mt-2" data-variant-id="{{ $v->id }}">
+                @php
+                    $cartItem = ($layoutCartItems ?? collect())->firstWhere('product_variant_id', $v->id);
+                @endphp
+                <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if($cartItem) d-none @endif">
+                    @csrf
+                    <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
+                    <input type="hidden" name="qty" value="1">
+                    <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
+                    <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
+                </form>
+                @if($cartItem)
+                    <div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="{{ $v->id }}" data-item-id="{{ $cartItem->id }}">
+                        <div class="d-flex align-items-center justify-content-between border rounded-pill bg-light px-2" style="height: 38px; width: 100%;">
+                            <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-dash"></i></button>
+                            <span class="fw-semibold js-selector-qty-val" style="font-size: 0.95rem; min-width: 24px; text-align: center;">{{ $cartItem->qty }}</span>
+                            <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                @endif
+            </div>
         @endif
     </div>
 </article>

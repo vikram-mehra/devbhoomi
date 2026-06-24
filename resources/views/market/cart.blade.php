@@ -344,8 +344,8 @@ input.js-cart-qty-input {
                     window.globalCartMap = {};
                     var totalQty = 0;
                     res.data.items.forEach(function (it) {
-                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: it.qty };
-                        totalQty += it.qty;
+                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: parseInt(it.qty, 10) || 0 };
+                        totalQty += parseInt(it.qty, 10) || 0;
                     });
                     
                     var mobileBadges = document.querySelectorAll('.pro-mobile-nav__badge');

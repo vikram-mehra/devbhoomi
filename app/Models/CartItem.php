@@ -11,6 +11,8 @@ class CartItem extends Model
 
     protected $casts = [
         'user_id' => 'integer',
+        'product_variant_id' => 'integer',
+        'qty' => 'integer',
     ];
     
     public function user(): BelongsTo

@@ -81,7 +81,8 @@ class CartController extends Controller
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
                     'qty' => $it->qty
-                ])
+                ]),
+                'ga_events' => session()->get('ga_events', [])
             ]);
         }
 

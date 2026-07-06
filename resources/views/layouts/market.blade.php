@@ -18,7 +18,7 @@
     <link rel="preload"
         href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap"
         as="style">
-    <link href="{{ asset('css/market-pro.css') }}?v=93" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=95" rel="stylesheet">
     @stack('head')
     @php $seoService = app(\App\Services\SeoService::class); @endphp
     <script type="application/ld+json">
@@ -33,8 +33,8 @@
     @php $faqSchema = request()->routeIs('market.home') ? $seoService->faqSchemaFromJson($seoService->global('faq_schema_json')) : null; @endphp
     @if($faqSchema)
         <script type="application/ld+json">
-            {!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
-            </script>
+                    {!! json_encode($faqSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+                    </script>
     @endif
     @stack('schema')
 </head>
@@ -609,8 +609,10 @@
                 // Only shift if an input is focused and the keyboard is actually visible (diff > 100px)
                 if (isInputFocused && diff > 100) {
                     document.documentElement.style.setProperty('--pro-mobile-nav-offset', diff + 'px');
+                    nav.classList.add('pro-mobile-nav--keyboard');
                 } else {
                     document.documentElement.style.setProperty('--pro-mobile-nav-offset', '0px');
+                    nav.classList.remove('pro-mobile-nav--keyboard');
                 }
             }
             if (window.visualViewport) {
@@ -965,6 +967,13 @@
                         }
 
                         updateDrawerTotals(data.totals, totalQty);
+
+                        // Trigger Google Analytics events from AJAX response if defined
+                        if (data.ga_events && Array.isArray(data.ga_events) && typeof gtag === 'function') {
+                            data.ga_events.forEach(function (event) {
+                                gtag('event', event.name, event.data);
+                            });
+                        }
 
                         var drawerEl = document.getElementById('cartDrawer');
                         if (drawerEl && window.bootstrap) {

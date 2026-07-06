@@ -43,7 +43,11 @@ body.cb-market-pro.cb-body {
   background: var(--pro-bg);
   color: var(--pro-ink);
   --pro-mobile-nav-h: 56px;
-  padding-bottom: calc(var(--pro-mobile-nav-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .cb-market-pro .cb-container {
@@ -3275,13 +3279,8 @@ a.mk-banner-overlay:hover .mk-banner-overlay__cta {
 
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 991.98px) {
-    html {
-      height: -webkit-fill-available;
-    }
-
     body.cb-market-pro.cb-body {
       min-height: 100dvh;
-      min-height: -webkit-fill-available;
     }
 
     body.cb-market-pro > .pro-mobile-nav {
@@ -3771,6 +3770,9 @@ html:has(body.cb-market-pro) {
 body.cb-market-pro.cb-body,
 body.cb-market-pro .cb-main {
   background-color: #ffffff !important;
+}
+body.cb-market-pro .cb-main {
+  flex: 1 0 auto;
 }
 
 body.cb-market-pro {
@@ -6447,7 +6449,7 @@ body.cb-market-pro .bi {
     --pro-mobile-icon-lg: 1.125rem;
     font-size: var(--pro-mobile-fs-base);
     line-height: 1.5;
-    padding-bottom: calc(var(--pro-mobile-nav-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0 !important;
   }
 
   /* —— Typography —— */
@@ -6727,6 +6729,8 @@ body.cb-market-pro .bi {
   @media (max-width: 991.98px) {
     body.cb-market-pro > .pro-mobile-nav {
       bottom: 0 !important;
+    }
+    body.cb-market-pro > .pro-mobile-nav.pro-mobile-nav--keyboard {
       transform: translate3d(0, calc(-1 * var(--pro-mobile-nav-offset, 0px)), 0);
       -webkit-transform: translate3d(0, calc(-1 * var(--pro-mobile-nav-offset, 0px)), 0);
     }
@@ -6956,5 +6960,12 @@ body.cb-market-pro .bi {
   }
   .pro-whatsapp-fab .bi-whatsapp {
     font-size: 1.5rem;
+  }
+  .cb-market-pro .cb-footer {
+    padding-bottom: calc(var(--pro-mobile-nav-h, 50px) + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .cb-market-pro .cb-cookie {
+    bottom: calc(var(--pro-mobile-nav-h, 50px) + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1050 !important;
   }
 }

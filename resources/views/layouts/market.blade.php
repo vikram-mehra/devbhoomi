@@ -966,6 +966,13 @@
 
                         updateDrawerTotals(data.totals, totalQty);
 
+                        // Trigger Google Analytics events from AJAX response if defined
+                        if (data.ga_events && Array.isArray(data.ga_events) && typeof gtag === 'function') {
+                            data.ga_events.forEach(function (event) {
+                                gtag('event', event.name, event.data);
+                            });
+                        }
+
                         var drawerEl = document.getElementById('cartDrawer');
                         if (drawerEl && window.bootstrap) {
                             var offcanvas = bootstrap.Offcanvas.getInstance(drawerEl) || new bootstrap.Offcanvas(drawerEl);

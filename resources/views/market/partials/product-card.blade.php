@@ -21,10 +21,13 @@
         'purple' => '#9333ea', 'beige' => '#d4c4a8', 'brown' => '#78350f', 'grey' => '#9ca3af', 'gray' => '#9ca3af',
         'navy' => '#1e3a5f', 'maroon' => '#7f1d1d', 'gold' => '#ca8a04', 'silver' => '#cbd5e1',
     ];
+    $hasStock = $product->variants->contains(fn ($x) => $x->isBuyable());
 @endphp
 <article class="zm-pro-card h-100 {{ $listing ? 'zm-pro-card--listing' : '' }}">
     <div class="zm-pro-card__media">
-        @if(!$listing)
+        @if(!$hasStock)
+            <span class="zm-pro-card__badge bg-danger @if($listing) zm-pro-card__badge--corner @endif">{{ __('Out of stock') }}</span>
+        @elseif(!$listing)
             @if($product->is_featured)
                 <span class="zm-pro-card__badge zm-pro-card__badge--feat">{{ __('Featured') }}</span>
             @elseif($flash)
@@ -124,24 +127,30 @@
             </div>
         @endif
         @if($v)
-            <div class="js-cart-add-container mt-2" data-variant-id="{{ $v->id }}">
+            <div class="js-cart-add-container mt-2" data-variant-id="{{ $v->id }}" data-buyable="{{ $hasStock ? '1' : '0' }}">
                 @php
                     $cartItem = ($layoutCartItems ?? collect())->firstWhere('product_variant_id', $v->id);
                 @endphp
-                <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if($cartItem) d-none @endif">
+                <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if($cartItem || !$hasStock) d-none @endif">
                     @csrf
                     <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
                     <input type="hidden" name="qty" value="1">
                     <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
                     <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
                 </form>
-                @if($cartItem)
-                    <div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="{{ $v->id }}" data-item-id="{{ $cartItem->id }}">
-                        <div class="d-flex align-items-center justify-content-between border rounded-pill bg-light px-2" style="height: 38px; width: 100%;">
-                            <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-dash"></i></button>
-                            <span class="fw-semibold js-selector-qty-val" style="font-size: 0.95rem; min-width: 24px; text-align: center;">{{ $cartItem->qty }}</span>
-                            <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>
+                @if($hasStock)
+                    @if($cartItem)
+                        <div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="{{ $v->id }}" data-item-id="{{ $cartItem->id }}">
+                            <div class="d-flex align-items-center justify-content-between border rounded-pill bg-light px-2" style="height: 38px; width: 100%;">
+                                <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-dash"></i></button>
+                                <span class="fw-semibold js-selector-qty-val" style="font-size: 0.95rem; min-width: 24px; text-align: center;">{{ $cartItem->qty }}</span>
+                                <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>
+                            </div>
                         </div>
+                    @endif
+                @else
+                    <div class="js-pdp-oos-pill w-100">
+                        <button type="button" class="btn btn-secondary w-100" disabled>{{ __('Out of stock') }}</button>
                     </div>
                 @endif
             </div>

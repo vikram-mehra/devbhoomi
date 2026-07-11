@@ -241,12 +241,12 @@
                 @php
                     $cartItem = $defaultVariant ? ($layoutCartItems ?? collect())->firstWhere('product_variant_id', $defaultVariant->id) : null;
                 @endphp
-                <div class="col-md-3 col-lg-2 @if($cartItem) d-none @endif" id="pdpQtyCol">
+                <div class="col-md-3 col-lg-2 @if($cartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="pdpQtyCol">
                     <label class="form-label">Qty</label>
                     <input type="number" name="qty" id="pdpQtyInput" value="1" min="1" class="form-control">
                 </div>
-                <div class="js-cart-add-container col-12 col-md-auto d-flex flex-wrap gap-2 align-items-end" id="pdpActionButtonsWrapper" data-variant-id="{{ $defaultVariant?->id }}" data-pdp="1">
-                    <div class="js-default-pdp-ctas d-flex gap-2 @if($cartItem) d-none @endif">
+                <div class="js-cart-add-container col-12 col-md-auto d-flex flex-wrap gap-2 align-items-end" id="pdpActionButtonsWrapper" data-variant-id="{{ $defaultVariant?->id }}" data-pdp="1" data-buyable="{{ ($defaultVariant && $defaultVariant->isBuyable()) ? '1' : '0' }}">
+                    <div class="js-default-pdp-ctas d-flex gap-2 @if($cartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="pdpNormalCtas">
                         <button class="zm-btn zm-btn-primary pro-pdp-add-cart" type="submit" id="pdpAddCartBtn">{{ __('Add to cart') }}</button>
                         <button class="zm-btn zm-btn-ghost pro-pdp-buy-now" type="submit" name="buy_now" value="1" id="pdpBuyNowBtn">{{ __('Buy now') }}</button>
                     </div>
@@ -355,16 +355,16 @@
             <div class="small text-truncate fw-semibold">{{ $product->name }}</div>
             <div class="fw-bold text-primary" id="stickyPriceLabel">{!! '&#8377;' !!}{{ number_format($fp, 0) }}</div>
         </div>
-        <div class="js-cart-add-container d-flex align-items-center ms-auto" data-variant-id="{{ $defaultVariant?->id }}" data-sticky="1" id="stickyAddFormContainer">
+        <div class="js-cart-add-container d-flex align-items-center ms-auto" data-variant-id="{{ $defaultVariant?->id }}" data-sticky="1" id="stickyAddFormContainer" data-buyable="{{ ($defaultVariant && $defaultVariant->isBuyable()) ? '1' : '0' }}">
             @php
                 $stickyCartItem = $defaultVariant ? ($layoutCartItems ?? collect())->firstWhere('product_variant_id', $defaultVariant->id) : null;
             @endphp
-            <form action="{{ route('cart.add') }}" method="post" class="d-flex align-items-center gap-2 js-ajax-add-to-cart @if($stickyCartItem) d-none @endif" id="stickyAddForm">
+            <form action="{{ route('cart.add') }}" method="post" class="d-flex align-items-center gap-2 js-ajax-add-to-cart @if($stickyCartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="stickyAddForm">
                 @csrf
                 <input type="hidden" name="product_variant_id" value="{{ $defaultVariant?->id }}" id="stickyVariantId">
                 <input type="hidden" name="qty" value="1" id="stickyQtyHidden">
-                <button type="submit" class="btn btn-primary rounded-pill pro-pdp-sticky-add" id="stickyAddBtn" @if($activeVariants->isEmpty() || $activeVariants->every(fn ($v) => ! $v->isBuyable())) disabled @endif>{{ __('Add to cart') }}</button>
-                <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary rounded-pill pro-pdp-sticky-buy" id="stickyBuyBtn" @if($activeVariants->isEmpty() || $activeVariants->every(fn ($v) => ! $v->isBuyable())) disabled @endif>{{ __('Buy now') }}</button>
+                <button type="submit" class="btn btn-primary rounded-pill pro-pdp-sticky-add" id="stickyAddBtn">{{ __('Add to cart') }}</button>
+                <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary rounded-pill pro-pdp-sticky-buy" id="stickyBuyBtn">{{ __('Buy now') }}</button>
             </form>
             @if($stickyCartItem)
                 <div class="js-qty-pill-selector d-flex gap-2 align-items-center" data-variant-id="{{ $defaultVariant->id }}" data-item-id="{{ $stickyCartItem->id }}">
@@ -504,11 +504,17 @@
                 if (el) el.disabled = !addOk;
             });
 
-            // Update wrapper data-variant-id to match selected variant
+            // Update wrapper attributes to match selected variant and stock state
             var mainWrapper = document.getElementById('pdpActionButtonsWrapper');
-            if (mainWrapper) mainWrapper.setAttribute('data-variant-id', String(id));
+            if (mainWrapper) {
+                mainWrapper.setAttribute('data-variant-id', String(id));
+                mainWrapper.setAttribute('data-buyable', addOk ? '1' : '0');
+            }
             var stickyWrapper = document.getElementById('stickyAddFormContainer');
-            if (stickyWrapper) stickyWrapper.setAttribute('data-variant-id', String(id));
+            if (stickyWrapper) {
+                stickyWrapper.setAttribute('data-variant-id', String(id));
+                stickyWrapper.setAttribute('data-buyable', addOk ? '1' : '0');
+            }
 
             // Sync selectors state
             if (typeof window.syncCartCTAContainers === 'function' && typeof window.globalCartMap !== 'undefined') {

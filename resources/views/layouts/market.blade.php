@@ -728,6 +728,8 @@
                 }
             }
 
+            window.msgOut = @json(__('Out of stock'));
+
             window.syncCartCTAContainers = function (cartMap) {
                 document.querySelectorAll('.js-cart-add-container').forEach(function (container) {
                     var variantId = parseInt(container.getAttribute('data-variant-id'), 10);
@@ -736,15 +738,44 @@
                     var isHoverIcon = container.classList.contains('d-inline-block'); // Hover icon wrapper in card
                     var isPdp = container.getAttribute('data-pdp') === '1';
                     var isSticky = container.getAttribute('data-sticky') === '1';
+                    var buyable = container.getAttribute('data-buyable') !== '0';
                     var item = cartMap[variantId];
 
                     // Remove existing selector if any
                     var oldSelector = container.querySelector('.js-qty-pill-selector');
                     if (oldSelector) oldSelector.remove();
 
+                    var oldOos = container.querySelector('.js-pdp-oos-pill');
+                    if (oldOos) oldOos.remove();
+
                     var form = container.querySelector('form');
                     var pdpCtas = container.querySelector('.js-default-pdp-ctas');
                     var pdpQtyCol = document.getElementById('pdpQtyCol');
+
+                    // If not buyable (out of stock)
+                    if (!buyable) {
+                        if (form) form.classList.add('d-none');
+                        if (pdpCtas) pdpCtas.classList.add('d-none');
+                        if (isPdp && pdpQtyCol) pdpQtyCol.classList.add('d-none');
+
+                        // Show "Out of stock" button inside the container
+                        var oosHtml = '';
+                        if (isPdp) {
+                            oosHtml = '<div class="js-pdp-oos-pill pro-pdp-oos-cta">' +
+                                '<button type="button" class="zm-btn btn-secondary" disabled style="min-height: 48px; background-color: #6c757d; color: #fff; border-color: #6c757d; padding: 0.85rem 1.85rem; font-size: 0.8125rem; font-weight: 600; text-transform: uppercase;">' + window.msgOut + '</button>' +
+                                '</div>';
+                        } else if (isSticky) {
+                            oosHtml = '<div class="js-pdp-oos-pill pro-sticky-oos">' +
+                                '<button type="button" class="btn btn-secondary rounded-pill" disabled>' + window.msgOut + '</button>' +
+                                '</div>';
+                        } else {
+                            oosHtml = '<div class="js-pdp-oos-pill w-100">' +
+                                '<button type="button" class="btn btn-secondary w-100" disabled>' + window.msgOut + '</button>' +
+                                '</div>';
+                        }
+                        container.insertAdjacentHTML('beforeend', oosHtml);
+                        return;
+                    }
 
                     if (item) {
                         if (form) form.classList.add('d-none');

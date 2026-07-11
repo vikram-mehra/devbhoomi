@@ -258,10 +258,12 @@ class ProductAdminController extends Controller
     {
         $menuOptions = MenuItemTree::selectOptions();
         $vendors = Vendor::where('status', 'approved')->orderBy('shop_name')->get();
+        $variantLabels = \App\Models\VariantLabel::with('options')->orderBy('name')->get();
         return view('admin.products.form', [
             'product' => null,
             'menuOptions' => $menuOptions,
             'vendors' => $vendors,
+            'variantLabels' => $variantLabels,
         ]);
     }
 
@@ -292,6 +294,7 @@ class ProductAdminController extends Controller
             'meta_keywords' => $data['meta_keywords'],
             'canonical_url' => $data['canonical_url'],
             'og_image' => $data['og_image'],
+            'variant_label' => $data['variant_label'] ?? null,
         ]);
 
         try {
@@ -308,7 +311,17 @@ class ProductAdminController extends Controller
                 ->withInput();
         }
 
-        $this->ensureDefaultVariant($product);
+        if ($request->has('variants')) {
+            try {
+                $rows = $this->validatedVariantRows($request, $product);
+                $this->syncVariants($product, $rows, $request);
+            } catch (ValidationException $e) {
+                $product->delete();
+                throw $e;
+            }
+        } else {
+            $this->ensureDefaultVariant($product);
+        }
 
         $this->bustCache();
 
@@ -317,7 +330,7 @@ class ProductAdminController extends Controller
 
     public function edit(Product $product)
     {
-        $product->load(['images']);
+        $product->load(['images', 'variants']);
         $menuOptions = MenuItemTree::selectOptions();
         $vendors = Vendor::query()
             ->where(function ($q) use ($product) {
@@ -325,8 +338,9 @@ class ProductAdminController extends Controller
             })
             ->orderBy('shop_name')
             ->get();
+        $variantLabels = \App\Models\VariantLabel::with('options')->orderBy('name')->get();
 
-        return view('admin.products.form', compact('product', 'menuOptions', 'vendors'));
+        return view('admin.products.form', compact('product', 'menuOptions', 'vendors', 'variantLabels'));
     }
 
     public function update(Request $request, Product $product)
@@ -354,6 +368,7 @@ class ProductAdminController extends Controller
             'meta_keywords' => $data['meta_keywords'],
             'canonical_url' => $data['canonical_url'],
             'og_image' => $data['og_image'],
+            'variant_label' => $data['variant_label'] ?? null,
         ]);
 
         $this->removeProductImages($request, $product);
@@ -370,7 +385,12 @@ class ProductAdminController extends Controller
                 ->withInput();
         }
 
-        $this->ensureDefaultVariant($product);
+        if ($request->has('variants')) {
+            $rows = $this->validatedVariantRows($request, $product);
+            $this->syncVariants($product, $rows, $request);
+        } else {
+            $this->ensureDefaultVariant($product);
+        }
 
         $this->bustCache();
 
@@ -571,7 +591,13 @@ class ProductAdminController extends Controller
             throw ValidationException::withMessages(['variants' => __('Add at least one product variant.')]);
         }
 
-        $isSaree = $this->menuIsColorOnlyFromRequest($request);
+        $isColorLabel = false;
+        $vLabelName = trim((string) $request->input('variant_label', ''));
+        if (mb_stripos($vLabelName, 'color') !== false || mb_stripos($vLabelName, 'colour') !== false) {
+            $isColorLabel = true;
+        }
+
+        $isSaree = $this->menuIsColorOnlyFromRequest($request) || $isColorLabel;
 
         $skus = [];
         foreach ($rows as $idx => $row) {
@@ -820,6 +846,7 @@ class ProductAdminController extends Controller
             'images.*' => ['file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
             'remove_image_ids' => 'nullable|array',
             'remove_image_ids.*' => 'integer|exists:product_images,id',
+            'variant_label' => 'nullable|string|max:64',
         ], [
             'images.max' => __('You can upload at most 30 images at once.'),
             'images.*.mimes' => __('Use JPEG, PNG, GIF, or WebP for all images.'),

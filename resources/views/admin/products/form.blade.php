@@ -237,6 +237,57 @@
                     </div>
                 </div>
 
+                <!-- Product Variants Card -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h3 class="card-title h6 fw-bold mb-0">{{ __('Product Variants') }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3" style="max-width: 400px;">
+                                <label class="form-label fw-semibold" for="adm-variant-label-select">{{ __('Variant Dimension Label') }}</label>
+                                <select name="variant_label" id="adm-variant-label-select" class="form-select">
+                                    <option value="">{{ __('No Variants (Single product)') }}</option>
+                                    @foreach($variantLabels as $lbl)
+                                        <option value="{{ $lbl->name }}" data-options="{{ json_encode($lbl->options->pluck('value')) }}" @if(old('variant_label', $product?->variant_label) === $lbl->name) selected @endif>{{ $lbl->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text small">{{ __('Selecting a label allows configuring multiple sizes, weights, or options.') }}</div>
+                            </div>
+
+                            <!-- Variant Option Checkboxes Container -->
+                            <div id="variant-options-checkboxes-container" class="mb-4 d-none">
+                                <label class="form-label fw-semibold d-block small">{{ __('Select Variant Values') }}</label>
+                                <div id="variant-options-checkboxes-list" class="d-flex flex-wrap gap-3 p-3 bg-light rounded-3">
+                                    <!-- Populated dynamically via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Generated Variant Form Fields -->
+                            <div id="variants-fields-container" class="d-none">
+                                <label class="form-label fw-semibold d-block small mb-3">{{ __('Configure Variant Rows') }}</label>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm align-middle fs-7" id="variants-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 15%;">{{ __('Value') }}</th>
+                                                <th style="width: 25%;">{{ __('SKU') }} *</th>
+                                                <th style="width: 15%;">{{ __('Stock Qty') }} *</th>
+                                                <th style="width: 15%;">{{ __('Price (Override)') }}</th>
+                                                <th style="width: 15%;">{{ __('Status') }}</th>
+                                                <th style="width: 15%;">{{ __('Image') }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="variants-table-body">
+                                            <!-- Dynamically added rows -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-12">
                     <div class="admin-form-toggles p-3 rounded-3 border">
                         <input type="hidden" name="is_active" value="0">
@@ -288,6 +339,140 @@
             countEl.textContent = (n === 1 ? msg1 : (n + ' ' + msgN)) + ' (~' + Math.round(total / 1024) + ' KB)';
             if (bad && warnEl) { warnEl.textContent = msgGalleryTooBig; warnEl.classList.remove('d-none'); }
         });
+    }
+})();
+</script>
+
+@php
+    $existingVariants = [];
+    if ($product && $product->variants->isNotEmpty()) {
+        foreach ($product->variants as $v) {
+            if ($v->size === null && $v->color === null) {
+                continue;
+            }
+            $existingVariants[] = [
+                'id' => $v->id,
+                'value' => $v->size ?: $v->color,
+                'sku' => $v->sku,
+                'stock_qty' => $v->stock_qty,
+                'price' => $v->price,
+                'status' => $v->status,
+                'image_url' => $v->variantImageUrl()
+            ];
+        }
+    }
+@endphp
+<script>
+(function() {
+    var labelSelect = document.getElementById('adm-variant-label-select');
+    var checkboxesContainer = document.getElementById('variant-options-checkboxes-container');
+    var checkboxesList = document.getElementById('variant-options-checkboxes-list');
+    var fieldsContainer = document.getElementById('variants-fields-container');
+    var tbody = document.getElementById('variants-table-body');
+    
+    var existing = @json($existingVariants);
+    var existingMap = {};
+    existing.forEach(function(ev) {
+        existingMap[ev.value] = ev;
+    });
+
+    function renderRows() {
+        var selectedLabel = labelSelect.value;
+        if (!selectedLabel) return;
+        var isColor = selectedLabel.toLowerCase().indexOf('color') !== -1 || selectedLabel.toLowerCase().indexOf('colour') !== -1;
+        
+        var checkedValues = [];
+        checkboxesList.querySelectorAll('input[type="checkbox"]:checked').forEach(function(cb) {
+            checkedValues.push(cb.value);
+        });
+        
+        if (checkedValues.length === 0) {
+            fieldsContainer.classList.add('d-none');
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        fieldsContainer.classList.remove('d-none');
+        
+        var html = '';
+        checkedValues.forEach(function(val, index) {
+            var prev = existingMap[val] || {};
+            var sku = prev.sku || '';
+            var stock = prev.stock_qty !== undefined ? prev.stock_qty : 100;
+            var price = prev.price !== null && prev.price !== undefined ? prev.price : '';
+            var active = prev.status !== 'inactive';
+            var idVal = prev.id ? '<input type="hidden" name="variants[' + index + '][id]" value="' + prev.id + '">' : '';
+            var imgHtml = prev.image_url ? '<img src="' + prev.image_url + '" class="rounded-1 d-block mb-1" style="width:40px;height:40px;object-fit:cover;">' : '';
+            
+            var valueField = isColor 
+                ? '<input type="hidden" name="variants[' + index + '][color]" value="' + val + '">'
+                : '<input type="hidden" name="variants[' + index + '][size]" value="' + val + '">';
+
+            html += '<tr>' +
+                '<td>' +
+                    '<strong>' + val + '</strong>' +
+                    valueField +
+                    idVal +
+                '</td>' +
+                '<td>' +
+                    '<input type="text" name="variants[' + index + '][sku]" class="form-control form-control-sm" required value="' + sku + '" placeholder="Unique SKU">' +
+                '</td>' +
+                '<td>' +
+                    '<input type="number" name="variants[' + index + '][stock_qty]" class="form-control form-control-sm" required min="0" value="' + stock + '">' +
+                '</td>' +
+                '<td>' +
+                    '<input type="number" step="0.01" name="variants[' + index + '][price]" class="form-control form-control-sm" value="' + price + '" placeholder="Fallback to base">' +
+                '</td>' +
+                '<td>' +
+                    '<select name="variants[' + index + '][status]" class="form-select form-select-sm">' +
+                        '<option value="active"' + (active ? ' selected' : '') + '>Active</option>' +
+                        '<option value="inactive"' + (!active ? ' selected' : '') + '>Inactive</option>' +
+                    '</select>' +
+                '</td>' +
+                '<td>' +
+                    imgHtml +
+                    '<input type="file" name="variants[' + index + '][image]" class="form-control form-control-sm" accept="image/*">' +
+                '</td>' +
+            '</tr>';
+        });
+        
+        tbody.innerHTML = html;
+    }
+
+    labelSelect.addEventListener('change', function() {
+        var val = labelSelect.value;
+        if (!val) {
+            checkboxesContainer.classList.add('d-none');
+            fieldsContainer.classList.add('d-none');
+            checkboxesList.innerHTML = '';
+            tbody.innerHTML = '';
+            return;
+        }
+        
+        var opt = labelSelect.options[labelSelect.selectedIndex];
+        var options = JSON.parse(opt.getAttribute('data-options') || '[]');
+        
+        checkboxesContainer.classList.remove('d-none');
+        
+        var checkboxHtml = '';
+        options.forEach(function(o) {
+            var checked = existingMap[o] ? ' checked' : '';
+            checkboxHtml += '<div class="form-check">' +
+                '<input class="form-check-input js-variant-option-cb" type="checkbox" value="' + o + '" id="cb-' + o + '"' + checked + '>' +
+                '<label class="form-check-label small fw-semibold" for="cb-' + o + '">' + o + '</label>' +
+            '</div>';
+        });
+        
+        checkboxesList.innerHTML = checkboxHtml;
+        renderRows();
+        
+        checkboxesList.querySelectorAll('.js-variant-option-cb').forEach(function(cb) {
+            cb.addEventListener('change', renderRows);
+        });
+    });
+    
+    if (labelSelect.value) {
+        labelSelect.dispatchEvent(new Event('change'));
     }
 })();
 </script>

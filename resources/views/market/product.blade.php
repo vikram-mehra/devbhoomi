@@ -196,7 +196,7 @@
                 @if($pdpColorFirst)
                     <div class="col-12 mb-2">
                         <div class="pro-pdp-size-head">
-                            <span class="pro-pdp-size-head__title">{{ __('Select color') }}</span>
+                            <span class="pro-pdp-size-head__title">Select {{ $product->variant_label ?: __('color') }}</span>
                         </div>
                         <div class="pro-pdp-sizes pro-pdp-sizes--colors" role="group" aria-label="{{ __('Color') }}" id="pdpColorGroup">
                             @foreach($colorValues as $c)
@@ -219,7 +219,7 @@
                 @if($showSizeOnPdp)
                     <div class="col-12 mb-1">
                         <div class="pro-pdp-size-head">
-                            <span class="pro-pdp-size-head__title">{{ __('Select size') }}</span>
+                            <span class="pro-pdp-size-head__title">Select {{ $product->variant_label ?: __('size') }}</span>
                             <a href="#" class="pro-pdp-size-chart" onclick="return false;">{{ __('Size chart') }} &gt;</a>
                         </div>
                         <div class="pro-pdp-sizes" role="group" aria-label="{{ __('Size') }}" id="pdpSizeGroup">

@@ -21,7 +21,7 @@ class Product extends Model
     protected $fillable = [
         'vendor_id', 'menu_item_id', 'name', 'slug', 'weight_kg', 'sku', 'barcode', 'brand', 'gst', 'hsn', 'description', 'short_description',
         'base_price', 'compare_price', 'rating_avg', 'rating_count', 'sales_count',
-        'is_active', 'is_featured', 'meta_title', 'meta_description', 'meta_keywords', 'canonical_url', 'og_image',
+        'is_active', 'is_featured', 'meta_title', 'meta_description', 'meta_keywords', 'canonical_url', 'og_image', 'variant_label',
     ];
 
     protected $casts = [

@@ -17,6 +17,9 @@
         <a href="{{ route('admin.products.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.products.*') ? 'is-active' : '' }}">
             <i class="bi bi-bag" aria-hidden="true"></i>{{ __('Products') }}
         </a>
+        <a href="{{ route('admin.variant-labels.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.variant-labels.*') ? 'is-active' : '' }}">
+            <i class="bi bi-tags" aria-hidden="true"></i>{{ __('Variant labels & options') }}
+        </a>
         <a href="{{ route('admin.inventory.product-inventory') }}" class="admin-sidebar__link {{ request()->routeIs('admin.inventory.product-inventory') ? 'is-active' : '' }}">
             <i class="bi bi-boxes" aria-hidden="true"></i>{{ __('Product inventory / stock') }}
         </a>

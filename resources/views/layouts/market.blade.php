@@ -228,10 +228,30 @@
                             <p class="small text-primary fw-semibold mb-1 js-qv-brand"></p>
                             <h3 class="h5 js-qv-name"></h3>
                             <div class="fs-5 fw-bold mb-3 js-qv-price"></div>
-                            <p class="text-muted small">{{ __('Select options on the product page for all variants.') }}
-                            </p>
+                            
+                            <!-- Dynamic Variant Selectors -->
+                            <div class="js-qv-variants-container mb-3 d-none">
+                                <label class="form-label small fw-bold text-muted uppercase tracking-wider mb-2 js-qv-variants-label">{{ __('Select Option') }}</label>
+                                <div class="d-flex flex-wrap gap-2 js-qv-variants-list"></div>
+                            </div>
+                            
+                            <!-- Add to Cart Form inside Quick View -->
+                            <div class="js-qv-cart-action mb-4">
+                                <form action="{{ route('cart.add') }}" method="post" class="js-ajax-add-to-cart zm-pro-add-form d-flex gap-2">
+                                    @csrf
+                                    <input type="hidden" name="product_variant_id" class="js-qv-variant-id-input" value="">
+                                    <div class="d-flex align-items-center border rounded-pill bg-light px-2" style="height: 38px; width: 110px;">
+                                        <button type="button" class="btn btn-sm p-0 border-0 text-primary js-qv-qty-minus" style="font-size: 1.1rem; width: 25px; line-height: 1;"><i class="bi bi-dash"></i></button>
+                                        <input type="number" name="qty" class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold js-qv-qty-input" value="1" min="1" readonly style="box-shadow:none; padding:0; width:40px;">
+                                        <button type="button" class="btn btn-sm p-0 border-0 text-primary js-qv-qty-plus" style="font-size: 1.1rem; width: 25px; line-height: 1;"><i class="bi bi-plus"></i></button>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4 js-qv-add-to-cart-btn">{{ __('Add to cart') }}</button>
+                                    <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary rounded-pill px-4 js-qv-buy-now-btn">{{ __('Buy now') }}</button>
+                                </form>
+                            </div>
+
                             <a href="#"
-                                class="btn btn-primary rounded-pill js-qv-link">{{ __('View full details') }}</a>
+                                class="btn btn-link text-decoration-none p-0 small js-qv-link">{{ __('View full details') }} &gt;</a>
                         </div>
                     </div>
                 </div>
@@ -462,27 +482,137 @@
                 btn.addEventListener('click', function () {
                     var m = document.getElementById('quickViewModal');
                     if (!m) return;
+                    
+                    // Reset quantity
+                    var qtyInput = m.querySelector('.js-qv-qty-input');
+                    if (qtyInput) qtyInput.value = 1;
+                    
                     m.querySelector('.js-qv-img').src = btn.getAttribute('data-qv-img') || '';
                     m.querySelector('.js-qv-img').alt = btn.getAttribute('data-qv-name') || '';
                     m.querySelector('.js-qv-brand').textContent = btn.getAttribute('data-qv-brand') || '';
                     m.querySelector('.js-qv-name').textContent = btn.getAttribute('data-qv-name') || '';
+                    
                     var price = btn.getAttribute('data-qv-price');
                     var cmp = btn.getAttribute('data-qv-compare');
                     var el = m.querySelector('.js-qv-price');
-                    el.innerHTML = '';
-                    if (price) {
-                        el.appendChild(document.createTextNode('₹' + Number(price).toLocaleString()));
-                        if (cmp) {
-                            var d = document.createElement('del');
-                            d.className = 'text-muted fs-6 fw-normal ms-2';
-                            d.textContent = '₹' + Number(cmp).toLocaleString();
-                            el.appendChild(d);
+                    
+                    function updatePriceDisplay(p, c) {
+                        el.innerHTML = '';
+                        if (p !== null && p !== undefined && p !== '') {
+                            el.appendChild(document.createTextNode('₹' + Number(p).toLocaleString()));
+                            if (c) {
+                                var d = document.createElement('del');
+                                d.className = 'text-muted fs-6 fw-normal ms-2';
+                                d.textContent = '₹' + Number(c).toLocaleString();
+                                el.appendChild(d);
+                            }
                         }
                     }
+                    updatePriceDisplay(price, cmp);
+
                     var link = m.querySelector('.js-qv-link');
                     link.href = btn.getAttribute('data-qv-url') || '#';
+                    
+                    var variantsDataStr = btn.getAttribute('data-qv-variants');
+                    var labelName = btn.getAttribute('data-qv-label') || 'Option';
+                    var variantsContainer = m.querySelector('.js-qv-variants-container');
+                    var variantsList = m.querySelector('.js-qv-variants-list');
+                    var labelEl = m.querySelector('.js-qv-variants-label');
+                    var varIdInput = m.querySelector('.js-qv-variant-id-input');
+                    
+                    var btnAdd = m.querySelector('.js-qv-add-to-cart-btn');
+                    var btnBuy = m.querySelector('.js-qv-buy-now-btn');
+                    
+                    if (variantsDataStr && variantsDataStr !== '[]' && variantsDataStr !== 'null') {
+                        var variants = JSON.parse(variantsDataStr);
+                        variantsContainer.classList.remove('d-none');
+                        labelEl.textContent = 'Select ' + labelName;
+                        variantsList.innerHTML = '';
+                        
+                        variants.forEach(function(v) {
+                            var pill = document.createElement('button');
+                            pill.type = 'button';
+                            pill.className = 'btn btn-outline-secondary btn-sm rounded-pill px-3 py-1';
+                            pill.textContent = v.size || v.color;
+                            
+                            pill.addEventListener('click', function() {
+                                variantsList.querySelectorAll('button').forEach(function(b) {
+                                    b.classList.remove('active', 'btn-primary');
+                                    b.classList.add('btn-outline-secondary');
+                                });
+                                pill.classList.add('active', 'btn-primary');
+                                pill.classList.remove('btn-outline-secondary');
+                                
+                                // Update variant ID
+                                varIdInput.value = v.id;
+                                
+                                // Update price
+                                updatePriceDisplay(v.effectivePrice, v.unitPrice > v.effectivePrice ? v.unitPrice : null);
+                                
+                                // Update image if variant has its own
+                                if (v.image) {
+                                    m.querySelector('.js-qv-img').src = v.image;
+                                } else {
+                                    m.querySelector('.js-qv-img').src = btn.getAttribute('data-qv-img') || '';
+                                }
+                                
+                                // Check stock
+                                if (!v.buyable) {
+                                    btnAdd.disabled = true;
+                                    btnAdd.textContent = 'Out of Stock';
+                                    btnBuy.classList.add('d-none');
+                                } else {
+                                    btnAdd.disabled = false;
+                                    btnAdd.textContent = 'Add to cart';
+                                    btnBuy.classList.remove('d-none');
+                                }
+                            });
+                            
+                            variantsList.appendChild(pill);
+                        });
+                        
+                        // Select first active variant
+                        var defaultSelected = variants.find(function(vx) { return vx.buyable; }) || variants[0];
+                        if (defaultSelected) {
+                            var pills = variantsList.querySelectorAll('button');
+                            var defIdx = variants.indexOf(defaultSelected);
+                            if (pills[defIdx]) pills[defIdx].click();
+                        }
+                    } else {
+                        variantsContainer.classList.add('d-none');
+                        varIdInput.value = btn.getAttribute('data-qv-variant') || '';
+                        
+                        // Check stock status of single variant
+                        var isBuyable = btn.closest('.js-cart-add-container')?.getAttribute('data-buyable') !== '0';
+                        if (!isBuyable) {
+                            btnAdd.disabled = true;
+                            btnAdd.textContent = 'Out of Stock';
+                            btnBuy.classList.add('d-none');
+                        } else {
+                            btnAdd.disabled = false;
+                            btnAdd.textContent = 'Add to cart';
+                            btnBuy.classList.remove('d-none');
+                        }
+                    }
                 });
             });
+
+            // Quick view quantity selectors
+            var qvMinus = document.querySelector('.js-qv-qty-minus');
+            var qvPlus = document.querySelector('.js-qv-qty-plus');
+            var qvQtyInput = document.querySelector('.js-qv-qty-input');
+            if (qvMinus && qvPlus && qvQtyInput) {
+                qvMinus.addEventListener('click', function() {
+                    var val = parseInt(qvQtyInput.value, 10) || 1;
+                    if (val > 1) {
+                        qvQtyInput.value = val - 1;
+                    }
+                });
+                qvPlus.addEventListener('click', function() {
+                    var val = parseInt(qvQtyInput.value, 10) || 1;
+                    qvQtyInput.value = val + 1;
+                });
+            }
 
             var newsEl = document.getElementById('newsletterModal');
             if (newsEl) {

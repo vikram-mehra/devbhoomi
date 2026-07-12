@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SupplierAdminController;
 use App\Http\Controllers\Admin\WarehouseAdminController;
 use App\Http\Controllers\Admin\ReturnAdminController;
 use App\Http\Controllers\Admin\SettingAdminController;
+use App\Http\Controllers\Admin\VariantLabelAdminController;
 use App\Http\Controllers\Admin\ShippingSettingAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Controllers\Admin\VendorAdminController;
@@ -191,6 +192,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/products/{product}/featured', [ProductAdminController::class, 'toggleFeatured'])->name('products.featured');
     Route::post('/products/{product}/stock-adjust', [ProductAdminController::class, 'adjustStock'])->name('products.stock-adjust');
     Route::get('/reports/variant-sales', [ProductAdminController::class, 'variantSalesReport'])->name('reports.variant-sales');
+
+    Route::get('/variant-labels', [VariantLabelAdminController::class, 'index'])->name('variant-labels.index');
+    Route::post('/variant-labels', [VariantLabelAdminController::class, 'store'])->name('variant-labels.store');
+    Route::patch('/variant-labels/{variantLabel}', [VariantLabelAdminController::class, 'update'])->name('variant-labels.update');
+    Route::delete('/variant-labels/{variantLabel}', [VariantLabelAdminController::class, 'destroy'])->name('variant-labels.destroy');
+    Route::post('/variant-labels/{variantLabel}/options', [VariantLabelAdminController::class, 'storeOption'])->name('variant-labels.options.store');
+    Route::delete('/variant-options/{variantOption}', [VariantLabelAdminController::class, 'deleteOption'])->name('variant-options.destroy');
 
     Route::get('/inventory', [InventoryDashboardController::class, 'index'])->name('inventory.dashboard');
     Route::get('/inventory/product-inventory', [InventoryDashboardController::class, 'productInventory'])->name('inventory.product-inventory');

@@ -22,6 +22,21 @@
         'navy' => '#1e3a5f', 'maroon' => '#7f1d1d', 'gold' => '#ca8a04', 'silver' => '#cbd5e1',
     ];
     $hasStock = $product->variants->contains(fn ($x) => $x->isBuyable());
+    $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE);
+    $hasMultipleVariants = $activeVariants->count() > 1;
+    $variantPayload = [];
+    if ($hasMultipleVariants) {
+        $variantPayload = $activeVariants->map(fn ($vx) => [
+            'id' => $vx->id,
+            'color' => (string) ($vx->color ?? ''),
+            'size' => (string) ($vx->size ?? ''),
+            'stock' => (int) $vx->stock_qty,
+            'effectivePrice' => $vx->effectivePrice(),
+            'unitPrice' => $vx->unitPrice(),
+            'image' => $vx->variantImageUrl(),
+            'buyable' => $vx->isBuyable(),
+        ])->values()->all();
+    }
 @endphp
 <article class="zm-pro-card h-100 {{ $listing ? 'zm-pro-card--listing' : '' }}">
     <div class="zm-pro-card__media">
@@ -69,7 +84,9 @@
                     data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                     data-qv-img="{{ e($url1) }}"
                     data-qv-url="{{ route('product.show', $product) }}"
-                    data-qv-variant="{{ $v?->id }}">
+                    data-qv-variant="{{ $v?->id }}"
+                    data-qv-variants="{{ json_encode($variantPayload) }}"
+                    data-qv-label="{{ $product->variant_label ?: __('Size') }}">
                     <i class="bi bi-eye"></i>
                 </button>
                 @if(!$listing)
@@ -131,27 +148,42 @@
                 @php
                     $cartItem = ($layoutCartItems ?? collect())->firstWhere('product_variant_id', $v->id);
                 @endphp
-                <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if($cartItem || !$hasStock) d-none @endif">
-                    @csrf
-                    <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
-                    <input type="hidden" name="qty" value="1">
-                    <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
-                    <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
-                </form>
-                @if($hasStock)
-                    @if($cartItem)
-                        <div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="{{ $v->id }}" data-item-id="{{ $cartItem->id }}">
-                            <div class="d-flex align-items-center justify-content-between border rounded-pill bg-light px-2" style="height: 38px; width: 100%;">
-                                <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-dash"></i></button>
-                                <span class="fw-semibold js-selector-qty-val" style="font-size: 0.95rem; min-width: 24px; text-align: center;">{{ $cartItem->qty }}</span>
-                                <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>
+                @if($hasMultipleVariants)
+                    <button type="button" class="btn btn-primary w-100 js-quick-view" data-bs-toggle="modal" data-bs-target="#quickViewModal"
+                        data-qv-name="{{ e($product->name) }}"
+                        data-qv-brand="{{ e($vendorName) }}"
+                        data-qv-price="{{ $price }}"
+                        data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
+                        data-qv-img="{{ e($url1) }}"
+                        data-qv-url="{{ route('product.show', $product) }}"
+                        data-qv-variant="{{ $v?->id }}"
+                        data-qv-variants="{{ json_encode($variantPayload) }}"
+                        data-qv-label="{{ $product->variant_label ?: __('Size') }}">
+                        {{ __('Choose Options') }}
+                    </button>
+                @else
+                    <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if($cartItem || !$hasStock) d-none @endif">
+                        @csrf
+                        <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
+                        <input type="hidden" name="qty" value="1">
+                        <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
+                        <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
+                    </form>
+                    @if($hasStock)
+                        @if($cartItem)
+                            <div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="{{ $v->id }}" data-item-id="{{ $cartItem->id }}">
+                                <div class="d-flex align-items-center justify-content-between border rounded-pill bg-light px-2" style="height: 38px; width: 100%;">
+                                    <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-dash"></i></button>
+                                    <span class="fw-semibold js-selector-qty-val" style="font-size: 0.95rem; min-width: 24px; text-align: center;">{{ $cartItem->qty }}</span>
+                                    <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>
+                                </div>
                             </div>
+                        @endif
+                    @else
+                        <div class="js-pdp-oos-pill w-100">
+                            <button type="button" class="btn btn-secondary w-100" disabled>{{ __('Out of stock') }}</button>
                         </div>
                     @endif
-                @else
-                    <div class="js-pdp-oos-pill w-100">
-                        <button type="button" class="btn btn-secondary w-100" disabled>{{ __('Out of stock') }}</button>
-                    </div>
                 @endif
             </div>
         @endif

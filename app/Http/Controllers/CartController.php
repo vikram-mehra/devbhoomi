@@ -82,7 +82,7 @@ class CartController extends Controller
                     'product_variant_id' => $it->product_variant_id,
                     'qty' => $it->qty
                 ]),
-                'ga_events' => session()->get('ga_events', [])
+                'ga_events' => session()->pull('ga_events', [])
             ]);
         }
 
@@ -98,7 +98,16 @@ class CartController extends Controller
     ) {
         $this->authorizeItem($item, $cart);
         $request->validate(['qty' => 'required|integer|min:1|max:99']);
-        $item->update(['qty' => $request->qty]);
+        
+        $oldQty = (int) $item->qty;
+        $newQty = (int) $request->qty;
+        $item->update(['qty' => $newQty]);
+
+        if ($newQty > $oldQty) {
+            $variant = $item->variant;
+            $variant->loadMissing('product');
+            GoogleAnalyticsService::flashAddToCart($variant, $newQty - $oldQty);
+        }
 
         if ($request->wantsJson()) {
             $items = $cart->query()->get();
@@ -114,7 +123,8 @@ class CartController extends Controller
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
                     'qty' => $it->qty
-                ])
+                ]),
+                'ga_events' => session()->pull('ga_events', [])
             ]);
         }
 

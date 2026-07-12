@@ -13,6 +13,91 @@
 @endpush
 
 @section('content')
+<style>
+.pro-custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+.pro-custom-dropdown .pro-checkout-input {
+    width: 80% !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    background-color: #ffffff;
+    border: 1px solid var(--pro-checkout-border, #cbd5e1);
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.875rem;
+    color: #334155;
+    transition: all 0.15s ease-in-out;
+}
+.pro-custom-dropdown .pro-checkout-input:hover {
+    border-color: #94a3b8;
+}
+.pro-custom-dropdown .pro-checkout-input:focus,
+.pro-custom-dropdown.is-open .pro-checkout-input {
+    outline: none;
+    border-color: var(--pro-checkout-accent, #ea580c);
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+}
+.pro-custom-dropdown .bi-chevron-down {
+    transition: transform 0.2s ease;
+}
+.pro-custom-dropdown.is-open .bi-chevron-down {
+    transform: rotate(180deg);
+}
+.pro-custom-dropdown__menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 80%;
+    z-index: 1050;
+    max-height: 220px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid var(--pro-checkout-border, #cbd5e1);
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    margin-top: 4px;
+    padding: 4px 0;
+}
+.pro-custom-dropdown__menu::-webkit-scrollbar {
+    width: 6px;
+}
+.pro-custom-dropdown__menu::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+.pro-custom-dropdown__menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+.pro-custom-dropdown__menu::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+.pro-custom-dropdown__menu button {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 1rem;
+    font-size: 0.875rem;
+    color: #475569;
+    text-align: left;
+    border: none;
+    background: transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.pro-custom-dropdown__menu button:hover {
+    background-color: #f1f5f9 !important;
+    color: var(--pro-checkout-accent, #ea580c) !important;
+    padding-left: 1.25rem;
+}
+.pro-custom-dropdown__menu button.active {
+    background-color: #f8fafc !important;
+    font-weight: 600;
+    color: var(--pro-checkout-accent, #ea580c) !important;
+}
+</style>
 @php
     $taxDisplay = (float) ($taxAmount ?? 0);
     $couponDiscount = (float) ($couponDiscount ?? 0);
@@ -91,16 +176,29 @@
                                 <input class="pro-checkout-input" name="line2" placeholder="{{ __('Apartment, landmark') }}" value="{{ old('line2') }}">
                             </div>
                             <div class="col-md-4">
+                                <label class="pro-checkout-field-label">{{ __('Pincode') }}</label>
+                                <input class="pro-checkout-input" name="pincode" placeholder="{{ __('Pincode') }}" value="{{ old('pincode') }}">
+                            </div>
+                            <div class="col-md-4">
                                 <label class="pro-checkout-field-label">{{ __('City') }}</label>
                                 <input class="pro-checkout-input" name="city" placeholder="{{ __('City') }}" value="{{ old('city') }}">
                             </div>
-                            <div class="col-md-4">
-                                <label class="pro-checkout-field-label">{{ __('State') }}</label>
-                                <input class="pro-checkout-input" name="state" placeholder="{{ __('State') }}" value="{{ old('state') }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="pro-checkout-field-label">{{ __('Pincode') }}</label>
-                                <input class="pro-checkout-input" name="pincode" placeholder="{{ __('Pincode') }}" value="{{ old('pincode') }}">
+                            <div class="col-md-4 position-relative">
+                                <label class="pro-checkout-field-label">{{ __('State') }} *</label>
+                                <div class="pro-custom-dropdown" id="stateDropdown">
+                                    <button type="button" class="pro-checkout-input" id="stateDropdownBtn" style="height: 38px;">
+                                        <span id="stateDropdownLabel">{{ old('state') ?: __('Select State') }}</span>
+                                        <i class="bi bi-chevron-down small text-muted"></i>
+                                    </button>
+                                    <input type="hidden" name="state" id="stateHiddenInput" value="{{ old('state') }}">
+                                    <div class="pro-custom-dropdown__menu d-none" id="stateDropdownMenu">
+                                        @foreach($states as $st)
+                                            <button type="button" class="js-state-option-btn @if((string) old('state') === (string) $st->name) active @endif" data-value="{{ $st->name }}">
+                                                {{ $st->name }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -162,26 +260,7 @@
                 </div>
 
                 {{-- Payment: Razorpay only --}}
-                <div class="pro-checkout-card mb-4">
-                    <h2 class="pro-checkout-card__title mb-3">{{ __('Payment Options') }}</h2>
-                    @unless($razorpayConfigured ?? false)
-                        <p class="small text-muted mb-3">{{ __('Razorpay runs in demo mode until you add API keys.') }}</p>
-                    @endunless
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="pro-checkout-pay-tile">
-                                <input type="radio" name="payment_method" value="razorpay" class="pro-checkout-pay-tile__input" checked>
-                                <span class="pro-checkout-pay-tile__box">
-                                    <span class="pro-checkout-radio" aria-hidden="true"></span>
-                                    <span class="pro-checkout-pay-tile__text">{{ __('Razorpay') }} — {{ __('UPI, cards, netbanking') }}</span>
-                                    @unless($razorpayConfigured ?? false)
-                                        <span class="d-block small text-muted mt-1">{{ __('Demo') }}</span>
-                                    @endunless
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                <input type="hidden" name="payment_method" value="razorpay">
             </div>
 
             <div class="col-lg-5">
@@ -561,9 +640,50 @@ document.addEventListener('DOMContentLoaded', function () {
             var copied = copyText(code);
             btn.textContent = copied ? MSG_COPIED : MSG_FILLED;
             setTimeout(function () { btn.textContent = label; }, copied ? 1600 : 1800);
-            applyCouponCode();
         });
     });
+    // Custom state dropdown logic
+    (function () {
+        var dropdown = document.getElementById('stateDropdown');
+        if (!dropdown) return;
+        var btn = document.getElementById('stateDropdownBtn');
+        var menu = document.getElementById('stateDropdownMenu');
+        var label = document.getElementById('stateDropdownLabel');
+        var hiddenInput = document.getElementById('stateHiddenInput');
+        
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            menu.classList.toggle('d-none');
+            dropdown.classList.toggle('is-open');
+        });
+        
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target)) {
+                menu.classList.add('d-none');
+                dropdown.classList.remove('is-open');
+            }
+        });
+        
+        menu.querySelectorAll('.js-state-option-btn').forEach(function (optionBtn) {
+            optionBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var val = optionBtn.getAttribute('data-value');
+                hiddenInput.value = val;
+                label.textContent = val;
+                
+                menu.querySelectorAll('.js-state-option-btn').forEach(function (b) {
+                    b.classList.remove('active');
+                });
+                optionBtn.classList.add('active');
+                menu.classList.add('d-none');
+                dropdown.classList.remove('is-open');
+                
+                hiddenInput.dispatchEvent(new Event('change'));
+            });
+        });
+    })();
 });
 </script>
 @endpush

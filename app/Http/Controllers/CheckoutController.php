@@ -10,6 +10,7 @@ use App\Models\OrderItem;
 use App\Models\ShippingAddress;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\State;
 use App\Services\CartService;
 use App\Services\CheckoutPricingService;
 use App\Services\CouponService;
@@ -44,6 +45,7 @@ class CheckoutController extends Controller
         $shippingCharge = $shipping->chargeForSubtotal($subtotal);
         $isFreeShipping = $shippingCharge <= 0;
         $addresses = auth()->user()->addresses()->orderByDesc('is_default')->get();
+        $states = State::enabled()->orderBy('name')->get();
 
         $promoCoupons = Coupon::query()
             ->public()
@@ -72,7 +74,7 @@ class CheckoutController extends Controller
 
         return view('market.checkout', compact(
             'items', 'subtotal', 'shippingCharge', 'isFreeShipping', 'taxAmount', 'addresses', 'promoCoupons', 'razorpayConfigured',
-            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath'
+            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath', 'states'
         ));
     }
 

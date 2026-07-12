@@ -58,6 +58,12 @@
             @endforeach
         </script>
     @endif
+@else
+    <script>
+        window.gtag = window.gtag || function() {
+            console.log('[GA4 Event]', arguments[0], arguments[1]);
+        };
+    </script>
 @endif
 
 <body class="cb-body cb-market-pro">
@@ -907,7 +913,7 @@
                         return;
                     }
 
-                    if (item) {
+                    if (item && (isPdp || isSticky)) {
                         if (form) form.classList.add('d-none');
                         if (pdpCtas) pdpCtas.classList.add('d-none');
                         if (isPdp && pdpQtyCol) pdpQtyCol.classList.add('d-none');
@@ -980,6 +986,13 @@
                             });
                         }
                         window.syncCartCTAContainers(window.globalCartMap);
+
+                        // Trigger Google Analytics events from AJAX response if defined
+                        if (data.ga_events && Array.isArray(data.ga_events) && typeof gtag === 'function') {
+                            data.ga_events.forEach(function (event) {
+                                gtag('event', event.name, event.data);
+                            });
+                        }
 
                         // If updated from outside the drawer (e.g. PDP or product card listing), replace the HTML
                         var isFromDrawer = card && card.classList.contains('js-drawer-item-card');
@@ -1134,6 +1147,15 @@
                             data.ga_events.forEach(function (event) {
                                 gtag('event', event.name, event.data);
                             });
+                        }
+
+                        // Close quickViewModal if open
+                        var quickViewEl = document.getElementById('quickViewModal');
+                        if (quickViewEl && window.bootstrap) {
+                            var modal = bootstrap.Modal.getInstance(quickViewEl);
+                            if (modal) {
+                                modal.hide();
+                            }
                         }
 
                         var drawerEl = document.getElementById('cartDrawer');

@@ -26,9 +26,7 @@
             <div class="text-muted">{{ $vendor->city }}, {{ $vendor->state }} · ★ {{ number_format($vendor->rating_avg, 1) }} ({{ $vendor->rating_count }})</div>
             <p class="mb-0 mt-2">{{ $vendor->description }}</p>
         </div>
-        @auth
-            <a href="{{ route('chat.show', $vendor) }}" class="zm-btn zm-btn-primary"><i class="bi bi-chat-dots"></i> Message</a>
-        @endauth
+
     </div>
     <div class="zm-grid-products">
         @forelse($products as $product)

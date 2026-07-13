@@ -64,18 +64,7 @@
                 </div>
             </div>
 
-            @if($vendors->isNotEmpty())
-                <div class="col-lg-6">
-                    <div class="zm-card p-3 h-100">
-                        <h2 class="h6 fw-bold mb-3">{{ __('Seller shops') }}</h2>
-                        <ul class="list-unstyled mb-0 small">
-                            @foreach($vendors as $vendor)
-                                <li class="mb-2"><a href="{{ route('vendor.shop', $vendor->slug) }}">{{ $vendor->shop_name }}</a></li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            @endif
+
         </div>
     </div>
 @endsection

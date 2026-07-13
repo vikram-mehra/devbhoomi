@@ -82,7 +82,7 @@ Route::get('/contact-us', [PageController::class, 'contact'])->name('pages.conta
 Route::post('/contact-us', [PageController::class, 'contactSubmit'])->name('pages.contact.submit');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
-Route::get('/store/{slug}', [ProductController::class, 'vendorShop'])->name('vendor.shop');
+Route::redirect('/store/{slug}', '/')->name('vendor.shop');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::get('/cart/summary', [CartController::class, 'summary'])->name('cart.summary');
@@ -133,8 +133,7 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
 
     Route::post('/product/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
-    Route::get('/chat/{vendor}', [ChatController::class, 'show'])->name('chat.show');
-    Route::post('/chat/{vendor}', [ChatController::class, 'store'])->name('chat.store');
+
 
     Route::prefix('account')->name('account.')->group(function () {
         Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');

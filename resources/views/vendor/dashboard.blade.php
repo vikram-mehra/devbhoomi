@@ -25,15 +25,5 @@
             @endforeach
         </tbody>
     </table>
-    <h2 class="h5 mt-4">Chats</h2>
-    <ul class="list-group">
-        @forelse($chatUserIds as $uid)
-            <li class="list-group-item d-flex justify-content-between">
-                <span>Customer #{{ $uid }}</span>
-                <a href="{{ route('chat.show', $vendor) }}?with={{ $uid }}">Open</a>
-            </li>
-        @empty
-            <li class="list-group-item">No messages yet.</li>
-        @endforelse
-    </ul>
+
 @endsection

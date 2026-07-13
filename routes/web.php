@@ -133,8 +133,7 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
 
     Route::post('/product/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
-    Route::get('/chat/{vendor}', [ChatController::class, 'show'])->name('chat.show');
-    Route::post('/chat/{vendor}', [ChatController::class, 'store'])->name('chat.store');
+
 
     Route::prefix('account')->name('account.')->group(function () {
         Route::get('/', [AccountController::class, 'dashboard'])->name('dashboard');

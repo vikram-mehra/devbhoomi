@@ -82,7 +82,7 @@ Route::get('/contact-us', [PageController::class, 'contact'])->name('pages.conta
 Route::post('/contact-us', [PageController::class, 'contactSubmit'])->name('pages.contact.submit');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
-Route::get('/store/{slug}', [ProductController::class, 'vendorShop'])->name('vendor.shop');
+Route::redirect('/store/{slug}', '/')->name('vendor.shop');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::get('/cart/summary', [CartController::class, 'summary'])->name('cart.summary');

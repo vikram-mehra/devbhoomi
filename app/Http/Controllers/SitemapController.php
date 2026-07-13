@@ -60,14 +60,7 @@ class SitemapController extends Controller
             ]);
         });
 
-        Vendor::where('status', 'approved')->get(['slug', 'updated_at'])->each(function (Vendor $vendor) use ($entries) {
-            $entries->push([
-                'loc' => route('vendor.shop', $vendor->slug),
-                'lastmod' => optional($vendor->updated_at)->toAtomString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.5',
-            ]);
-        });
+
 
         $unique = $entries->unique('loc')->values();
 

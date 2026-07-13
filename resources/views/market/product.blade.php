@@ -163,7 +163,7 @@
                     <a href="{{ route('shop.menu', $product->menuItem->slug) }}">{{ $product->menuItem->title }}</a>
                     <span class="mx-1">·</span>
                 @endif
-                <a href="{{ route('vendor.shop', $product->vendor->slug) }}">{{ $product->vendor->shop_name }}</a>
+                <span>{{ $product->vendor->shop_name }}</span>
             </div>
             <p class="h3 fw-bold mb-2">{{ $product->name }}</p>
             <div class="mb-2"><i class="bi bi-star-fill text-warning" aria-hidden="true"></i> {{ number_format($product->rating_avg, 1) }} <span class="text-muted small">({{ $product->rating_count }} reviews)</span></div>

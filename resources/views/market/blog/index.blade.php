@@ -28,9 +28,9 @@
         @else
             <div class="row g-3">
                 @foreach($posts as $post)
-                    <div class="col-md-6 col-lg-4">
+                    <div class="col-6 col-md-3">
                         <article class="pro-blog-card h-100">
-                            <a href="{{ route('blog.show', $post) }}" class="d-block">
+                            <a href="{{ route('blog.show', $post) }}" class="pro-blog-card__media">
                                 <img src="{{ $post->imageUrl() }}" class="pro-blog-card__img" alt="{{ $post->title }}" title="{{ $post->title }}" loading="lazy" width="640" height="400" decoding="async">
                             </a>
                             <div class="pro-blog-card__body">

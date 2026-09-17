@@ -22,6 +22,11 @@
         'navy' => '#1e3a5f', 'maroon' => '#7f1d1d', 'gold' => '#ca8a04', 'silver' => '#cbd5e1',
     ];
     $hasStock = $product->variants->contains(fn ($x) => $x->isBuyable());
+    $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
+    $isWishlisted = auth()->check() && in_array((int) $product->id, $wishlistIds, true);
+    $wishIcon = $isWishlisted ? 'bi-heart-fill' : 'bi-heart';
+    $wishTitle = $isWishlisted ? __('Remove from wishlist') : __('Wishlist');
+    $qvDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) ($product->short_description ?: $product->description)))), 220);
     $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE);
     $hasMultipleVariants = $activeVariants->count() > 1;
     $variantPayload = [];
@@ -63,23 +68,22 @@
                 <span>{{ $ratingDisplay }}</span>
             </div>
         @endif
+        <div class="zm-pro-card__wish">
+            @auth
+                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist">@csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <button type="submit" class="zm-pro-icon-btn zm-pro-icon-btn--round {{ $isWishlisted ? 'is-wishlisted' : '' }}" title="{{ $wishTitle }}" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}"><i class="bi {{ $wishIcon }}"></i></button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="zm-pro-icon-btn zm-pro-icon-btn--round" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
+            @endauth
+        </div>
         <div class="zm-pro-card__actions {{ $listing ? 'zm-pro-card__actions--listing' : '' }}">
-            @if($listing)
-                <div class="zm-pro-card__wish">
-                    @auth
-                        <form action="{{ route('wishlist.store') }}" method="post" class="d-inline">@csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <button type="submit" class="zm-pro-icon-btn zm-pro-icon-btn--round" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" class="zm-pro-icon-btn zm-pro-icon-btn--round" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
-                    @endauth
-                </div>
-            @endif
             <div class="zm-pro-card__hover-actions">
                 <button type="button" class="zm-pro-icon-btn {{ $listing ? 'zm-pro-icon-btn--round' : '' }} js-quick-view" title="{{ __('Quick view') }}" data-bs-toggle="modal" data-bs-target="#quickViewModal"
                     data-qv-name="{{ e($product->name) }}"
                     data-qv-brand="{{ e($vendorName) }}"
+                    data-qv-desc="{{ e($qvDescription) }}"
                     data-qv-price="{{ $price }}"
                     data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                     data-qv-img="{{ e($url1) }}"
@@ -89,16 +93,6 @@
                     data-qv-label="{{ $product->variant_label ?: __('Size') }}">
                     <i class="bi bi-eye"></i>
                 </button>
-                @if(!$listing)
-                    @auth
-                        <form action="{{ route('wishlist.store') }}" method="post" class="d-inline">@csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <button type="submit" class="zm-pro-icon-btn" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" class="zm-pro-icon-btn" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
-                    @endauth
-                @endif
             </div>
         </div>
     </div>

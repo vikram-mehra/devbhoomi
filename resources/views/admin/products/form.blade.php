@@ -136,9 +136,14 @@
                     @error('short_description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-12">
-                    <label class="form-label fw-semibold">{{ __('Full description') }}</label>
-                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="8" placeholder="{{ __('Fabric, size & fit, care, details — shown in the Description tab') }}">{{ old('description', $product->description ?? '') }}</textarea>
-                    @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <label class="form-label fw-semibold" for="productDescriptionEditor">{{ __('Full description') }}</label>
+                    <div class="form-text mb-2">{{ __('Use headings, lists, links, and images. Shown in the Description tab on the product page.') }}</div>
+                    @include('admin.partials.rich-text-editor', [
+                        'editorId' => 'productDescriptionEditor',
+                        'editorName' => 'description',
+                        'editorValue' => $product->description ?? '',
+                        'editorHeight' => 420,
+                    ])
                 </div>
 
                 <div class="col-md-4">
@@ -178,16 +183,25 @@
                     <p class="form-text mb-1 d-none fw-semibold text-primary" id="admProductImagesCount" role="status" aria-live="polite"></p>
                     <div class="form-text">{{ __('JPEG, PNG, GIF, WebP — up to 5 MB each (or lower if your host limits PHP).') }}</div>
                     @if($product && $product->images->isNotEmpty())
+                        @php $currentCoverId = (int) old('cover_image_id', optional($product->images->first())->id); @endphp
                         <div class="mt-3 border rounded-3 p-3 bg-light">
-                            <div class="fw-semibold small mb-2">{{ __('Current images') }}</div>
+                            <div class="fw-semibold small mb-1">{{ __('Current images') }}</div>
+                            <p class="small text-muted mb-2">{{ __('Choose one cover image. It is used on listings, the home page, and as the first photo on the product page.') }}</p>
                             <div class="row g-2">
                                 @foreach($product->images as $im)
                                     @php $u = \App\Models\Product::publicImageUrl($im->path); @endphp
                                     @if($u)
                                         <div class="col-6 col-sm-4 col-md-3">
-                                            <div class="position-relative border rounded overflow-hidden bg-white">
+                                            <div class="position-relative border rounded overflow-hidden bg-white h-100">
+                                                @if((int) $im->id === (int) optional($product->images->first())->id)
+                                                    <span class="badge bg-success position-absolute top-0 start-0 m-1">{{ __('Cover') }}</span>
+                                                @endif
                                                 <img src="{{ $u }}" alt="" class="w-100" style="height: 88px; object-fit: cover;">
                                                 <div class="p-2">
+                                                    <div class="form-check mb-1">
+                                                        <input class="form-check-input" type="radio" name="cover_image_id" value="{{ $im->id }}" id="cover-img-{{ $im->id }}" @if((int) $currentCoverId === (int) $im->id) checked @endif>
+                                                        <label class="form-check-label small" for="cover-img-{{ $im->id }}">{{ __('Make cover') }}</label>
+                                                    </div>
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" name="remove_image_ids[]" value="{{ $im->id }}" id="rm-img-{{ $im->id }}">
                                                         <label class="form-check-label small text-danger" for="rm-img-{{ $im->id }}">{{ __('Remove') }}</label>
@@ -198,6 +212,9 @@
                                     @endif
                                 @endforeach
                             </div>
+                            @error('cover_image_id')
+                                <div class="text-danger small mt-2">{{ $message }}</div>
+                            @enderror
                         </div>
                     @endif
                 </div>

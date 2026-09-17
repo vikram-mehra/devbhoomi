@@ -385,6 +385,8 @@ class ProductAdminController extends Controller
                 ->withInput();
         }
 
+        $this->applyCoverImage($request, $product);
+
         if ($request->has('variants')) {
             $rows = $this->validatedVariantRows($request, $product);
             $this->syncVariants($product, $rows, $request);
@@ -784,6 +786,35 @@ class ProductAdminController extends Controller
         }
     }
 
+    protected function applyCoverImage(Request $request, Product $product): void
+    {
+        $coverId = (int) $request->input('cover_image_id', 0);
+        if ($coverId < 1) {
+            return;
+        }
+
+        $cover = ProductImage::query()
+            ->where('id', $coverId)
+            ->where('product_id', $product->id)
+            ->first();
+        if (! $cover) {
+            return;
+        }
+
+        $others = $product->images()
+            ->where('id', '!=', $cover->id)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        $cover->update(['sort_order' => 0]);
+        $order = 1;
+        foreach ($others as $img) {
+            $img->update(['sort_order' => $order]);
+            $order++;
+        }
+    }
+
     protected function translateUploadError(int $code): string
     {
         switch ($code) {
@@ -844,6 +875,7 @@ class ProductAdminController extends Controller
             'og_image' => 'nullable|string|max:2048',
             'images' => 'nullable|array|max:30',
             'images.*' => ['file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'cover_image_id' => 'nullable|integer|exists:product_images,id',
             'remove_image_ids' => 'nullable|array',
             'remove_image_ids.*' => 'integer|exists:product_images,id',
             'variant_label' => 'nullable|string|max:64',

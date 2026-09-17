@@ -1,5 +1,5 @@
 @if(($promoBanners ?? collect())->isNotEmpty())
-    <section class="pro-home-promo cb-reveal" aria-label="{{ __('Featured offers') }}">
+    <section class="pro-home-promo mk-home-band cb-reveal" aria-label="{{ __('Featured offers') }}">
         <div class="cb-container">
             <div class="row g-3 g-md-4">
                 @foreach($promoBanners as $tile)

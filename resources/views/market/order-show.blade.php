@@ -208,6 +208,12 @@
                     <span>{{ __('Payment status') }}</span>
                     <span class="pro-order-detail__pay-badge pro-order-detail__pay-badge--{{ $payStatusKey === 'paid' ? 'paid' : 'pending' }}">{{ strtoupper($order->payment_status) }}</span>
                 </div>
+                @if(strtolower((string) $order->payment_method) === 'razorpay'
+                    && in_array($payStatusKey, ['unpaid', 'pending'], true)
+                    && ! in_array($order->status, ['cancelled', 'returned'], true)
+                    && $order->payableAmount() > 0)
+                    <a href="{{ route('pay.razorpay', $order) }}" class="zm-btn zm-btn-primary w-100 mt-3">{{ __('Complete payment') }}</a>
+                @endif
                 <div class="pro-order-detail__breakdown">
                     <div class="pro-order-detail__break-line">
                         <span>{{ __('Subtotal') }}</span>

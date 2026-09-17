@@ -1,5 +1,3 @@
-# Laravel in a subfolder (e.g. http://localhost/alluringstyle/)
-# Avoid "Options" here — XAMPP often forbids it in .htaccess (403 Forbidden).
 <IfModule mod_dir.c>
     DirectoryIndex public/index.php
 </IfModule>

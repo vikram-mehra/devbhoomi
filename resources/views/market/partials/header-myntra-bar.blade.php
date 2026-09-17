@@ -63,17 +63,14 @@
             </div>
         @endguest
 
-        @auth
-            <a href="{{ route('wishlist.index') }}" class="mk-myntra-action text-decoration-none text-dark">
+        @php $wishlistCount = (int) ($layoutWishlistCount ?? 0); @endphp
+        <a href="{{ auth()->check() ? route('wishlist.index') : route('login') }}" class="mk-myntra-action text-decoration-none text-dark" title="{{ __('Wishlist') }}">
+            <span class="mk-myntra-action__iconwrap">
                 <i class="bi bi-heart mk-myntra-action__icon" aria-hidden="true"></i>
-                <span class="mk-myntra-action__label">{{ __('Wishlist') }}</span>
-            </a>
-        @else
-            <a href="{{ route('login') }}" class="mk-myntra-action text-decoration-none text-dark">
-                <i class="bi bi-heart mk-myntra-action__icon" aria-hidden="true"></i>
-                <span class="mk-myntra-action__label">{{ __('Wishlist') }}</span>
-            </a>
-        @endauth
+                <span class="mk-myntra-wish-badge" @if($wishlistCount === 0) style="display:none;" @endif>{{ $wishlistCount > 99 ? '99+' : $wishlistCount }}</span>
+            </span>
+            <span class="mk-myntra-action__label">{{ __('Wishlist') }}</span>
+        </a>
 
         <button type="button" class="mk-myntra-action mk-myntra-action--bag border-0 bg-transparent p-0 text-dark" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer" aria-controls="cartDrawer" title="{{ __('Cart') }}">
             <span class="mk-myntra-action__iconwrap">

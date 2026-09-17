@@ -18,7 +18,13 @@
 
 @section('account_content')
     @if($orders->isEmpty())
-        <p class="text-muted mb-0">{{ __('You have not placed any orders yet.') }}</p>
+        @include('market.partials.empty-state', [
+            'icon' => 'bi-bag-x',
+            'title' => __('No orders yet'),
+            'text' => __('You have not placed any orders yet. Browse the shop to find organic Himalayan products and your orders will appear here.'),
+            'cta' => __('Start shopping'),
+            'ctaUrl' => route('shop.search'),
+        ])
     @else
         <div class="account-orders__card">
             <div class="table-responsive">

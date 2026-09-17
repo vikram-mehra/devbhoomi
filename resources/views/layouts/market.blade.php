@@ -18,7 +18,7 @@
     <link rel="preload"
         href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap"
         as="style">
-    <link href="{{ asset('css/market-pro.css') }}?v=95" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=141" rel="stylesheet">
     @stack('head')
     @php $seoService = app(\App\Services\SeoService::class); @endphp
     <script type="application/ld+json">
@@ -233,7 +233,8 @@
                         <div class="col-md-7">
                             <p class="small text-primary fw-semibold mb-1 js-qv-brand"></p>
                             <h3 class="h5 js-qv-name"></h3>
-                            <div class="fs-5 fw-bold mb-3 js-qv-price"></div>
+                            <div class="fs-5 fw-bold mb-2 js-qv-price"></div>
+                            <p class="js-qv-description small text-muted" hidden></p>
                             
                             <!-- Dynamic Variant Selectors -->
                             <div class="js-qv-variants-container mb-3 d-none">
@@ -338,13 +339,9 @@
                 <div class="col-12 col-md-6 col-xl-3">
                     <a href="{{ route('market.home') }}"
                         class="pro-footer-mk__brand mb-3 text-decoration-none d-inline-block">
-                        @if(!empty($siteLogoUrl))
-                            <!-- <img src="{{ $siteLogoUrl }}" alt="{{ $footerBrand }}" class="pro-footer-mk__logo-img" width="160" height="44" decoding="async"> -->
-                        @else
-                            <span class="pro-footer-mk__logo-text font-anc-serif">
-                                <span class="pro-footer-mk__logo-main">{{ $footerBrand }}</span>
-                            </span>
-                        @endif
+                        <span class="pro-footer-mk__logo-text font-anc-serif">
+                            <span class="pro-footer-mk__logo-main">{{ $footerBrand }}</span>
+                        </span>
                     </a>
                     <p class="pro-footer-mk__desc small mb-4">
                         {{ __('Discover the latest trends and enjoy seamless shopping with our exclusive collections.') }}
@@ -422,22 +419,30 @@
                         <a href="https://www.instagram.com/dev_bhoominaturals?igsh=MXJwZXYzeDQwamNjMw%3D%3D"
                             class="pro-footer-mk__social-btn" aria-label="Instagram"><i class="bi bi-instagram"
                                 aria-hidden="true"></i></a>
-                        <a href="#" class="pro-footer-mk__social-btn" aria-label="Pinterest"><i class="bi bi-pinterest"
-                                aria-hidden="true"></i></a>
                         <a href="https://wa.me/919217732670?text=Hi"
                             class="pro-footer-mk__social-btn pro-footer-mk__social-btn--whatsapp" aria-label="WhatsApp"
                             target="_blank" rel="noopener"><i class="bi bi-whatsapp" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="pro-footer-mk__bar cb-footer-bottom">
-                <div class="d-flex flex-column flex-md-row align-items-center justify-content-md-between gap-3 py-4">
-                    <p class="pro-footer-mk__copy small mb-0 text-center text-md-start">&copy; {{ date('Y') }}
+        </div>
+        <div class="pro-footer-mk__bar cb-footer-bottom">
+            <div class="cb-container">
+                <div class="pro-footer-mk__bar-inner">
+                    <p class="pro-footer-mk__copy small mb-0">&copy; {{ date('Y') }}
                         {{ config('app.name') }}. {{ __('All rights reserved.') }}
                     </p>
-                    <!-- <div class="pro-footer-mk__payments d-flex flex-wrap align-items-center justify-content-center gap-2" aria-label="{{ __('Payment methods') }}">
-                        <span class="pro-footer-mk__pay">Razorpay</span>
-                    </div> -->
+                    <div class="pro-footer-mk__payments" aria-label="{{ __('Payment methods') }}">
+                        <img src="{{ asset('images/payments/visa.svg') }}" alt="Visa" width="48" height="30">
+                        <img src="{{ asset('images/payments/mastercard.svg') }}" alt="Mastercard" width="48" height="30">
+                        <img src="{{ asset('images/payments/rupay.svg') }}" alt="RuPay" width="52" height="30">
+                        <img src="{{ asset('images/payments/upi.svg') }}" alt="UPI" width="42" height="30">
+                        <img src="{{ asset('images/payments/razorpay.svg') }}" alt="Razorpay" width="68" height="30">
+                    </div>
+                    <p class="pro-footer-mk__credit small mb-0">
+                        {{ __('Developed by') }}
+                        <a href="https://quezent.com/" target="_blank" rel="noopener noreferrer">Quezent Technologies</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -497,6 +502,13 @@
                     m.querySelector('.js-qv-img').alt = btn.getAttribute('data-qv-name') || '';
                     m.querySelector('.js-qv-brand').textContent = btn.getAttribute('data-qv-brand') || '';
                     m.querySelector('.js-qv-name').textContent = btn.getAttribute('data-qv-name') || '';
+
+                    var descEl = m.querySelector('.js-qv-description');
+                    if (descEl) {
+                        var desc = (btn.getAttribute('data-qv-desc') || '').trim();
+                        descEl.textContent = desc;
+                        descEl.hidden = !desc;
+                    }
                     
                     var price = btn.getAttribute('data-qv-price');
                     var cmp = btn.getAttribute('data-qv-compare');
@@ -811,6 +823,39 @@
                         badge.style.display = '';
                     } else {
                         badge.style.display = 'none';
+                    }
+                });
+            }
+
+            function updateWishlistBadges(count) {
+                var n = parseInt(count, 10) || 0;
+                document.querySelectorAll('.mk-myntra-wish-badge').forEach(function (badge) {
+                    if (n > 0) {
+                        badge.textContent = n > 99 ? '99+' : n;
+                        badge.style.display = '';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                });
+            }
+
+            function applyWishlistState(productId, wishlisted) {
+                document.querySelectorAll('.js-ajax-wishlist').forEach(function (form) {
+                    var idInput = form.querySelector('input[name="product_id"]');
+                    if (!idInput || String(idInput.value) !== String(productId)) return;
+                    var btn = form.querySelector('button[type="submit"]');
+                    if (!btn) return;
+                    btn.classList.toggle('is-wishlisted', !!wishlisted);
+                    btn.setAttribute('aria-pressed', wishlisted ? 'true' : 'false');
+                    btn.title = wishlisted ? 'Remove from wishlist' : 'Wishlist';
+                    var icon = btn.querySelector('.bi');
+                    if (icon) {
+                        icon.classList.toggle('bi-heart-fill', !!wishlisted);
+                        icon.classList.toggle('bi-heart', !wishlisted);
+                    }
+                    var label = btn.querySelector('.js-wish-label');
+                    if (label) {
+                        label.textContent = wishlisted ? 'Wishlisted' : 'Wishlist';
                     }
                 });
             }
@@ -1166,6 +1211,64 @@
                     })
                     .catch(function (err) {
                         alert(err.message || 'Error adding to cart');
+                    });
+            });
+
+            document.addEventListener('submit', function (e) {
+                var form = e.target;
+                if (!form.classList.contains('js-ajax-wishlist')) return;
+                e.preventDefault();
+
+                var idInput = form.querySelector('input[name="product_id"]');
+                var btn = form.querySelector('button[type="submit"]');
+                if (!idInput) return;
+                if (form.getAttribute('data-busy') === '1') return;
+                form.setAttribute('data-busy', '1');
+                if (btn) btn.disabled = true;
+
+                fetch(form.getAttribute('action') || '/wishlist', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ product_id: parseInt(idInput.value, 10) })
+                })
+                    .then(function (r) {
+                        if (r.status === 401 || r.status === 419) {
+                            window.location.href = '{{ route('login') }}';
+                            return Promise.reject();
+                        }
+                        if (!r.ok) {
+                            return r.json().catch(function () { return {}; }).then(function (err) {
+                                throw new Error((err && (err.message || err.error)) || 'Could not update wishlist');
+                            });
+                        }
+                        return r.json();
+                    })
+                    .then(function (data) {
+                        if (!data) return;
+                        applyWishlistState(data.product_id || idInput.value, !!data.wishlisted);
+                        if (typeof data.count !== 'undefined') {
+                            updateWishlistBadges(data.count);
+                        }
+                        if (data.message && typeof window.zmShowFlashToast === 'function') {
+                            window.zmShowFlashToast(data.message, 'success');
+                        }
+                    })
+                    .catch(function (err) {
+                        if (err && err.message && typeof window.zmShowFlashToast === 'function') {
+                            window.zmShowFlashToast(err.message, 'danger');
+                        } else if (err && err.message) {
+                            alert(err.message);
+                        }
+                    })
+                    .finally(function () {
+                        form.removeAttribute('data-busy');
+                        if (btn) btn.disabled = false;
                     });
             });
 

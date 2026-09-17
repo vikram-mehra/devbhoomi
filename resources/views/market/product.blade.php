@@ -134,7 +134,7 @@
             'buyable' => $v->isBuyable(),
         ])->values()->all();
     @endphp
-    <div class="row g-4 pro-page-pad-mobile">
+    <div class="row g-4 pro-page-pad-mobile pro-pdp-page">
         <div class="col-md-5">
             <div class="zm-card p-2 p-md-3">
                 <div class="pro-pdp-gallery pro-pdp-gallery--hero">
@@ -263,9 +263,16 @@
             </form>
 
             @auth
-                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline">@csrf
+                @php
+                    $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
+                    $isWishlisted = in_array((int) $product->id, $wishlistIds, true);
+                @endphp
+                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist">@csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <button class="zm-btn zm-btn-ghost" type="submit"><i class="bi bi-heart"></i> Wishlist</button>
+                    <button class="zm-btn zm-btn-ghost {{ $isWishlisted ? 'is-wishlisted' : '' }}" type="submit" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}">
+                        <i class="bi {{ $isWishlisted ? 'bi-heart-fill' : 'bi-heart' }}"></i>
+                        <span class="js-wish-label">{{ $isWishlisted ? __('Wishlisted') : __('Wishlist') }}</span>
+                    </button>
                 </form>
             @endauth
         </div>
@@ -287,7 +294,17 @@
             <div class="tab-content pro-pdp-tab-content" id="pdpDetailTabsContent">
             <div class="tab-pane fade show active" id="pdp-tab-desc" role="tabpanel" aria-labelledby="pdp-tab-desc-btn" tabindex="0">
                 @if(filled($product->description))
-                    <div class="pro-pdp-long-desc text-body lh-lg">{!! nl2br(e($product->description)) !!}</div>
+                    @php
+                        $descHtml = trim((string) $product->description);
+                        $descIsRich = $descHtml !== '' && $descHtml !== strip_tags($descHtml);
+                    @endphp
+                    <div class="pro-pdp-long-desc text-body lh-lg @if($descIsRich) pro-pdp-long-desc--rich @endif">
+                        @if($descIsRich)
+                            {!! $descHtml !!}
+                        @else
+                            {!! nl2br(e($descHtml)) !!}
+                        @endif
+                    </div>
                 @else
                     <p class="text-muted mb-0">{{ __('More details will be added soon.') }}</p>
                 @endif
@@ -742,8 +759,8 @@
         if (typeof Swiper === 'undefined') return;
         function swiperOptions(el) {
             return {
-                slidesPerView: 1,
-                spaceBetween: 12,
+                slidesPerView: 1.5,
+                spaceBetween: 10,
                 watchOverflow: true,
                 observer: true,
                 observeParents: true,
@@ -751,13 +768,13 @@
                 watchSlidesProgress: true,
                 resizeObserver: true,
                 centeredSlides: false,
-                roundLengths: true,
+                roundLengths: false,
                 navigation: {
                     nextEl: el.querySelector('.swiper-button-next'),
                     prevEl: el.querySelector('.swiper-button-prev'),
                 },
                 breakpoints: {
-                    576: { slidesPerView: 'auto', spaceBetween: 16 },
+                    620: { slidesPerView: 'auto', spaceBetween: 16 },
                     768: { slidesPerView: 'auto', spaceBetween: 16 },
                     992: { slidesPerView: 'auto', spaceBetween: 16 },
                 },

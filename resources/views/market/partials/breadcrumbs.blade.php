@@ -9,7 +9,7 @@
 @endphp
 @once('market-page-breadcrumb')
 @if($title !== '' || ! empty($items))
-<section class="pro-page-hero">
+<section class="pro-page-hero" style="--pro-page-hero-img: url('{{ asset('images/inner-page-banner.jpg') }}?v=7'); --pro-page-hero-img-mobile: url('{{ asset('images/inner-page-banner-mobile.jpg') }}?v=3')">
     <div class="pro-page-hero__inner">
         @if($title !== '')
             <h1 class="pro-page-hero__title">{{ $title }}</h1>

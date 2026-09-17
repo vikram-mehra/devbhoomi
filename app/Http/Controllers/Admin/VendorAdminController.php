@@ -188,7 +188,7 @@ class VendorAdminController extends Controller
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 Rule::unique('vendors', 'slug')->ignore($vendor?->id),
             ],
-            'description' => 'nullable|string|max:5000',
+            'description' => 'nullable|string|max:20000',
             'city' => 'nullable|string|max:120',
             'state' => 'nullable|string|max:120',
             'status' => 'required|in:pending,approved,rejected',

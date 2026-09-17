@@ -96,9 +96,14 @@
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label fw-semibold">{{ __('Description') }}</label>
-                    <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="4" maxlength="5000">{{ old('description', $vendor->description ?? '') }}</textarea>
-                    @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <label class="form-label fw-semibold" for="vendorDescriptionEditor">{{ __('Description') }}</label>
+                    <div class="form-text mb-2">{{ __('Use headings, lists, and links. Shown on the vendor shop page.') }}</div>
+                    @include('admin.partials.rich-text-editor', [
+                        'editorId' => 'vendorDescriptionEditor',
+                        'editorName' => 'description',
+                        'editorValue' => $vendor->description ?? '',
+                        'editorHeight' => 360,
+                    ])
                 </div>
 
                 @if($vendor)

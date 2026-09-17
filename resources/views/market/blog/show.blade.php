@@ -112,7 +112,7 @@
                         @foreach($relatedPosts as $related)
                             <div class="col-md-4">
                                 <article class="pro-blog-card h-100">
-                                    <a href="{{ route('blog.show', $related) }}" class="d-block">
+                                    <a href="{{ route('blog.show', $related) }}" class="pro-blog-card__media">
                                         <img src="{{ $related->imageUrl() }}" class="pro-blog-card__img" alt="{{ $related->title }}" title="{{ $related->title }}" loading="lazy" width="640" height="400" decoding="async">
                                     </a>
                                     <div class="pro-blog-card__body p-3">

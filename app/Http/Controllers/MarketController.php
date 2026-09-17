@@ -47,7 +47,7 @@ class MarketController extends Controller
             return BlogPost::published()
                 ->orderByDesc('published_at')
                 ->orderByDesc('id')
-                ->take(3)
+                ->take(4)
                 ->get();
         });
 

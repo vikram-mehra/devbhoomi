@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\ProductVariant;
+use App\Models\Wishlist;
 use App\Services\CartService;
 use App\Services\MenuItemService;
 use App\Services\ProductStorefrontService;
@@ -107,6 +108,26 @@ class AppServiceProvider extends ServiceProvider
                 'layoutHeaderMenu' => $menus->headerTree(),
                 'layoutFooterMenu' => $menus->footerLinks(),
                 'siteLogoUrl' => SiteLogo::url(),
+            ]);
+        });
+
+        View::composer(['layouts.market', 'market.*'], function ($view) {
+            if (! app()->bound('layout.wishlist_product_ids')) {
+                $ids = [];
+                if (auth()->check()) {
+                    $ids = Wishlist::where('user_id', auth()->id())
+                        ->pluck('product_id')
+                        ->map(fn ($id) => (int) $id)
+                        ->values()
+                        ->all();
+                }
+                app()->instance('layout.wishlist_product_ids', $ids);
+            }
+
+            $wishlistProductIds = app('layout.wishlist_product_ids');
+            $view->with([
+                'layoutWishlistCount' => count($wishlistProductIds),
+                'layoutWishlistProductIds' => $wishlistProductIds,
             ]);
         });
     }

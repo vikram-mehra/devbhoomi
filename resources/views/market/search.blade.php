@@ -10,6 +10,20 @@
     @include('market.partials.pagination-head', ['paginator' => $products])
 @endpush
 
+@push('schema')
+@php
+    $searchListSchema = app(\App\Services\SeoService::class)->itemListSchema(
+        request('q') ? __('Search results for :query', ['query' => request('q')]) : __('Shop Organic Products'),
+        $products->map(fn ($p) => route('product.show', $p->slug))->all()
+    );
+@endphp
+@if($searchListSchema)
+<script type="application/ld+json">
+{!! json_encode($searchListSchema, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endif
+@endpush
+
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => __('Search products'),
@@ -18,7 +32,7 @@
 @endpush
 
 @section('content')
-    <div class="row g-4">
+    <div class="row g-4 pro-listing-page">
         <aside class="col-lg-3 mk-shop-filter-col" id="mkShopFilterCol">
             @include('market.partials.shop-filters', [
                 'formAction' => route('shop.search'),
@@ -79,7 +93,7 @@
                         @include('market.partials.product-card', ['product' => $product, 'listing' => true])
                     @endforeach
                 </div>
-                <div class="mt-4">{{ $products->links() }}</div>
+                {{ $products->links('market.partials.pagination') }}
             @endif
         </div>
     </div>

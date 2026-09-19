@@ -45,7 +45,7 @@
 @endpush
 
 @section('content')
-    <div class="row g-4">
+    <div class="row g-4 pro-listing-page">
         <aside class="col-lg-3 mk-shop-filter-col" id="mkShopFilterCol">
             @include('market.partials.shop-filters', [
                 'formAction' => route('shop.menu', $menuItem->slug),
@@ -103,7 +103,7 @@
                         @include('market.partials.product-card', ['product' => $product, 'listing' => true])
                     @endforeach
                 </div>
-                <div class="mt-4">{{ $products->links() }}</div>
+                {{ $products->links('market.partials.pagination') }}
             @endif
         </div>
     </div>

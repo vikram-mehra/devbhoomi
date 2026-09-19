@@ -9,7 +9,7 @@
 
     <a href="{{ route('market.home') }}" class="mk-myntra-brand flex-shrink-0 text-decoration-none" aria-label="{{ $brandName }}">
         @if(!empty($siteLogoUrl))
-            <img src="{{ $siteLogoUrl }}" alt="{{ $brandName }}" class="mk-myntra-brand__logo" width="150" height="40" decoding="async">
+            <img src="{{ \App\Support\OptimizedImage::url($siteLogoUrl, 300) }}" alt="{{ $brandName }}" class="mk-myntra-brand__logo" width="150" height="40" decoding="async" fetchpriority="low">
         @else
             <span class="mk-myntra-brand__text font-anc-serif">{{ $brandName }}</span>
         @endif

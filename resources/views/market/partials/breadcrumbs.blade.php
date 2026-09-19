@@ -1,6 +1,7 @@
 @php
     $items = $items ?? [];
     $title = $title ?? null;
+    $heroClass = trim((string) ($heroClass ?? ''));
     if ($title === null && ! empty($items)) {
         $last = $items[array_key_last($items)] ?? null;
         $title = is_array($last) ? ($last['label'] ?? '') : '';
@@ -9,7 +10,7 @@
 @endphp
 @once('market-page-breadcrumb')
 @if($title !== '' || ! empty($items))
-<section class="pro-page-hero" style="--pro-page-hero-img: url('{{ asset('images/inner-page-banner.jpg') }}?v=7'); --pro-page-hero-img-mobile: url('{{ asset('images/inner-page-banner-mobile.jpg') }}?v=3')">
+<section class="pro-page-hero {{ $heroClass }}" style="--pro-page-hero-img: url('{{ asset('images/inner-page-banner.jpg') }}?v=8'); --pro-page-hero-img-mobile: url('{{ asset('images/inner-page-banner-mobile.jpg') }}?v=3')">
     <div class="pro-page-hero__inner">
         @if($title !== '')
             <h1 class="pro-page-hero__title">{{ $title }}</h1>

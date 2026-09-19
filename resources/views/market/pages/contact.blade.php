@@ -11,13 +11,19 @@
 @endif
 
 @push('head')
-    <link href="{{ asset('css/pages-static.css') }}?v=1" rel="stylesheet">
+    <link href="{{ asset('css/pages-static.css') }}?v=2" rel="stylesheet">
+@endpush
+
+@push('schema')
+<script type="application/ld+json">
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema(($page->meta_title ?: $page->hero_title).' | Devbhoomi Naturals', $page->canonical_url ?: route('pages.contact'), $page->meta_description ?: Str::limit(strip_tags($page->hero_subtitle), 155)), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+</script>
 @endpush
 
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
-        'title' => '',
-        'items' => [['label' => $page->hero_title ?: __('Contact us')]],
+        'title' => __('Contact us'),
+        'items' => [['label' => __('Contact us')]],
     ])
 @endpush
 
@@ -26,7 +32,7 @@
         <section class="pro-contact-hero">
             <div class="pro-contact-hero__glow" aria-hidden="true"></div>
             <div class="cb-container text-center">
-                <h1 class="pro-contact-hero__title">{{ $page->hero_title }}</h1>
+                <h2 class="pro-contact-hero__title">{{ $page->hero_title }}</h2>
                 @if($page->hero_subtitle)
                     <p class="pro-contact-hero__lead">{{ $page->hero_subtitle }}</p>
                 @endif

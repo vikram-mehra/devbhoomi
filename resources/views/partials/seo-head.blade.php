@@ -17,11 +17,15 @@
 <meta name="keywords" content="{{ $seo->keywords }}">
 @endif
 <link rel="canonical" href="{{ $seo->canonical }}">
+<link rel="alternate" hreflang="en-IN" href="{{ $seo->canonical }}">
+<link rel="alternate" hreflang="x-default" href="{{ $seo->canonical }}">
 @stack('pagination_head')
 @if(filled($seo->robots))
 <meta name="robots" content="{{ $seo->robots }}">
 @endif
-<meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
+<meta name="geo.region" content="IN-UT">
+<meta name="geo.placename" content="Ranikhet">
+<meta property="og:locale" content="en_IN">
 <meta property="og:type" content="{{ $seo->ogType }}">
 <meta property="og:title" content="{{ $seo->title }}">
 <meta property="og:description" content="{{ $seo->description }}">
@@ -39,6 +43,10 @@
 @endif
 @if(filled($twitterHandle))
 <meta name="twitter:site" content="@{{ ltrim($twitterHandle, '@') }}">
+@endif
+@php $facebookAppId = app(\App\Services\SeoService::class)->global('facebook_app_id'); @endphp
+@if(filled($facebookAppId))
+<meta property="fb:app_id" content="{{ $facebookAppId }}">
 @endif
 @if(! empty($seo->schemaExtra))
 <script type="application/ld+json">

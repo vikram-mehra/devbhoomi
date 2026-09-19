@@ -13,13 +13,13 @@ return [
 
     'default_keywords' => 'organic food, Himalayan products, Uttarakhand, millets, pahadi pulses, natural spices, Devbhoomi Naturals',
 
-    'default_og_image' => '/images/logo.png',
+    'default_og_image' => '/images/inner-page-banner.jpg',
 
     'organization' => [
         'name' => 'Devbhoomi Naturals',
         'legal_name' => 'Dev Bhoomi Naturals',
         'url' => 'https://devbhoominaturals.com',
-        'logo' => '/images/logo.png',
+        'logo' => '/images/logo.svg',
         'email' => 'support@devbhoominaturals.com',
         'phone' => '+919217732670',
         'address' => [
@@ -75,6 +75,18 @@ return [
         ],
     ],
 
+    'listing_query_keys' => [
+        'q',
+        'brand',
+        'color',
+        'rating_min',
+        'rating',
+        'min',
+        'max',
+        'discount_min',
+        'category',
+    ],
+
     'robots_disallow' => [
         '/admin',
         '/vendor',
@@ -87,6 +99,7 @@ return [
         '/register',
         '/pay/',
         '/api/',
+        '/search?',
     ],
 
 ];

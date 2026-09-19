@@ -47,5 +47,5 @@
             <p>No products yet.</p>
         @endforelse
     </div>
-    {{ $products->links() }}
+    {{ $products->links('market.partials.pagination') }}
 @endsection

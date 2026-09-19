@@ -44,13 +44,13 @@ class ProductStorefrontService
     }
 
     /**
-     * Active products from approved vendors (featured first, then newest).
+     * Active featured products from approved vendors.
      */
     public function featuredForHome(int $limit = 12): Collection
     {
         return $this->remember(self::CACHE_FEATURED, function () use ($limit) {
             return $this->storefrontQuery()
-                ->orderByDesc('is_featured')
+                ->where('is_featured', true)
                 ->orderByDesc('id')
                 ->limit($limit)
                 ->get();

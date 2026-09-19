@@ -3,31 +3,67 @@
 @section('title', 'Devbhoomi Naturals | Pure Organic Himalayan Products')
 @section('meta_description', 'Shop pure organic Himalayan products — millets, pahadi pulses, spices & grains direct from Uttarakhand farmers. Free delivery above ₹499.')
 @section('meta_keywords', 'organic food, Himalayan products, Uttarakhand, millets, pahadi pulses, natural spices')
+@section('canonical', route('market.home'))
 
 @if($banners->isNotEmpty())
 @push('head')
-@php $firstBanner = $banners->first(); @endphp
-<link rel="preload" as="image" href="{{ $firstBanner->imageUrl() }}" media="(min-width: 768px)" fetchpriority="high">
-<link rel="preload" as="image" href="{{ $firstBanner->resolvedMobileImageUrl() }}" media="(max-width: 767.98px)" fetchpriority="high">
+@php
+    $firstBanner = $banners->first();
+    $heroMobile = \App\Support\OptimizedImage::url($firstBanner->resolvedMobileImageUrl(), 768);
+    $heroDesktop = \App\Support\OptimizedImage::url($firstBanner->imageUrl(), 1400);
+@endphp
+<link rel="preload" as="image" href="{{ $heroMobile }}" media="(max-width: 767.98px)" fetchpriority="high">
+<link rel="preload" as="image" href="{{ $heroDesktop }}" media="(min-width: 768px)" fetchpriority="high">
 @endpush
 @endif
 
 @section('content')
     @php
         $newTab = ($newProducts ?? collect())->isNotEmpty() ? $newProducts : $trending->take(8);
-        $featTab = $featured->isNotEmpty() ? $featured->take(8) : $trending->take(8);
+        $featTab = $featured->filter(fn ($product) => (bool) $product->is_featured);
         $bestTab = $trending->take(8);
         $fallbackHeroImg = 'https://picsum.photos/seed/prohero/1920/700';
     @endphp
 
     {{-- Hero: full-bleed background image + overlay copy --}}
     @if($banners->isNotEmpty())
-        <section class="pro-hero p-0 cb-reveal">
-            <div id="proHeroSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5500">
+        <section class="pro-hero p-0">
+            <div id="proHeroSlider" class="carousel slide" data-bs-ride="false" data-bs-interval="8000">
                 <div class="carousel-inner">
                     @foreach($banners as $i => $b)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
-                            <div class="mk-hero-full" style="--hero-img: url('{{ e($b->imageUrl()) }}'); --hero-img-mobile: url('{{ e($b->resolvedMobileImageUrl()) }}');">
+                            <div class="mk-hero-full mk-hero-full--photo">
+                                <picture>
+                                    @php
+                                        $slideMobile = \App\Support\OptimizedImage::url($b->resolvedMobileImageUrl(), 768);
+                                        $slideDesktop = \App\Support\OptimizedImage::url($b->imageUrl(), 1400);
+                                    @endphp
+                                    @if($i === 0)
+                                        <source media="(max-width: 767.98px)" srcset="{{ $slideMobile }}">
+                                        <img
+                                            src="{{ $slideDesktop }}"
+                                            alt="{{ $b->title }}"
+                                            class="mk-hero-full__img"
+                                            width="1400"
+                                            height="510"
+                                            sizes="100vw"
+                                            fetchpriority="high"
+                                        >
+                                    @else
+                                        <source media="(max-width: 767.98px)" data-srcset="{{ $slideMobile }}">
+                                        <img
+                                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                            data-src="{{ $slideDesktop }}"
+                                            alt="{{ $b->title }}"
+                                            class="mk-hero-full__img"
+                                            width="1400"
+                                            height="510"
+                                            sizes="100vw"
+                                            loading="lazy"
+                                            fetchpriority="low"
+                                        >
+                                    @endif
+                                </picture>
                                 <div class="mk-hero-full__overlay">
                                     <div class="cb-container">
                                         <div class="mk-hero-copy">
@@ -54,8 +90,9 @@
             </div>
         </section>
     @else
-        <section class="pro-hero p-0 cb-reveal">
-            <div class="mk-hero-full" style="background-image: url('{{ $fallbackHeroImg }}');">
+        <section class="pro-hero p-0">
+            <div class="mk-hero-full mk-hero-full--photo">
+                <img src="{{ $fallbackHeroImg }}" alt="" class="mk-hero-full__img" width="1920" height="700" fetchpriority="high" decoding="async">
                 <div class="mk-hero-full__overlay">
                     <div class="cb-container">
                         <div class="mk-hero-copy">
@@ -75,7 +112,7 @@
 
     <div class="mk-home-bands">
         {{-- Trending tabs: New · Featured · Best selling (Swiper slider) --}}
-        <section class="mk-home-band mk-section cb-reveal" aria-labelledby="trend-heading">
+        <section class="mk-home-band mk-section" aria-labelledby="trend-heading">
             <div class="cb-container">
             <div class="pro-section-head">
                 <p class="pro-section-head__eyebrow">{{ __('Trending now') }}</p>
@@ -209,12 +246,41 @@
         @include('market.partials.home-promo-tiles')
         
         @push('head')
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" media="print" onload="this.media='all'">
+            <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"></noscript>
         @endpush
         @push('scripts')
             <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
             <script>
             (function () {
+                var hero = document.getElementById('proHeroSlider');
+                if (hero) {
+                    function hydrateHeroSlide(item) {
+                        if (!item) return;
+                        item.querySelectorAll('source[data-srcset]').forEach(function (sourceEl) {
+                            if (!sourceEl.getAttribute('srcset')) {
+                                sourceEl.setAttribute('srcset', sourceEl.getAttribute('data-srcset'));
+                            }
+                        });
+                        item.querySelectorAll('img[data-src]').forEach(function (img) {
+                            var realSrc = img.getAttribute('data-src');
+                            if (realSrc && img.getAttribute('src') !== realSrc) {
+                                img.setAttribute('src', realSrc);
+                            }
+                        });
+                    }
+                    hero.addEventListener('slide.bs.carousel', function (e) {
+                        hydrateHeroSlide(e.relatedTarget);
+                    });
+                    window.setTimeout(function () {
+                        if (!window.bootstrap || !bootstrap.Carousel) return;
+                        var next = hero.querySelector('.carousel-item.active')?.nextElementSibling
+                            || hero.querySelector('.carousel-item:not(.active)');
+                        hydrateHeroSlide(next);
+                        bootstrap.Carousel.getOrCreateInstance(hero, { interval: 8000, pause: 'hover' }).cycle();
+                    }, 8000);
+                }
+
                 if (typeof Swiper === 'undefined') return;
 
                 function swiperOptions(el) {
@@ -386,12 +452,12 @@
                 </div>
                 <a href="{{ route('blog.index') }}" class="pro-blog-viewall">{{ __('View all') }}<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
             </div>
-            <div class="row g-3">
+            <div class="row g-3 pro-blog-list">
                 @foreach($blogPosts as $post)
                     <div class="col-6 col-md-3">
                         <article class="pro-blog-card">
                             <a href="{{ route('blog.show', $post) }}" class="pro-blog-card__media">
-                                <img src="{{ $post->imageUrl() }}" class="pro-blog-card__img" alt="{{ $post->title }}" title="{{ $post->title }}" loading="lazy" width="640" height="400" decoding="async">
+                                <img src="{{ \App\Support\OptimizedImage::url($post->imageUrl(), 640) }}" class="pro-blog-card__img" alt="{{ $post->title }}" title="{{ $post->title }}" loading="lazy" width="640" height="400" decoding="async">
                             </a>
                             <div class="pro-blog-card__body">
                                 <div class="pro-blog-card__date">{{ strtoupper(($post->published_at ?? $post->created_at)->format('M Y')) }}</div>

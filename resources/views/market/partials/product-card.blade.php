@@ -12,7 +12,7 @@
     $compare = $product->compare_price ? (float) $product->compare_price : null;
     $pctOff = ($compare && $compare > $price) ? (int) round(100 - ($price / $compare) * 100) : null;
     $rating = (float) ($product->rating_avg ?? 0);
-    $ratingDisplay = $rating > 0 ? number_format($rating, 1) : '—';
+    $ratingDisplay = $rating > 0 ? number_format($rating, 1) : '0';
     $starN = $rating > 0 ? (int) min(5, max(1, round($rating))) : 5;
     $variantColors = $product->variants->pluck('color')->filter()->unique()->values();
     $swatchMap = [
@@ -27,6 +27,16 @@
     $wishIcon = $isWishlisted ? 'bi-heart-fill' : 'bi-heart';
     $wishTitle = $isWishlisted ? __('Remove from wishlist') : __('Wishlist');
     $qvDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) ($product->short_description ?: $product->description)))), 220);
+    $qvImages = [];
+    foreach ($product->images as $im) {
+        $u = \App\Models\Product::publicImageUrl($im->path);
+        if ($u) {
+            $qvImages[] = \App\Support\OptimizedImage::url($u, 600);
+        }
+    }
+    if ($qvImages === []) {
+        $qvImages[] = \App\Support\OptimizedImage::url($url1, 600) ?: $url1;
+    }
     $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE);
     $hasMultipleVariants = $activeVariants->count() > 1;
     $variantPayload = [];
@@ -59,8 +69,10 @@
             <span class="zm-pro-card__badge zm-pro-card__badge--corner">{{ __('Sale') }}</span>
         @endif
         <a href="{{ route('product.show', $product) }}" class="zm-pro-card__link">
-            <img src="{{ $url1 }}" class="zm-pro-card__img zm-pro-card__img--primary" alt="{{ $product->name }}" title="{{ $product->name }}" loading="lazy" width="520" height="390" decoding="async" onerror="this.onerror=null;this.src='{{ $product->namedPlaceholderUrl(false) }}';">
-            <img src="{{ $url2 }}" class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view" title="{{ $product->name }}" loading="lazy" width="520" height="390" decoding="async" onerror="this.onerror=null;this.style.display='none';">
+            <img src="{{ \App\Support\OptimizedImage::url($url1, 420) }}" class="zm-pro-card__img zm-pro-card__img--primary" alt="{{ $product->name }}" title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560" decoding="async" onerror="this.onerror=null;this.src='{{ $product->namedPlaceholderUrl(false) }}';">
+            @if($url2 && $url2 !== $url1)
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-hover-src="{{ \App\Support\OptimizedImage::url($url2, 420) }}" class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view" title="{{ $product->name }}" width="420" height="560" decoding="async" onerror="this.onerror=null;this.style.display='none';">
+            @endif
         </a>
         @if($listing)
             <div class="zm-pro-card__img-rate" title="{{ __('Average rating') }}">
@@ -87,6 +99,7 @@
                     data-qv-price="{{ $price }}"
                     data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                     data-qv-img="{{ e($url1) }}"
+                    data-qv-images="{{ json_encode($qvImages) }}"
                     data-qv-url="{{ route('product.show', $product) }}"
                     data-qv-variant="{{ $v?->id }}"
                     data-qv-variants="{{ json_encode($variantPayload) }}"
@@ -146,9 +159,11 @@
                     <button type="button" class="btn btn-primary w-100 js-quick-view" data-bs-toggle="modal" data-bs-target="#quickViewModal"
                         data-qv-name="{{ e($product->name) }}"
                         data-qv-brand="{{ e($vendorName) }}"
+                        data-qv-desc="{{ e($qvDescription) }}"
                         data-qv-price="{{ $price }}"
                         data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                         data-qv-img="{{ e($url1) }}"
+                        data-qv-images="{{ json_encode($qvImages) }}"
                         data-qv-url="{{ route('product.show', $product) }}"
                         data-qv-variant="{{ $v?->id }}"
                         data-qv-variants="{{ json_encode($variantPayload) }}"

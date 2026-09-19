@@ -15,7 +15,7 @@ class SeoService
             'default_description' => config('seo.default_description'),
             'default_keywords' => config('seo.default_keywords'),
             'default_og_image' => config('seo.default_og_image'),
-            'google_analytics_id' => 'G-XLTR42JC0T',
+            'google_analytics_id' => config('services.google.analytics_id') ?: 'G-XLTR42JC0T',
             'twitter_handle' => '',
             'facebook_app_id' => '',
             'faq_schema_json' => '',
@@ -50,10 +50,8 @@ class SeoService
             $ogImage = $this->absoluteUrl($ogImage);
         }
 
-        $robots = $data['robots'] ?? null;
-        if ($robots === null && $this->shouldNoIndex()) {
-            $robots = 'noindex, nofollow';
-        }
+        $robots = trim((string) ($data['robots'] ?? ''));
+        $robots = $robots !== '' ? $robots : $this->robotsDirective();
 
         return new SeoMeta([
             'title' => $title,
@@ -98,15 +96,43 @@ class SeoService
 
     public function shouldNoIndex(): bool
     {
+        return $this->robotsDirective() !== null;
+    }
+
+    /**
+     * Private/account pages stay nofollow. Filtered/search result URLs stay followable.
+     */
+    public function robotsDirective(): ?string
+    {
         $routeName = optional(request()->route())->getName();
-        if (! $routeName) {
+        if ($routeName) {
+            foreach (config('seo.noindex_route_patterns', []) as $pattern) {
+                if (Str::is($pattern, $routeName)) {
+                    return 'noindex, nofollow';
+                }
+            }
+        }
+
+        if ($this->hasThinListingQuery()) {
+            return 'noindex, follow';
+        }
+
+        return null;
+    }
+
+    public function hasThinListingQuery(): bool
+    {
+        if (! request()->routeIs(['shop.search', 'shop.menu'])) {
             return false;
         }
 
-        foreach (config('seo.noindex_route_patterns', []) as $pattern) {
-            if (Str::is($pattern, $routeName)) {
-                return true;
+        foreach (config('seo.listing_query_keys', []) as $key) {
+            $val = request()->query($key);
+            if ($val === null || $val === '' || $val === []) {
+                continue;
             }
+
+            return true;
         }
 
         return false;
@@ -189,6 +215,7 @@ class SeoService
             '@type' => 'WebSite',
             'name' => config('seo.organization.name', config('app.name')),
             'url' => url('/'),
+            'inLanguage' => 'en-IN',
             'potentialAction' => [
                 '@type' => 'SearchAction',
                 'target' => url('/search').'?q={search_term_string}',
@@ -311,14 +338,7 @@ class SeoService
 
     public function canonicalForListing(string $baseUrl): string
     {
-        $query = request()->query();
-        unset($query['page'], $query['sort']);
-
-        if (empty($query)) {
-            return $baseUrl;
-        }
-
-        return $baseUrl.'?'.http_build_query($query);
+        return $baseUrl;
     }
 
     /**
@@ -357,5 +377,22 @@ class SeoService
             'numberOfItems' => count($productUrls),
             'itemListElement' => $items,
         ];
+    }
+
+    public function webPageSchema(string $name, string $url, ?string $description = null): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebPage',
+            'name' => $name,
+            'url' => $url,
+            'description' => $description,
+            'inLanguage' => 'en-IN',
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                'name' => config('seo.organization.name', config('app.name')),
+                'url' => url('/'),
+            ],
+        ]);
     }
 }

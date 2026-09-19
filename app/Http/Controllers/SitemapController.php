@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\MenuItem;
 use App\Models\Product;
-use App\Models\Vendor;
 use Illuminate\Support\Facades\Response;
 
 class SitemapController extends Controller
@@ -18,7 +17,7 @@ class SitemapController extends Controller
             try {
                 $entries->push([
                     'loc' => route($page['route']),
-                    'lastmod' => now()->toAtomString(),
+                    'lastmod' => null,
                     'changefreq' => $page['changefreq'] ?? 'weekly',
                     'priority' => $page['priority'] ?? '0.5',
                 ]);

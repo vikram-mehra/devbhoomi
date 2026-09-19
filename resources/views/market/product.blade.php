@@ -46,6 +46,24 @@
     }
     $hasStock = $product->variants->contains(fn ($v) => $v->isBuyable());
     $brandName = filled($product->brand) ? $product->brand : ($product->vendor->shop_name ?? config('seo.organization.name'));
+    $barcodeDigits = preg_replace('/\D/', '', (string) ($product->barcode ?? ''));
+    $gtin = (strlen($barcodeDigits) >= 8 && strlen($barcodeDigits) <= 14) ? $barcodeDigits : null;
+    $reviewSchema = $product->reviews
+        ->filter(fn ($r) => (int) $r->rating > 0 && ($r->is_approved ?? true))
+        ->take(5)
+        ->map(fn ($r) => array_filter([
+            '@type' => 'Review',
+            'author' => ['@type' => 'Person', 'name' => $r->user->name ?? __('Customer')],
+            'reviewRating' => [
+                '@type' => 'Rating',
+                'ratingValue' => (int) $r->rating,
+                'bestRating' => 5,
+            ],
+            'name' => filled($r->title) ? $r->title : null,
+            'reviewBody' => filled($r->body) ? \Illuminate\Support\Str::limit(strip_tags($r->body), 240) : null,
+        ]))
+        ->values()
+        ->all();
 @endphp
 <script type="application/ld+json">
 {!! json_encode(array_filter([
@@ -55,17 +73,31 @@
     'image' => $schemaImages,
     'description' => Str::limit(strip_tags(trim(($product->short_description ?? '').' '.($product->description ?? ''))), 300),
     'sku' => $product->sku,
+    'mpn' => $product->sku,
+    'gtin' => $gtin,
     'brand' => ['@type' => 'Brand', 'name' => $brandName],
     'category' => $product->menuItem?->title,
+    'weight' => $product->weight_kg ? [
+        '@type' => 'QuantitativeValue',
+        'value' => (float) $product->weight_kg,
+        'unitCode' => 'KGM',
+    ] : null,
     'offers' => [
         '@type' => 'Offer',
         'priceCurrency' => 'INR',
         'price' => $product->effectivePrice(),
+        'priceValidUntil' => now()->addYear()->toDateString(),
+        'itemCondition' => 'https://schema.org/NewCondition',
         'availability' => $hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        'url' => url()->current(),
+        'url' => $product->canonical_url ?: url()->current(),
         'seller' => [
             '@type' => 'Organization',
             'name' => $product->vendor->shop_name ?? config('seo.organization.name'),
+        ],
+        'hasMerchantReturnPolicy' => [
+            '@type' => 'MerchantReturnPolicy',
+            'applicableCountry' => 'IN',
+            'url' => route('legal.refund'),
         ],
     ],
     'aggregateRating' => $product->rating_count ? [
@@ -73,6 +105,7 @@
         'ratingValue' => (float) $product->rating_avg,
         'reviewCount' => (int) $product->rating_count,
     ] : null,
+    'review' => $reviewSchema ?: null,
 ]), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush

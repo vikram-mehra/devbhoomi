@@ -4,6 +4,12 @@
 @section('meta_description', 'Shipping and delivery policy for Devbhoomi Naturals organic products. Pan-India delivery, free shipping above ₹499, and estimated delivery timelines explained.')
 @section('canonical', route('legal.shipping'))
 
+@push('schema')
+<script type="application/ld+json">
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Shipping Policy | Devbhoomi Naturals', route('legal.shipping'), 'Shipping and delivery policy for Devbhoomi Naturals organic products.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endpush
+
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => __('Shipping policy'),

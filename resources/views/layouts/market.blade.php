@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ app()->getLocale() === 'en' ? 'en-IN' : str_replace('_', '-', app()->getLocale()) }}" class="mk-wait">
 
 <head>
     <meta charset="utf-8">
@@ -11,14 +11,39 @@
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
+    <link href="{{ asset('css/market-critical.css') }}?v=6" rel="stylesheet">
+    <style>
+        html.mk-wait { overflow: hidden; }
+        #mkPagePreloader {
+            position: fixed; inset: 0; z-index: 2147483646;
+            display: flex; align-items: center; justify-content: center;
+            background: #ffffff;
+            transition: opacity .28s ease, visibility .28s ease;
+        }
+        #mkPagePreloader.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+        #mkPagePreloader .mk-page-preloader__plate {
+            width: 78px; height: 78px; border-radius: 50%; background: #fff;
+            box-shadow: 0 8px 32px rgba(0,0,0,.07), 0 2px 10px rgba(0,0,0,.05);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #mkPagePreloader .mk-page-preloader__ring {
+            width: 42px; height: 42px; border-radius: 50%;
+            border: 3px solid rgba(45,90,61,.14);
+            border-top-color: #2d5a3d;
+            border-right-color: #2d5a3d;
+            animation: mk-page-preloader-spin .78s linear infinite;
+        }
+        @keyframes mk-page-preloader-spin { to { transform: rotate(360deg); } }
+    </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link rel="preload"
-        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap"
-        as="style">
-    <link href="{{ asset('css/market-pro.css') }}?v=141" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=159" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    </noscript>
     @stack('head')
     @php $seoService = app(\App\Services\SeoService::class); @endphp
     <script type="application/ld+json">
@@ -39,7 +64,7 @@
     @stack('schema')
 </head>
 @php
-    $gaId = config('services.google.analytics_id');
+    $gaId = config('services.google.analytics_id') ?: $seoService->global('google_analytics_id');
     $isLocal = app()->environment('local');
 @endphp
 @if(filled($gaId) && !$isLocal)
@@ -106,7 +131,7 @@
         <div class="offcanvas-header pro-mnav-header">
             <a href="{{ route('market.home') }}" class="pro-mnav-brand text-decoration-none" id="marketNavLabel">
                 @if(!empty($siteLogoUrl))
-                    <img src="{{ $siteLogoUrl }}" alt="{{ config('app.name') }}" class="pro-mnav-brand__logo" width="130"
+                    <img src="{{ \App\Support\OptimizedImage::url($siteLogoUrl, 300) }}" alt="{{ config('app.name') }}" class="pro-mnav-brand__logo" width="130"
                         height="36" decoding="async">
                 @else
                     <span class="pro-mnav-brand__name font-anc-serif">{{ config('app.name') }}</span>
@@ -227,8 +252,14 @@
                 <div class="modal-body pt-2">
                     <div class="row g-3">
                         <div class="col-md-5">
-                            <img src="" alt="" class="w-100 rounded-3 bg-light js-qv-img" width="400" height="480"
-                                style="object-fit:cover;aspect-ratio:4/5;">
+                            <div class="qv-gallery js-qv-gallery qv-gallery--single">
+                                <div class="qv-gallery__track js-qv-track" tabindex="0" aria-label="{{ __('Product images') }}">
+                                    <div class="qv-gallery__slide is-active">
+                                        <img src="" alt="" class="qv-gallery__img js-qv-img" width="400" height="480">
+                                    </div>
+                                </div>
+                                <div class="qv-gallery__dots js-qv-dots" role="tablist" aria-label="{{ __('Image navigation') }}"></div>
+                            </div>
                         </div>
                         <div class="col-md-7">
                             <p class="small text-primary fw-semibold mb-1 js-qv-brand"></p>
@@ -247,9 +278,9 @@
                                 <form action="{{ route('cart.add') }}" method="post" class="js-ajax-add-to-cart zm-pro-add-form d-flex gap-2">
                                     @csrf
                                     <input type="hidden" name="product_variant_id" class="js-qv-variant-id-input" value="">
-                                    <div class="d-flex align-items-center border rounded-pill bg-light px-2" style="height: 38px; width: 110px;">
+                                    <div class="d-flex align-items-center border rounded-pill bg-light px-2 js-qv-qty-wrap" style="height: 38px; width: 110px;">
                                         <button type="button" class="btn btn-sm p-0 border-0 text-primary js-qv-qty-minus" style="font-size: 1.1rem; width: 25px; line-height: 1;"><i class="bi bi-dash"></i></button>
-                                        <input type="number" name="qty" class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold js-qv-qty-input" value="1" min="1" readonly style="box-shadow:none; padding:0; width:40px;">
+                                        <input type="number" name="qty" class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold js-qv-qty-input" value="1" min="1" max="99" readonly style="box-shadow:none; padding:0; width:40px;">
                                         <button type="button" class="btn btn-sm p-0 border-0 text-primary js-qv-qty-plus" style="font-size: 1.1rem; width: 25px; line-height: 1;"><i class="bi bi-plus"></i></button>
                                     </div>
                                     <button type="submit" class="btn btn-primary rounded-pill px-4 js-qv-add-to-cart-btn">{{ __('Add to cart') }}</button>
@@ -293,7 +324,7 @@
             @yield('content')
         @else
             @stack('breadcrumb')
-            <div class="cb-container py-3 pb-5">
+            <div class="cb-container pb-5">
                 @yield('content')
             </div>
         @endif
@@ -489,6 +520,152 @@
                 });
             }
 
+            var QV_SLIDE_MS = 3500;
+            var qvAutoTimer = null;
+
+            function qvStopAuto() {
+                if (qvAutoTimer) {
+                    clearInterval(qvAutoTimer);
+                    qvAutoTimer = null;
+                }
+            }
+
+            function qvStartAuto(m) {
+                qvStopAuto();
+                if (!m) return;
+                var gallery = m.querySelector('.js-qv-gallery');
+                var slides = m.querySelectorAll('.qv-gallery__slide');
+                if (!gallery || slides.length < 2) return;
+                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                qvAutoTimer = setInterval(function () {
+                    if (!m.classList.contains('show')) {
+                        qvStopAuto();
+                        return;
+                    }
+                    var total = m.querySelectorAll('.qv-gallery__slide').length;
+                    if (total < 2) {
+                        qvStopAuto();
+                        return;
+                    }
+                    var next = ((gallery._qvIndex || 0) + 1) % total;
+                    qvGoSlide(m, next);
+                }, QV_SLIDE_MS);
+            }
+
+            var qvModal = document.getElementById('quickViewModal');
+            if (qvModal) {
+                qvModal.addEventListener('shown.bs.modal', function () {
+                    var slides = qvModal.querySelectorAll('.qv-gallery__slide');
+                    var active = qvModal.querySelector('.qv-gallery__slide.is-active');
+                    var idx = Array.prototype.indexOf.call(slides, active);
+                    qvGoSlide(qvModal, idx >= 0 ? idx : 0, true);
+                    qvStartAuto(qvModal);
+                });
+                qvModal.addEventListener('hidden.bs.modal', qvStopAuto);
+            }
+
+            function qvUniqueUrls(list) {
+                var out = [];
+                var seen = {};
+                (list || []).forEach(function (u) {
+                    u = String(u || '').trim();
+                    if (!u || seen[u]) return;
+                    seen[u] = 1;
+                    out.push(u);
+                });
+                return out;
+            }
+
+            function qvFileKey(u) {
+                return String(u || '').split('?')[0].split('/').pop().toLowerCase();
+            }
+
+            function qvFindSlideIndex(urls, url) {
+                if (!url) return -1;
+                var exact = urls.indexOf(url);
+                if (exact >= 0) return exact;
+                var key = qvFileKey(url);
+                if (!key) return -1;
+                return urls.findIndex(function (u) {
+                    var other = qvFileKey(u);
+                    return other === key || other.indexOf(key.replace(/\.[^.]+$/, '')) !== -1 || key.indexOf(other.replace(/\.[^.]+$/, '')) !== -1;
+                });
+            }
+
+            function qvGoSlide(m, index, instant) {
+                var gallery = m.querySelector('.js-qv-gallery');
+                var track = m.querySelector('.js-qv-track');
+                var slides = m.querySelectorAll('.qv-gallery__slide');
+                if (!gallery || !track || !slides[index]) return;
+                var width = gallery.clientWidth || slides[0].offsetWidth || 0;
+                track.style.transition = instant ? 'none' : '';
+                track.style.transform = 'translate3d(-' + (index * width) + 'px, 0, 0)';
+                if (instant) {
+                    track.offsetHeight;
+                    track.style.transition = '';
+                }
+                m.querySelectorAll('.qv-gallery__dot').forEach(function (dot, idx) {
+                    dot.classList.toggle('is-active', idx === index);
+                });
+                slides.forEach(function (slide, idx) {
+                    slide.classList.toggle('is-active', idx === index);
+                });
+                gallery._qvIndex = index;
+            }
+
+            function qvRenderGallery(m, urls, alt, activeUrl) {
+                var gallery = m.querySelector('.js-qv-gallery');
+                var track = m.querySelector('.js-qv-track');
+                var dots = m.querySelector('.js-qv-dots');
+                if (!gallery || !track || !dots) return;
+                urls = qvUniqueUrls(urls);
+                if (!urls.length) urls = [''];
+                gallery._qvUrls = urls;
+                track.innerHTML = '';
+                dots.innerHTML = '';
+                urls.forEach(function (src, i) {
+                    var slide = document.createElement('div');
+                    slide.className = 'qv-gallery__slide' + (i === 0 ? ' is-active' : '');
+                    var img = document.createElement('img');
+                    img.src = src;
+                    img.alt = alt || '';
+                    img.className = 'qv-gallery__img' + (i === 0 ? ' js-qv-img' : '');
+                    img.width = 400;
+                    img.height = 480;
+                    img.decoding = 'async';
+                    slide.appendChild(img);
+                    track.appendChild(slide);
+
+                    var dot = document.createElement('button');
+                    dot.type = 'button';
+                    dot.className = 'qv-gallery__dot' + (i === 0 ? ' is-active' : '');
+                    dot.setAttribute('aria-label', 'Image ' + (i + 1));
+                    dot.setAttribute('role', 'tab');
+                    dot.addEventListener('click', function () {
+                        qvGoSlide(m, i);
+                        qvStartAuto(m);
+                    });
+                    dots.appendChild(dot);
+                });
+                gallery.classList.toggle('qv-gallery--single', urls.length < 2);
+                var start = qvFindSlideIndex(urls, activeUrl);
+                qvGoSlide(m, start >= 0 ? start : 0, true);
+                qvStartAuto(m);
+            }
+
+            function qvShowImage(m, url) {
+                var gallery = m.querySelector('.js-qv-gallery');
+                var urls = (gallery && gallery._qvUrls) || [];
+                var idx = qvFindSlideIndex(urls, url);
+                if (idx >= 0) {
+                    qvGoSlide(m, idx);
+                    qvStartAuto(m);
+                    return;
+                }
+                var img = m.querySelector('.qv-gallery__slide.is-active .qv-gallery__img') || m.querySelector('.js-qv-img');
+                if (img && url) img.src = url;
+            }
+
             document.querySelectorAll('.js-quick-view').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     var m = document.getElementById('quickViewModal');
@@ -497,11 +674,20 @@
                     // Reset quantity
                     var qtyInput = m.querySelector('.js-qv-qty-input');
                     if (qtyInput) qtyInput.value = 1;
-                    
-                    m.querySelector('.js-qv-img').src = btn.getAttribute('data-qv-img') || '';
-                    m.querySelector('.js-qv-img').alt = btn.getAttribute('data-qv-name') || '';
+
+                    var qvName = btn.getAttribute('data-qv-name') || '';
+                    var qvImages = [];
+                    try {
+                        qvImages = JSON.parse(btn.getAttribute('data-qv-images') || '[]');
+                    } catch (e) {
+                        qvImages = [];
+                    }
+                    if (!Array.isArray(qvImages) || !qvImages.length) {
+                        qvImages = [btn.getAttribute('data-qv-img') || ''];
+                    }
+                    qvRenderGallery(m, qvImages, qvName, btn.getAttribute('data-qv-img') || '');
                     m.querySelector('.js-qv-brand').textContent = btn.getAttribute('data-qv-brand') || '';
-                    m.querySelector('.js-qv-name').textContent = btn.getAttribute('data-qv-name') || '';
+                    m.querySelector('.js-qv-name').textContent = qvName;
 
                     var descEl = m.querySelector('.js-qv-description');
                     if (descEl) {
@@ -540,6 +726,46 @@
                     
                     var btnAdd = m.querySelector('.js-qv-add-to-cart-btn');
                     var btnBuy = m.querySelector('.js-qv-buy-now-btn');
+                    var qtyWrap = m.querySelector('.js-qv-qty-wrap');
+
+                    function qvIsBuyable(v) {
+                        if (!v) return false;
+                        var stock = parseInt(v.stock, 10);
+                        if (isNaN(stock)) stock = v.buyable ? 1 : 0;
+                        return !!v.buyable && stock > 0;
+                    }
+
+                    function applyQvStockUi(buyable, stock) {
+                        var max = buyable ? Math.max(1, parseInt(stock, 10) || 1) : 1;
+                        if (qtyInput) {
+                            qtyInput.setAttribute('max', String(max));
+                            var cur = parseInt(qtyInput.value, 10) || 1;
+                            if (cur < 1) cur = 1;
+                            if (cur > max) cur = max;
+                            qtyInput.value = cur;
+                        }
+                        if (qtyWrap) qtyWrap.classList.toggle('d-none', !buyable);
+                        if (btnAdd) {
+                            btnAdd.disabled = !buyable;
+                            btnAdd.textContent = buyable ? 'Add to cart' : 'Out of Stock';
+                        }
+                        if (btnBuy) btnBuy.classList.toggle('d-none', !buyable);
+                    }
+
+                    function selectQvVariant(v, pill) {
+                        variantsList.querySelectorAll('button').forEach(function(b) {
+                            b.classList.remove('active', 'btn-primary');
+                            b.classList.add('btn-outline-secondary');
+                        });
+                        if (pill) {
+                            pill.classList.add('active', 'btn-primary');
+                            pill.classList.remove('btn-outline-secondary');
+                        }
+                        varIdInput.value = v.id;
+                        updatePriceDisplay(v.effectivePrice, v.unitPrice > v.effectivePrice ? v.unitPrice : null);
+                        qvShowImage(m, v.image || btn.getAttribute('data-qv-img') || '');
+                        applyQvStockUi(qvIsBuyable(v), v.stock);
+                    }
                     
                     if (variantsDataStr && variantsDataStr !== '[]' && variantsDataStr !== 'null') {
                         var variants = JSON.parse(variantsDataStr);
@@ -552,65 +778,37 @@
                             pill.type = 'button';
                             pill.className = 'btn btn-outline-secondary btn-sm rounded-pill px-3 py-1';
                             pill.textContent = v.size || v.color;
-                            
+                            var buyable = qvIsBuyable(v);
+                            if (!buyable) {
+                                pill.disabled = true;
+                                pill.classList.add('is-disabled');
+                                pill.setAttribute('aria-disabled', 'true');
+                                pill.title = 'Out of stock';
+                            }
+
                             pill.addEventListener('click', function() {
-                                variantsList.querySelectorAll('button').forEach(function(b) {
-                                    b.classList.remove('active', 'btn-primary');
-                                    b.classList.add('btn-outline-secondary');
-                                });
-                                pill.classList.add('active', 'btn-primary');
-                                pill.classList.remove('btn-outline-secondary');
-                                
-                                // Update variant ID
-                                varIdInput.value = v.id;
-                                
-                                // Update price
-                                updatePriceDisplay(v.effectivePrice, v.unitPrice > v.effectivePrice ? v.unitPrice : null);
-                                
-                                // Update image if variant has its own
-                                if (v.image) {
-                                    m.querySelector('.js-qv-img').src = v.image;
-                                } else {
-                                    m.querySelector('.js-qv-img').src = btn.getAttribute('data-qv-img') || '';
-                                }
-                                
-                                // Check stock
-                                if (!v.buyable) {
-                                    btnAdd.disabled = true;
-                                    btnAdd.textContent = 'Out of Stock';
-                                    btnBuy.classList.add('d-none');
-                                } else {
-                                    btnAdd.disabled = false;
-                                    btnAdd.textContent = 'Add to cart';
-                                    btnBuy.classList.remove('d-none');
-                                }
+                                if (pill.disabled) return;
+                                selectQvVariant(v, pill);
                             });
                             
                             variantsList.appendChild(pill);
                         });
                         
-                        // Select first active variant
-                        var defaultSelected = variants.find(function(vx) { return vx.buyable; }) || variants[0];
+                        var defaultSelected = variants.find(qvIsBuyable) || variants[0];
                         if (defaultSelected) {
                             var pills = variantsList.querySelectorAll('button');
                             var defIdx = variants.indexOf(defaultSelected);
-                            if (pills[defIdx]) pills[defIdx].click();
+                            selectQvVariant(defaultSelected, pills[defIdx] || null);
                         }
                     } else {
                         variantsContainer.classList.add('d-none');
                         varIdInput.value = btn.getAttribute('data-qv-variant') || '';
                         
-                        // Check stock status of single variant
                         var isBuyable = btn.closest('.js-cart-add-container')?.getAttribute('data-buyable') !== '0';
-                        if (!isBuyable) {
-                            btnAdd.disabled = true;
-                            btnAdd.textContent = 'Out of Stock';
-                            btnBuy.classList.add('d-none');
-                        } else {
-                            btnAdd.disabled = false;
-                            btnAdd.textContent = 'Add to cart';
-                            btnBuy.classList.remove('d-none');
-                        }
+                        applyQvStockUi(!!isBuyable, isBuyable ? 99 : 0);
+                    }
+                    if (window.bootstrap && bootstrap.Modal) {
+                        bootstrap.Modal.getOrCreateInstance(m).show();
                     }
                 });
             });
@@ -628,7 +826,10 @@
                 });
                 qvPlus.addEventListener('click', function() {
                     var val = parseInt(qvQtyInput.value, 10) || 1;
-                    qvQtyInput.value = val + 1;
+                    var max = parseInt(qvQtyInput.getAttribute('max'), 10) || 99;
+                    if (val < max) {
+                        qvQtyInput.value = val + 1;
+                    }
                 });
             }
 
@@ -641,7 +842,7 @@
             if (!localStorage.getItem('zm_news_popup') && window.bootstrap && newsEl) {
                 setTimeout(function () {
                     new bootstrap.Modal(newsEl).show();
-                }, 4500);
+                }, 20000);
             }
             document.getElementById('proNewsPopupForm')?.addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -662,6 +863,17 @@
             } else {
                 reveals.forEach(function (el) { el.classList.add('cb-reveal--visible'); });
             }
+
+            document.addEventListener('pointerover', function (e) {
+                var card = e.target && e.target.closest ? e.target.closest('.zm-pro-card') : null;
+                if (!card) return;
+                var hoverImg = card.querySelector('img[data-hover-src]');
+                if (!hoverImg) return;
+                var hoverSrc = hoverImg.getAttribute('data-hover-src');
+                if (hoverSrc && hoverImg.getAttribute('src') !== hoverSrc) {
+                    hoverImg.setAttribute('src', hoverSrc);
+                }
+            }, true);
         })();
     </script>
     <script>
@@ -686,21 +898,33 @@
     <script>
         (function () {
             var el = document.getElementById('mkPagePreloader');
-            if (!el) return;
+            if (!el) {
+                document.documentElement.classList.remove('mk-wait');
+                return;
+            }
             var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var done = false;
             function finish() {
+                if (done) return;
+                done = true;
                 el.classList.add('is-done');
                 el.setAttribute('aria-busy', 'false');
                 el.setAttribute('aria-hidden', 'true');
+                document.documentElement.classList.remove('mk-wait');
                 setTimeout(function () {
                     if (el.parentNode) el.parentNode.removeChild(el);
-                }, reduced ? 0 : 520);
+                }, reduced ? 0 : 280);
             }
             if (document.readyState === 'complete') {
                 finish();
+            } else if (document.readyState === 'interactive') {
+                window.setTimeout(finish, reduced ? 0 : 120);
             } else {
-                window.addEventListener('load', finish);
+                document.addEventListener('DOMContentLoaded', function () {
+                    window.setTimeout(finish, reduced ? 0 : 120);
+                });
             }
+            window.setTimeout(finish, 1600);
         })();
     </script>
     @include('partials.flash-toasts', ['includeValidationErrors' => true])

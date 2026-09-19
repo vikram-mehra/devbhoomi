@@ -1,6 +1,8 @@
 @extends('layouts.market')
 
 @section('title', __('Page not found'))
+@section('meta_description', __('This page could not be found. Browse Devbhoomi Naturals organic Himalayan products or return home.'))
+@section('robots', 'noindex, follow')
 
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [

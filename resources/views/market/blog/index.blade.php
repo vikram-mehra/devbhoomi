@@ -10,6 +10,20 @@
     @include('market.partials.pagination-head', ['paginator' => $posts])
 @endpush
 
+@push('schema')
+@php
+    $blogListSchema = app(\App\Services\SeoService::class)->itemListSchema(
+        __('From the blog'),
+        $posts->map(fn ($p) => route('blog.show', $p))->all()
+    );
+@endphp
+@if($blogListSchema)
+<script type="application/ld+json">
+{!! json_encode($blogListSchema, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endif
+@endpush
+
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => __('From the blog'),
@@ -26,7 +40,7 @@
         @if($posts->isEmpty())
             <p class="text-muted">{{ __('No articles yet. Check back soon.') }}</p>
         @else
-            <div class="row g-3">
+            <div class="row g-3 pro-blog-list">
                 @foreach($posts as $post)
                     <div class="col-6 col-md-3">
                         <article class="pro-blog-card h-100">
@@ -45,9 +59,7 @@
                 @endforeach
             </div>
 
-            <div class="mt-4 d-flex justify-content-center">
-                {{ $posts->links() }}
-            </div>
+            {{ $posts->links('market.partials.pagination') }}
         @endif
     </div>
 @endsection

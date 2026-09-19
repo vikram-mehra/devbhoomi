@@ -41,6 +41,8 @@
         ],
     ],
     'mainEntityOfPage' => url()->current(),
+    'inLanguage' => 'en-IN',
+    'wordCount' => $wordCount,
 ], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
@@ -48,6 +50,7 @@
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => $post->title,
+        'heroClass' => 'pro-page-hero--blog',
         'items' => [
             ['label' => __('Blog'), 'url' => route('blog.index')],
             ['label' => Str::limit($post->title, 48)],

@@ -1,11 +1,11 @@
 @if(($promoBanners ?? collect())->isNotEmpty())
-    <section class="pro-home-promo cb-reveal" aria-label="{{ __('Featured offers') }}">
+    <section class="pro-home-promo mk-home-band" aria-label="{{ __('Featured offers') }}">
         <div class="cb-container">
             <div class="row g-3 g-md-4">
                 @foreach($promoBanners as $tile)
                     <div class="col-md-4">
                         <a href="{{ $tile->resolvedLink() }}" class="pro-home-promo__card" @if($tile->target_blank ?? false) target="_blank" rel="noopener noreferrer" @endif>
-                            <img src="{{ $tile->imageUrl() }}" alt="{{ $tile->title }}" class="pro-home-promo__img" loading="lazy" width="640" height="480">
+                            <img src="{{ \App\Support\OptimizedImage::url($tile->imageUrl(), 640) }}" alt="{{ $tile->title }}" class="pro-home-promo__img" loading="lazy" width="640" height="480">
                             <span class="pro-home-promo__overlay" aria-hidden="true"></span>
                             <span class="pro-home-promo__content">
                                 @if(filled($tile->eyebrow))

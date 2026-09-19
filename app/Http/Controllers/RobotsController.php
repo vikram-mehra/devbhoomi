@@ -10,10 +10,11 @@ class RobotsController extends Controller
     {
         $lines = [
             'User-agent: *',
+            'Allow: /',
         ];
 
         foreach (config('seo.robots_disallow', []) as $path) {
-            $lines[] = 'Disallow: '.rtrim($path, '/');
+            $lines[] = 'Disallow: '.$path;
         }
 
         $lines[] = '';

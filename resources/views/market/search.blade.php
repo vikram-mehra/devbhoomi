@@ -10,6 +10,20 @@
     @include('market.partials.pagination-head', ['paginator' => $products])
 @endpush
 
+@push('schema')
+@php
+    $searchListSchema = app(\App\Services\SeoService::class)->itemListSchema(
+        request('q') ? __('Search results for :query', ['query' => request('q')]) : __('Shop Organic Products'),
+        $products->map(fn ($p) => route('product.show', $p->slug))->all()
+    );
+@endphp
+@if($searchListSchema)
+<script type="application/ld+json">
+{!! json_encode($searchListSchema, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endif
+@endpush
+
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => __('Search products'),
@@ -18,8 +32,8 @@
 @endpush
 
 @section('content')
-    <div class="row g-4">
-        <aside class="col-lg-3">
+    <div class="row g-4 pro-listing-page">
+        <aside class="col-lg-3 mk-shop-filter-col" id="mkShopFilterCol">
             @include('market.partials.shop-filters', [
                 'formAction' => route('shop.search'),
                 'facets' => $facets,
@@ -46,26 +60,41 @@
                     @endif
                 @endforeach
                 @php $rtotal = $products->total(); @endphp
-                <span class="small text-muted">{{ $rtotal }} {{ $rtotal === 1 ? __('result') : __('results') }}</span>
-                <div class="d-flex align-items-center gap-2 ms-auto">
-                    <label class="small text-muted mb-0" for="mkSearchSort">{{ __('Sort by') }}</label>
-                    <select name="sort" id="mkSearchSort" class="form-select form-select-sm rounded-3" style="width: auto; min-width: 10rem;" onchange="this.form.submit()">
-                        <option value="popular" @if(request('sort', 'popular') === 'popular') selected @endif>{{ __('Popularity') }}</option>
-                        <option value="price_asc" @if(request('sort') === 'price_asc') selected @endif>{{ __('Price ↑') }}</option>
-                        <option value="price_desc" @if(request('sort') === 'price_desc') selected @endif>{{ __('Price ↓') }}</option>
-                        <option value="newest" @if(request('sort') === 'newest') selected @endif>{{ __('Newest') }}</option>
-                    </select>
+                <span class="small text-muted mk-shop-toolbar__count">{{ $rtotal }} {{ $rtotal === 1 ? __('result') : __('results') }}</span>
+                <div class="mk-shop-toolbar__actions d-flex align-items-center gap-2 ms-auto">
+                    <button type="button" class="mk-shop-filter-toggle d-lg-none" id="mkShopFilterOpen" aria-expanded="false" aria-controls="mkShopFilterPanel">
+                        <i class="bi bi-sliders" aria-hidden="true"></i>{{ __('Filters') }}
+                    </button>
+                    <div class="mk-shop-toolbar__sort d-flex align-items-center gap-2">
+                        <label class="small text-muted mb-0" for="mkSearchSort">{{ __('Sort by') }}</label>
+                        <select name="sort" id="mkSearchSort" class="form-select form-select-sm rounded-3" style="width: auto; min-width: 8rem;" onchange="this.form.submit()">
+                            <option value="popular" @if(request('sort', 'popular') === 'popular') selected @endif>{{ __('Popularity') }}</option>
+                            <option value="price_asc" @if(request('sort') === 'price_asc') selected @endif>{{ __('Price ↑') }}</option>
+                            <option value="price_desc" @if(request('sort') === 'price_desc') selected @endif>{{ __('Price ↓') }}</option>
+                            <option value="newest" @if(request('sort') === 'newest') selected @endif>{{ __('Newest') }}</option>
+                        </select>
+                    </div>
                 </div>
             </form>
 
-            <div class="zm-grid-products zm-grid-products--shop">
-                @forelse($products as $product)
-                    @include('market.partials.product-card', ['product' => $product, 'listing' => true])
-                @empty
-                    <p class="text-muted mb-0">{{ __('No matches.') }}</p>
-                @endforelse
-            </div>
-            <div class="mt-4">{{ $products->links() }}</div>
+            @if($products->isEmpty())
+                @include('market.partials.empty-state', [
+                    'icon' => 'bi-search',
+                    'title' => __('No products found'),
+                    'text' => request('q')
+                        ? __('We could not find any products matching “:query”. Try a different keyword or browse the shop.', ['query' => request('q')])
+                        : __('No products match these filters. Try changing your search, category, or price range.'),
+                    'cta' => __('Continue shopping'),
+                    'ctaUrl' => route('shop.search'),
+                ])
+            @else
+                <div class="zm-grid-products zm-grid-products--shop">
+                    @foreach($products as $product)
+                        @include('market.partials.product-card', ['product' => $product, 'listing' => true])
+                    @endforeach
+                </div>
+                {{ $products->links('market.partials.pagination') }}
+            @endif
         </div>
     </div>
 @endsection

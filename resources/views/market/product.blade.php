@@ -46,6 +46,24 @@
     }
     $hasStock = $product->variants->contains(fn ($v) => $v->isBuyable());
     $brandName = filled($product->brand) ? $product->brand : ($product->vendor->shop_name ?? config('seo.organization.name'));
+    $barcodeDigits = preg_replace('/\D/', '', (string) ($product->barcode ?? ''));
+    $gtin = (strlen($barcodeDigits) >= 8 && strlen($barcodeDigits) <= 14) ? $barcodeDigits : null;
+    $reviewSchema = $product->reviews
+        ->filter(fn ($r) => (int) $r->rating > 0 && ($r->is_approved ?? true))
+        ->take(5)
+        ->map(fn ($r) => array_filter([
+            '@type' => 'Review',
+            'author' => ['@type' => 'Person', 'name' => $r->user->name ?? __('Customer')],
+            'reviewRating' => [
+                '@type' => 'Rating',
+                'ratingValue' => (int) $r->rating,
+                'bestRating' => 5,
+            ],
+            'name' => filled($r->title) ? $r->title : null,
+            'reviewBody' => filled($r->body) ? \Illuminate\Support\Str::limit(strip_tags($r->body), 240) : null,
+        ]))
+        ->values()
+        ->all();
 @endphp
 <script type="application/ld+json">
 {!! json_encode(array_filter([
@@ -55,17 +73,31 @@
     'image' => $schemaImages,
     'description' => Str::limit(strip_tags(trim(($product->short_description ?? '').' '.($product->description ?? ''))), 300),
     'sku' => $product->sku,
+    'mpn' => $product->sku,
+    'gtin' => $gtin,
     'brand' => ['@type' => 'Brand', 'name' => $brandName],
     'category' => $product->menuItem?->title,
+    'weight' => $product->weight_kg ? [
+        '@type' => 'QuantitativeValue',
+        'value' => (float) $product->weight_kg,
+        'unitCode' => 'KGM',
+    ] : null,
     'offers' => [
         '@type' => 'Offer',
         'priceCurrency' => 'INR',
         'price' => $product->effectivePrice(),
+        'priceValidUntil' => now()->addYear()->toDateString(),
+        'itemCondition' => 'https://schema.org/NewCondition',
         'availability' => $hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        'url' => url()->current(),
+        'url' => $product->canonical_url ?: url()->current(),
         'seller' => [
             '@type' => 'Organization',
             'name' => $product->vendor->shop_name ?? config('seo.organization.name'),
+        ],
+        'hasMerchantReturnPolicy' => [
+            '@type' => 'MerchantReturnPolicy',
+            'applicableCountry' => 'IN',
+            'url' => route('legal.refund'),
         ],
     ],
     'aggregateRating' => $product->rating_count ? [
@@ -73,6 +105,7 @@
         'ratingValue' => (float) $product->rating_avg,
         'reviewCount' => (int) $product->rating_count,
     ] : null,
+    'review' => $reviewSchema ?: null,
 ]), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
@@ -134,7 +167,7 @@
             'buyable' => $v->isBuyable(),
         ])->values()->all();
     @endphp
-    <div class="row g-4 pro-page-pad-mobile">
+    <div class="row g-4 pro-page-pad-mobile pro-pdp-page">
         <div class="col-md-5">
             <div class="zm-card p-2 p-md-3">
                 <div class="pro-pdp-gallery pro-pdp-gallery--hero">
@@ -263,9 +296,16 @@
             </form>
 
             @auth
-                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline">@csrf
+                @php
+                    $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
+                    $isWishlisted = in_array((int) $product->id, $wishlistIds, true);
+                @endphp
+                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist">@csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <button class="zm-btn zm-btn-ghost" type="submit"><i class="bi bi-heart"></i> Wishlist</button>
+                    <button class="zm-btn zm-btn-ghost {{ $isWishlisted ? 'is-wishlisted' : '' }}" type="submit" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}">
+                        <i class="bi {{ $isWishlisted ? 'bi-heart-fill' : 'bi-heart' }}"></i>
+                        <span class="js-wish-label">{{ $isWishlisted ? __('Wishlisted') : __('Wishlist') }}</span>
+                    </button>
                 </form>
             @endauth
         </div>
@@ -287,7 +327,17 @@
             <div class="tab-content pro-pdp-tab-content" id="pdpDetailTabsContent">
             <div class="tab-pane fade show active" id="pdp-tab-desc" role="tabpanel" aria-labelledby="pdp-tab-desc-btn" tabindex="0">
                 @if(filled($product->description))
-                    <div class="pro-pdp-long-desc text-body lh-lg">{!! nl2br(e($product->description)) !!}</div>
+                    @php
+                        $descHtml = trim((string) $product->description);
+                        $descIsRich = $descHtml !== '' && $descHtml !== strip_tags($descHtml);
+                    @endphp
+                    <div class="pro-pdp-long-desc text-body lh-lg @if($descIsRich) pro-pdp-long-desc--rich @endif">
+                        @if($descIsRich)
+                            {!! $descHtml !!}
+                        @else
+                            {!! nl2br(e($descHtml)) !!}
+                        @endif
+                    </div>
                 @else
                     <p class="text-muted mb-0">{{ __('More details will be added soon.') }}</p>
                 @endif
@@ -742,8 +792,8 @@
         if (typeof Swiper === 'undefined') return;
         function swiperOptions(el) {
             return {
-                slidesPerView: 1,
-                spaceBetween: 12,
+                slidesPerView: 1.5,
+                spaceBetween: 10,
                 watchOverflow: true,
                 observer: true,
                 observeParents: true,
@@ -751,13 +801,13 @@
                 watchSlidesProgress: true,
                 resizeObserver: true,
                 centeredSlides: false,
-                roundLengths: true,
+                roundLengths: false,
                 navigation: {
                     nextEl: el.querySelector('.swiper-button-next'),
                     prevEl: el.querySelector('.swiper-button-prev'),
                 },
                 breakpoints: {
-                    576: { slidesPerView: 'auto', spaceBetween: 16 },
+                    620: { slidesPerView: 'auto', spaceBetween: 16 },
                     768: { slidesPerView: 'auto', spaceBetween: 16 },
                     992: { slidesPerView: 'auto', spaceBetween: 16 },
                 },

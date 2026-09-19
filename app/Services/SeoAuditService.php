@@ -217,11 +217,9 @@ class SeoAuditService
     private function auditGlobal(): array
     {
         $issues = [];
-        $sitemapUrl = url('/sitemap.xml');
-        $robotsPath = public_path('robots.txt');
 
-        if (! is_readable($robotsPath) || ! Str::contains(file_get_contents($robotsPath), 'Sitemap:')) {
-            $issues[] = $this->issue('medium', 'robots.txt missing Sitemap directive', 'robots.txt', url('/robots.txt'), 'Add Sitemap: '.$sitemapUrl);
+        if (! \Illuminate\Support\Facades\Route::has('robots')) {
+            $issues[] = $this->issue('medium', 'robots.txt route missing', 'robots.txt', url('/robots.txt'), 'Restore the /robots.txt route so crawlers can find the sitemap.');
         }
 
         if (! filled($this->seo->global('default_description'))) {

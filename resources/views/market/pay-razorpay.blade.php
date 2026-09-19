@@ -12,10 +12,14 @@
 @endpush
 
 @section('content')
-    <div class="text-center py-5" id="rzpLoading">
-        <p class="h5 mb-2">{{ __('Opening payment gateway…') }}</p>
-        <p class="text-muted small mb-4">{{ __('Order') }} {{ $order->order_number }} — ₹{{ number_format($payable, 2) }}</p>
-        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+    <div class="rzp-pay-overlay" id="rzpLoading" role="alert" aria-live="polite" aria-busy="true">
+        <div class="rzp-pay-overlay__inner">
+            <div class="mk-page-preloader__plate">
+                <span class="mk-page-preloader__ring" aria-hidden="true"></span>
+            </div>
+            <p class="rzp-pay-overlay__title" id="rzpLoadingTitle">{{ __('Opening payment gateway…') }}</p>
+            <p class="rzp-pay-overlay__sub" id="rzpLoadingSub">{{ __('Order') }} {{ $order->order_number }} — ₹{{ number_format($payable, 2) }}</p>
+        </div>
     </div>
     <div class="text-center py-5" id="rzpFallback" hidden>
         <p id="rzpError" class="text-danger mb-3"></p>
@@ -29,26 +33,64 @@
 <script>
 (function () {
     var loadingEl = document.getElementById('rzpLoading');
+    var loadingTitle = document.getElementById('rzpLoadingTitle');
+    var loadingSub = document.getElementById('rzpLoadingSub');
     var fallbackEl = document.getElementById('rzpFallback');
     var btn = document.getElementById('rzpBtn');
     var errEl = document.getElementById('rzpError');
     var started = false;
+    var submitting = false;
+    var hadFailure = false;
+    var payPageUrl = @json(route('pay.razorpay', $order));
+    var orderUrl = @json(route('orders.show', $order));
+    var abandonUrl = @json(route('pay.razorpay.abandon', $order));
+    var defaultSub = @json(__('Order') . ' ' . $order->order_number . ' — ₹' . number_format($payable, 2));
 
-    function showFallback(msg) {
-        if (loadingEl) loadingEl.hidden = true;
-        if (fallbackEl) fallbackEl.hidden = false;
-        if (errEl && msg) {
-            errEl.textContent = msg;
+    function showLoader(title, sub) {
+        if (loadingTitle && title) loadingTitle.textContent = title;
+        if (loadingSub) loadingSub.textContent = sub || defaultSub;
+        if (loadingEl) {
+            loadingEl.hidden = false;
+            loadingEl.setAttribute('aria-busy', 'true');
+        }
+        if (fallbackEl) fallbackEl.hidden = true;
+    }
+
+    function hideLoader() {
+        if (loadingEl) {
+            loadingEl.hidden = true;
+            loadingEl.setAttribute('aria-busy', 'false');
         }
     }
 
+    function showFallback(msg) {
+        hideLoader();
+        if (fallbackEl) fallbackEl.hidden = false;
+        if (errEl && msg) errEl.textContent = msg;
+    }
+
+    function goToPayPage() {
+        window.location.replace(payPageUrl);
+    }
+
+    function abandonThenLeave() {
+        fetch(abandonUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': @json(csrf_token()),
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+            keepalive: true,
+        }).catch(function () {}).finally(goToPayPage);
+    }
+
     function openRzp() {
-        if (started && loadingEl && !loadingEl.hidden) {
-            return;
-        }
+        if (submitting) return;
+        if (started && loadingEl && !loadingEl.hidden) return;
         started = true;
-        if (fallbackEl) fallbackEl.hidden = true;
-        if (loadingEl) loadingEl.hidden = false;
+        hadFailure = false;
+        showLoader(@json(__('Opening payment gateway…')));
         if (errEl) errEl.textContent = '';
         if (btn) btn.disabled = true;
 
@@ -66,8 +108,18 @@
             });
         }).then(function (res) {
             if (btn) btn.disabled = false;
-            if (!res.ok || res.data.error) {
+            if (!res.ok || (res.data && res.data.error)) {
                 var key = res.data && res.data.error;
+                if (key === 'already_paid' || key === 'not_payable') {
+                    showLoader(
+                        key === 'already_paid'
+                            ? @json(__('This order is already paid.'))
+                            : @json(__('This payment link is no longer valid.')),
+                        @json(__('Redirecting…'))
+                    );
+                    goToPayPage();
+                    return;
+                }
                 var msg = key === 'gateway_not_configured'
                     ? @json(__('Online payment is not configured.'))
                     : key === 'nothing_to_pay'
@@ -77,7 +129,6 @@
                 started = false;
                 return;
             }
-            if (loadingEl) loadingEl.hidden = true;
             var options = {
                 key: @json($key),
                 amount: res.data.amount,
@@ -90,8 +141,11 @@
                     email: @json($prefill['email'] ?? ''),
                     contact: @json($prefill['contact'] ?? ''),
                 },
-                theme: { color: '#c67c4e' },
+                theme: { color: '#2d5a3d' },
                 handler: function (response) {
+                    if (submitting) return;
+                    submitting = true;
+                    showLoader(@json(__('Confirming your payment…')), @json(__('Please wait, do not refresh this page.')));
                     var f = document.createElement('form');
                     f.method = 'POST';
                     f.action = @json(route('pay.razorpay.verify'));
@@ -105,18 +159,28 @@
                 },
                 modal: {
                     ondismiss: function () {
-                        window.location.href = @json(route('orders.show', $order));
+                        if (submitting) return;
+                        if (hadFailure) {
+                            showLoader(@json(__('Payment failed.')), @json(__('Redirecting you now…')));
+                            abandonThenLeave();
+                            return;
+                        }
+                        showLoader(@json(__('Returning to your order…')));
+                        window.location.href = orderUrl;
                     },
                 },
             };
-            var rzp = new Razorpay(options);
-            rzp.on('payment.failed', function (resp) {
-                showFallback(resp.error && resp.error.description
-                    ? resp.error.description
-                    : @json(__('Payment failed. Try another method or contact support.')));
+            if (typeof Razorpay === 'undefined') {
+                showFallback(@json(__('Could not load the payment window. Please refresh and try again.')));
                 started = false;
+                return;
+            }
+            var rzp = new Razorpay(options);
+            rzp.on('payment.failed', function () {
+                hadFailure = true;
             });
             rzp.open();
+            hideLoader();
         }).catch(function () {
             if (btn) btn.disabled = false;
             showFallback(@json(__('Network error. Check your connection and try again.')));

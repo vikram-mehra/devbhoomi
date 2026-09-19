@@ -62,11 +62,14 @@
   padding: 0.65rem 1.35rem;
   border-radius: 999px;
   font-weight: 600;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .pro-about-hero__cta:hover {
   background: var(--pro-page-green-dark);
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(45, 90, 61, 0.28);
 }
 
 .pro-about-stats {
@@ -382,11 +385,14 @@
   padding: 0.7rem 1.5rem;
   border-radius: 999px;
   font-weight: 600;
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .pro-contact-submit:hover {
   background: var(--pro-page-green-dark);
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(45, 90, 61, 0.28);
 }
 
 @media (max-width: 991.98px) {

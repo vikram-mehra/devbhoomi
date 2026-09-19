@@ -16,7 +16,8 @@
     }
 @endphp
 @if(!empty($faqItems))
-<section class="mk-section cb-reveal" aria-labelledby="faq-heading">
+<section class="mk-home-band mk-section cb-reveal" aria-labelledby="faq-heading">
+    <div class="cb-container">
     <div class="pro-section-head">
         <p class="pro-section-head__eyebrow">{{ __('Help center') }}</p>
         <h2 class="pro-section-head__title" id="faq-heading">{{ __('Frequently asked questions') }}</h2>
@@ -39,6 +40,7 @@
                 </div>
             </div>
         @endforeach
+    </div>
     </div>
 </section>
 @endif

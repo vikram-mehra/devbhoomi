@@ -27,6 +27,7 @@ class BannerAdminController extends Controller
             'eyebrow' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:2000',
             'image' => ['required', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'mobile_image' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
             'link' => 'nullable|string|max:2048',
             'button_label' => 'nullable|string|max:120',
             'secondary_button_label' => 'nullable|string|max:120',
@@ -36,10 +37,15 @@ class BannerAdminController extends Controller
             'image.required' => __('Choose an image file to upload.'),
             'image.mimes' => __('Use JPEG, PNG, GIF, or WebP.'),
             'image.max' => __('Image must be 5 MB or smaller.'),
+            'mobile_image.mimes' => __('Use JPEG, PNG, GIF, or WebP for the mobile banner.'),
+            'mobile_image.max' => __('Mobile image must be 5 MB or smaller.'),
         ]);
 
         try {
             $imageValue = $request->file('image')->store('banners', 'public');
+            $mobileValue = $request->hasFile('mobile_image')
+                ? $request->file('mobile_image')->store('banners', 'public')
+                : null;
         } catch (\Throwable $e) {
             report($e);
 
@@ -57,6 +63,7 @@ class BannerAdminController extends Controller
             'eyebrow' => $request->eyebrow,
             'subtitle' => $request->subtitle,
             'image' => $imageValue,
+            'mobile_image' => $mobileValue ?: null,
             'link' => $request->link,
             'button_label' => $request->button_label,
             'secondary_button_label' => $request->secondary_button_label,
@@ -79,6 +86,8 @@ class BannerAdminController extends Controller
             'eyebrow' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:2000',
             'image' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'mobile_image' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'remove_mobile_image' => 'nullable|boolean',
             'link' => 'nullable|string|max:2048',
             'button_label' => 'nullable|string|max:120',
             'secondary_button_label' => 'nullable|string|max:120',
@@ -88,10 +97,19 @@ class BannerAdminController extends Controller
         ]);
 
         $imageValue = $banner->image;
+        $mobileValue = $banner->mobile_image;
 
         if ($request->hasFile('image')) {
             $this->deleteStoredBannerFile($banner);
             $imageValue = $request->file('image')->store('banners', 'public');
+        }
+
+        if ($request->hasFile('mobile_image')) {
+            $this->deleteStoredMobileBannerFile($banner);
+            $mobileValue = $request->file('mobile_image')->store('banners', 'public');
+        } elseif ($request->boolean('remove_mobile_image')) {
+            $this->deleteStoredMobileBannerFile($banner);
+            $mobileValue = null;
         }
 
         if ($imageValue === '' || $imageValue === null) {
@@ -103,6 +121,7 @@ class BannerAdminController extends Controller
             'eyebrow' => $request->eyebrow,
             'subtitle' => $request->subtitle,
             'image' => $imageValue,
+            'mobile_image' => $mobileValue ?: null,
             'link' => $request->link,
             'button_label' => $request->button_label,
             'secondary_button_label' => $request->secondary_button_label,
@@ -120,6 +139,7 @@ class BannerAdminController extends Controller
     {
         $this->ensureHomeSlider($banner);
         $this->deleteStoredBannerFile($banner);
+        $this->deleteStoredMobileBannerFile($banner);
         $banner->delete();
         $this->flushHomeCaches();
 
@@ -144,8 +164,22 @@ class BannerAdminController extends Controller
 
     protected function deleteStoredBannerFile(Banner $banner): void
     {
-        if ($banner->isStoredFile() && Storage::disk('public')->exists($banner->image)) {
-            Storage::disk('public')->delete($banner->image);
+        $this->deleteStoredPath($banner->isStoredFile() ? $banner->image : null);
+    }
+
+    protected function deleteStoredMobileBannerFile(Banner $banner): void
+    {
+        $this->deleteStoredPath($banner->isStoredMobileFile() ? $banner->mobile_image : null);
+    }
+
+    protected function deleteStoredPath(?string $path): void
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return;
+        }
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
         }
     }
 

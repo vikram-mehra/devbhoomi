@@ -31,12 +31,20 @@
                     <textarea name="subtitle" class="form-control" rows="2" placeholder="{{ __('Paragraph under the heading') }}">{{ old('subtitle') }}</textarea>
                 </div>
                 <div class="col-md-6 col-lg-4">
-                    <label class="form-label">{{ __('Image file') }} *</label>
+                    <label class="form-label">{{ __('Desktop image') }} *</label>
                     <input type="file" name="image" class="form-control @error('image') is-invalid @enderror" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp" required>
                     @error('image')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
-                    <div class="form-text">{{ __('JPEG, PNG, GIF or WebP — max 5 MB. If upload fails, increase PHP upload_max_filesize and post_max_size.') }}</div>
+                    <div class="form-text">{{ __('Wide landscape (about 1920×700). JPEG, PNG, GIF or WebP — max 5 MB.') }}</div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <label class="form-label">{{ __('Mobile image') }}</label>
+                    <input type="file" name="mobile_image" class="form-control @error('mobile_image') is-invalid @enderror" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp">
+                    @error('mobile_image')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text">{{ __('Optional. Portrait or square (about 800×1000) for phones. Desktop image is used if this is empty.') }}</div>
                 </div>
                 <div class="col-md-6 col-lg-4">
                     <label class="form-label">{{ __('Primary button link') }}</label>
@@ -74,9 +82,26 @@
                         <div class="ratio ratio-16x9 bg-light rounded border overflow-hidden mb-2">
                             <img src="{{ $b->imageUrl() }}" alt="" class="object-fit-cover w-100 h-100" style="object-fit: cover;">
                         </div>
-                        <label class="form-label small">{{ __('Replace image (optional)') }}</label>
+                        <label class="form-label small">{{ __('Replace desktop image') }}</label>
                         <input type="file" name="image" class="form-control form-control-sm" accept="image/jpeg,image/png,image/gif,image/webp">
-                        <div class="form-text small">{{ __('Leave empty to keep the current image.') }}</div>
+                        <div class="form-text small mb-3">{{ __('Leave empty to keep the current image.') }}</div>
+                        @if($b->mobileImageUrl())
+                            <div class="ratio ratio-1x1 bg-light rounded border overflow-hidden mb-2" style="max-width: 140px;">
+                                <img src="{{ $b->mobileImageUrl() }}" alt="" class="object-fit-cover w-100 h-100" style="object-fit: cover;">
+                            </div>
+                        @endif
+                        <label class="form-label small">{{ __('Mobile image') }}</label>
+                        <input type="file" name="mobile_image" class="form-control form-control-sm @error('mobile_image') is-invalid @enderror" accept="image/jpeg,image/png,image/gif,image/webp">
+                        @error('mobile_image')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text small">{{ __('Optional. Used on phones instead of the desktop slide.') }}</div>
+                        @if($b->mobile_image)
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="remove_mobile_image" value="1" class="form-check-input" id="rm-mob-{{ $b->id }}">
+                                <label class="form-check-label small text-danger" for="rm-mob-{{ $b->id }}">{{ __('Remove mobile image') }}</label>
+                            </div>
+                        @endif
                     </div>
                     <div class="col-lg-9 col-md-8">
                         <div class="row g-2">

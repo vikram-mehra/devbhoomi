@@ -4,6 +4,12 @@
 @section('meta_description', 'Devbhoomi Naturals refund and return policy for organic food orders. Learn eligibility, timelines and how to request returns for damaged or incorrect items.')
 @section('canonical', route('legal.refund'))
 
+@push('schema')
+<script type="application/ld+json">
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Refund & Return Policy | Devbhoomi Naturals', route('legal.refund'), 'Refund and return policy for Devbhoomi Naturals organic food orders.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endpush
+
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => __('Refund policy'),

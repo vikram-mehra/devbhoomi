@@ -16,6 +16,7 @@ class Banner extends Model
         'eyebrow',
         'subtitle',
         'image',
+        'mobile_image',
         'link',
         'button_label',
         'secondary_button_label',
@@ -29,19 +30,47 @@ class Banner extends Model
 
     public function imageUrl(): string
     {
-        if (!$this->image) {
-            return '';
-        }
-        if (Str::startsWith($this->image, ['http://', 'https://'])) {
-            return $this->image;
-        }
+        return $this->publicUrl($this->image);
+    }
 
-        return asset('storage/'.$this->image);
+    public function mobileImageUrl(): string
+    {
+        return $this->publicUrl($this->mobile_image);
+    }
+
+    public function resolvedMobileImageUrl(): string
+    {
+        return $this->mobileImageUrl() !== '' ? $this->mobileImageUrl() : $this->imageUrl();
     }
 
     public function isStoredFile(): bool
     {
-        return $this->image && ! Str::startsWith($this->image, ['http://', 'https://']);
+        return $this->isStoredPath($this->image);
+    }
+
+    public function isStoredMobileFile(): bool
+    {
+        return $this->isStoredPath($this->mobile_image);
+    }
+
+    public function isStoredPath(?string $path): bool
+    {
+        $path = trim((string) $path);
+
+        return $path !== '' && ! Str::startsWith($path, ['http://', 'https://']);
+    }
+
+    protected function publicUrl(?string $path): string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return '';
+        }
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        return asset('storage/'.$path);
     }
 
     public function resolvedLink(): string

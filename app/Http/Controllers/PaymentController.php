@@ -22,6 +22,11 @@ class PaymentController extends Controller
     {
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
+
+        if ($redirect = $this->redirectIfPaymentSettled($order)) {
+            return $redirect;
+        }
+
         $payable = $this->payableAmount($order);
         if ($payable <= 0) {
             return redirect()->route('orders.show', $order);
@@ -49,6 +54,10 @@ class PaymentController extends Controller
         abort_unless($order->payment_method === 'razorpay', 400);
         abort_if($this->razorpayLive(), 403);
 
+        if ($redirect = $this->redirectIfPaymentSettled($order)) {
+            return $redirect;
+        }
+
         $payable = $this->payableAmount($order);
         if ($payable <= 0) {
             return redirect()->route('orders.show', $order);
@@ -72,6 +81,10 @@ class PaymentController extends Controller
         $order = Order::findOrFail($request->order_id);
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
+
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('orders.show', $order)->with('status', __('Payment successful.'));
+        }
 
         $secret = config('services.razorpay.secret');
         $key = config('services.razorpay.key');
@@ -117,6 +130,15 @@ class PaymentController extends Controller
     {
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
+
+        if ($order->payment_status === 'paid') {
+            return response()->json(['error' => 'already_paid'], 422);
+        }
+
+        if (! $this->orderIsPayable($order)) {
+            return response()->json(['error' => 'not_payable'], 422);
+        }
+
         $payable = $this->payableAmount($order);
         if ($payable <= 0) {
             return response()->json(['error' => 'nothing_to_pay'], 422);
@@ -146,8 +168,39 @@ class PaymentController extends Controller
 
     protected function authorizeOrder(Order $order): void
     {
-        abort_unless((int)$order->user_id === (int)auth()->id(), 403);
-        abort_if($order->payment_status === 'paid', 400);
+        abort_unless((int) $order->user_id === (int) auth()->id(), 403);
+    }
+
+    protected function orderIsPayable(Order $order): bool
+    {
+        if ($order->payment_method !== 'razorpay') {
+            return false;
+        }
+
+        if (in_array($order->payment_status, ['paid', 'failed', 'refunded'], true)) {
+            return false;
+        }
+
+        if (in_array($order->status, ['cancelled', 'returned'], true)) {
+            return false;
+        }
+
+        return $this->payableAmount($order) > 0;
+    }
+
+    protected function redirectIfPaymentSettled(Order $order)
+    {
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('orders.show', $order)
+                ->with('status', __('This order is already paid.'));
+        }
+
+        if (! $this->orderIsPayable($order)) {
+            return redirect()->route('orders.show', $order)
+                ->with('error', __('This payment link is no longer valid. Please place a new order if you still want these items.'));
+        }
+
+        return null;
     }
 
     protected function payableAmount(Order $order): float

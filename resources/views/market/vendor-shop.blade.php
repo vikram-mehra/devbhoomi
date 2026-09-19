@@ -24,7 +24,19 @@
         <div>
             <p class="h3 mb-1 fw-bold" role="doc-subtitle">{{ $vendor->shop_name }}</p>
             <div class="text-muted">{{ $vendor->city }}, {{ $vendor->state }} · ★ {{ number_format($vendor->rating_avg, 1) }} ({{ $vendor->rating_count }})</div>
-            <p class="mb-0 mt-2">{{ $vendor->description }}</p>
+            @php
+                $vendorDesc = trim((string) ($vendor->description ?? ''));
+                $vendorDescIsRich = $vendorDesc !== '' && $vendorDesc !== strip_tags($vendorDesc);
+            @endphp
+            @if($vendorDesc !== '')
+                @if($vendorDescIsRich)
+                    <div class="mk-vendor-desc mt-2">
+                        {!! $vendorDesc !!}
+                    </div>
+                @else
+                    <p class="mb-0 mt-2">{{ $vendorDesc }}</p>
+                @endif
+            @endif
         </div>
 
     </div>
@@ -35,5 +47,5 @@
             <p>No products yet.</p>
         @endforelse
     </div>
-    {{ $products->links() }}
+    {{ $products->links('market.partials.pagination') }}
 @endsection

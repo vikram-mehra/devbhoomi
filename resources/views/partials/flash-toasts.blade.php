@@ -1,7 +1,8 @@
 {{--
-  Session / validation flash as centered screen toasts.
+  Session / validation flash as toasts.
   Optional: includeValidationErrors (bool), extraMessages (array of ['type'=>'success|danger|warning','body'=>string]),
   omitSessionStatus (bool) — default skips status when mk_cart_toast is set.
+  window.zmShowFlashToast(body, type) is always available for AJAX notices.
 --}}
 @php
     $omitStatus = $omitSessionStatus ?? (bool) session('mk_cart_toast');
@@ -23,19 +24,20 @@
             $flashStack[] = ['type' => 'danger', 'body' => (string) $message];
         }
     }
-    $toastMountId = 'zmFlashToastRoot-'.substr(str_replace('.', '', uniqid('', true)), -8);
 @endphp
-@if(count($flashStack))
-<div id="{{ $toastMountId }}" class="zm-flash-toast-container" aria-live="polite"></div>
+<div id="zmFlashToastRoot" class="zm-flash-toast-container" aria-live="polite"></div>
 <style>
 .zm-flash-toast-container {
   position: fixed;
-  inset: 0;
+  top: max(1rem, env(safe-area-inset-top, 0px));
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  left: auto;
+  bottom: auto;
   z-index: 10900;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-end;
   gap: 0.5rem;
   pointer-events: none;
   padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
@@ -88,35 +90,44 @@
 </style>
 <script>
 (function () {
-    var items = @json($flashStack);
-    var rootId = @json($toastMountId);
-    var root = document.getElementById(rootId);
-    if (!root || !items.length) return;
+    var root = document.getElementById('zmFlashToastRoot');
+    var closeLabel = @json(__('Close'));
+
     function removeEl(el) {
         el.style.opacity = '0';
         el.style.transform = 'scale(0.96)';
         el.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
         setTimeout(function () { if (el.parentNode) el.remove(); }, 300);
     }
-    items.forEach(function (item, i) {
-        var type = item.type || 'success';
+
+    function showToast(body, type) {
+        if (!root || !body) return;
+        type = type || 'success';
         var el = document.createElement('div');
         el.className = 'zm-flash-toast zm-flash-toast--' + type;
         el.setAttribute('role', type === 'danger' ? 'alert' : 'status');
-        var body = document.createElement('div');
-        body.className = 'zm-flash-toast__body';
-        body.textContent = item.body || '';
+        var text = document.createElement('div');
+        text.className = 'zm-flash-toast__body';
+        text.textContent = body;
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'zm-flash-toast__close';
-        btn.setAttribute('aria-label', @json(__('Close')));
+        btn.setAttribute('aria-label', closeLabel);
         btn.innerHTML = '&times;';
         btn.addEventListener('click', function () { removeEl(el); });
-        el.appendChild(body);
+        el.appendChild(text);
         el.appendChild(btn);
         root.appendChild(el);
-        setTimeout(function () { removeEl(el); }, 6500 + i * 450);
+        setTimeout(function () { removeEl(el); }, 4200);
+    }
+
+    window.zmShowFlashToast = showToast;
+
+    var items = @json($flashStack);
+    items.forEach(function (item, i) {
+        setTimeout(function () {
+            showToast(item.body || '', item.type || 'success');
+        }, i * 120);
     });
 })();
 </script>
-@endif

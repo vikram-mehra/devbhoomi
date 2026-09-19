@@ -41,6 +41,8 @@
         ],
     ],
     'mainEntityOfPage' => url()->current(),
+    'inLanguage' => 'en-IN',
+    'wordCount' => $wordCount,
 ], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
@@ -48,6 +50,7 @@
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => $post->title,
+        'heroClass' => 'pro-page-hero--blog',
         'items' => [
             ['label' => __('Blog'), 'url' => route('blog.index')],
             ['label' => Str::limit($post->title, 48)],
@@ -112,7 +115,7 @@
                         @foreach($relatedPosts as $related)
                             <div class="col-md-4">
                                 <article class="pro-blog-card h-100">
-                                    <a href="{{ route('blog.show', $related) }}" class="d-block">
+                                    <a href="{{ route('blog.show', $related) }}" class="pro-blog-card__media">
                                         <img src="{{ $related->imageUrl() }}" class="pro-blog-card__img" alt="{{ $related->title }}" title="{{ $related->title }}" loading="lazy" width="640" height="400" decoding="async">
                                     </a>
                                     <div class="pro-blog-card__body p-3">

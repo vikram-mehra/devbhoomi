@@ -12,7 +12,7 @@
     $compare = $product->compare_price ? (float) $product->compare_price : null;
     $pctOff = ($compare && $compare > $price) ? (int) round(100 - ($price / $compare) * 100) : null;
     $rating = (float) ($product->rating_avg ?? 0);
-    $ratingDisplay = $rating > 0 ? number_format($rating, 1) : '—';
+    $ratingDisplay = $rating > 0 ? number_format($rating, 1) : '0';
     $starN = $rating > 0 ? (int) min(5, max(1, round($rating))) : 5;
     $variantColors = $product->variants->pluck('color')->filter()->unique()->values();
     $swatchMap = [
@@ -22,6 +22,21 @@
         'navy' => '#1e3a5f', 'maroon' => '#7f1d1d', 'gold' => '#ca8a04', 'silver' => '#cbd5e1',
     ];
     $hasStock = $product->variants->contains(fn ($x) => $x->isBuyable());
+    $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
+    $isWishlisted = auth()->check() && in_array((int) $product->id, $wishlistIds, true);
+    $wishIcon = $isWishlisted ? 'bi-heart-fill' : 'bi-heart';
+    $wishTitle = $isWishlisted ? __('Remove from wishlist') : __('Wishlist');
+    $qvDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) ($product->short_description ?: $product->description)))), 220);
+    $qvImages = [];
+    foreach ($product->images as $im) {
+        $u = \App\Models\Product::publicImageUrl($im->path);
+        if ($u) {
+            $qvImages[] = \App\Support\OptimizedImage::url($u, 600);
+        }
+    }
+    if ($qvImages === []) {
+        $qvImages[] = \App\Support\OptimizedImage::url($url1, 600) ?: $url1;
+    }
     $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE);
     $hasMultipleVariants = $activeVariants->count() > 1;
     $variantPayload = [];
@@ -54,8 +69,10 @@
             <span class="zm-pro-card__badge zm-pro-card__badge--corner">{{ __('Sale') }}</span>
         @endif
         <a href="{{ route('product.show', $product) }}" class="zm-pro-card__link">
-            <img src="{{ $url1 }}" class="zm-pro-card__img zm-pro-card__img--primary" alt="{{ $product->name }}" title="{{ $product->name }}" loading="lazy" width="520" height="390" decoding="async" onerror="this.onerror=null;this.src='{{ $product->namedPlaceholderUrl(false) }}';">
-            <img src="{{ $url2 }}" class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view" title="{{ $product->name }}" loading="lazy" width="520" height="390" decoding="async" onerror="this.onerror=null;this.style.display='none';">
+            <img src="{{ \App\Support\OptimizedImage::url($url1, 420) }}" class="zm-pro-card__img zm-pro-card__img--primary" alt="{{ $product->name }}" title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560" decoding="async" onerror="this.onerror=null;this.src='{{ $product->namedPlaceholderUrl(false) }}';">
+            @if($url2 && $url2 !== $url1)
+            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-hover-src="{{ \App\Support\OptimizedImage::url($url2, 420) }}" class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view" title="{{ $product->name }}" width="420" height="560" decoding="async" onerror="this.onerror=null;this.style.display='none';">
+            @endif
         </a>
         @if($listing)
             <div class="zm-pro-card__img-rate" title="{{ __('Average rating') }}">
@@ -63,42 +80,32 @@
                 <span>{{ $ratingDisplay }}</span>
             </div>
         @endif
+        <div class="zm-pro-card__wish">
+            @auth
+                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist">@csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <button type="submit" class="zm-pro-icon-btn zm-pro-icon-btn--round {{ $isWishlisted ? 'is-wishlisted' : '' }}" title="{{ $wishTitle }}" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}"><i class="bi {{ $wishIcon }}"></i></button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="zm-pro-icon-btn zm-pro-icon-btn--round" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
+            @endauth
+        </div>
         <div class="zm-pro-card__actions {{ $listing ? 'zm-pro-card__actions--listing' : '' }}">
-            @if($listing)
-                <div class="zm-pro-card__wish">
-                    @auth
-                        <form action="{{ route('wishlist.store') }}" method="post" class="d-inline">@csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <button type="submit" class="zm-pro-icon-btn zm-pro-icon-btn--round" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" class="zm-pro-icon-btn zm-pro-icon-btn--round" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
-                    @endauth
-                </div>
-            @endif
             <div class="zm-pro-card__hover-actions">
                 <button type="button" class="zm-pro-icon-btn {{ $listing ? 'zm-pro-icon-btn--round' : '' }} js-quick-view" title="{{ __('Quick view') }}" data-bs-toggle="modal" data-bs-target="#quickViewModal"
                     data-qv-name="{{ e($product->name) }}"
                     data-qv-brand="{{ e($vendorName) }}"
+                    data-qv-desc="{{ e($qvDescription) }}"
                     data-qv-price="{{ $price }}"
                     data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                     data-qv-img="{{ e($url1) }}"
+                    data-qv-images="{{ json_encode($qvImages) }}"
                     data-qv-url="{{ route('product.show', $product) }}"
                     data-qv-variant="{{ $v?->id }}"
                     data-qv-variants="{{ json_encode($variantPayload) }}"
                     data-qv-label="{{ $product->variant_label ?: __('Size') }}">
                     <i class="bi bi-eye"></i>
                 </button>
-                @if(!$listing)
-                    @auth
-                        <form action="{{ route('wishlist.store') }}" method="post" class="d-inline">@csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <button type="submit" class="zm-pro-icon-btn" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" class="zm-pro-icon-btn" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
-                    @endauth
-                @endif
             </div>
         </div>
     </div>
@@ -152,9 +159,11 @@
                     <button type="button" class="btn btn-primary w-100 js-quick-view" data-bs-toggle="modal" data-bs-target="#quickViewModal"
                         data-qv-name="{{ e($product->name) }}"
                         data-qv-brand="{{ e($vendorName) }}"
+                        data-qv-desc="{{ e($qvDescription) }}"
                         data-qv-price="{{ $price }}"
                         data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                         data-qv-img="{{ e($url1) }}"
+                        data-qv-images="{{ json_encode($qvImages) }}"
                         data-qv-url="{{ route('product.show', $product) }}"
                         data-qv-variant="{{ $v?->id }}"
                         data-qv-variants="{{ json_encode($variantPayload) }}"

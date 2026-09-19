@@ -24,7 +24,8 @@
     }
     $clearFiltersUrl = $formAction.'?'.http_build_query(['sort' => $sortForClear]);
 @endphp
-<div class="mk-shop-filters mk-filter-sheet zm-pro-filters">
+<div class="mk-shop-filter-backdrop" id="mkShopFilterBackdrop" hidden></div>
+<div class="mk-shop-filters mk-filter-sheet zm-pro-filters" id="mkShopFilterPanel">
     <form method="get" action="{{ $formAction }}" class="mk-shop-filters__form" id="mkShopFilterForm" data-auto-filter="1">
         @if(!empty($hiddenFields))
             @foreach($hiddenFields as $name => $val)
@@ -41,7 +42,12 @@
         <div class="mk-filter-section mk-filter-section--top">
             <div class="mk-filter-page-head">
                 <p class="mk-filter-page-head__title">{{ __('Filters') }}</p>
-                <a href="{{ $clearFiltersUrl }}" class="mk-filter-page-head__clear">{{ __('Clear all') }}</a>
+                <div class="mk-filter-page-head__actions">
+                    <a href="{{ $clearFiltersUrl }}" class="mk-filter-page-head__clear">{{ __('Clear all') }}</a>
+                    <button type="button" class="mk-shop-filter-close d-lg-none" id="mkShopFilterClose" aria-label="{{ __('Close filters') }}">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -259,6 +265,34 @@
             });
         });
     }
+
+    var col = document.getElementById('mkShopFilterCol');
+    var openBtn = document.getElementById('mkShopFilterOpen');
+    var closeBtn = document.getElementById('mkShopFilterClose');
+    var backdrop = document.getElementById('mkShopFilterBackdrop');
+
+    function setFilterOpen(open) {
+        if (!col) return;
+        col.classList.toggle('is-open', open);
+        document.body.classList.toggle('mk-filter-open', open);
+        if (openBtn) openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (backdrop) backdrop.hidden = !open;
+    }
+
+    if (openBtn) {
+        openBtn.addEventListener('click', function () { setFilterOpen(true); });
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function () { setFilterOpen(false); });
+    }
+    if (backdrop) {
+        backdrop.addEventListener('click', function () { setFilterOpen(false); });
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && col && col.classList.contains('is-open')) {
+            setFilterOpen(false);
+        }
+    });
 })();
 </script>
 @endpush

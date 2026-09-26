@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
-    <link href="{{ asset('css/market-critical.css') }}?v=7" rel="stylesheet">
+    <link href="{{ asset('css/market-critical.css') }}?v=9" rel="stylesheet">
     <style>
         html.mk-wait { overflow: hidden; }
         #mkPagePreloader {
@@ -39,7 +39,7 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link href="{{ asset('css/market-pro.css') }}?v=172" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=184" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -175,6 +175,7 @@
                     <a class="pro-mnav-rowlink" href="{{ route('account.dashboard') }}">{{ __('Dashboard') }}</a>
                     <a class="pro-mnav-rowlink" href="{{ route('account.details') }}">{{ __('Account details') }}</a>
                     <a class="pro-mnav-rowlink" href="{{ route('orders.index') }}">{{ __('My orders') }}</a>
+                    <a class="pro-mnav-rowlink" href="{{ route('orders.track') }}">{{ __('Track order') }}</a>
                     <a class="pro-mnav-rowlink" href="{{ route('account.refunds') }}">{{ __('Refund history') }}</a>
                     <a class="pro-mnav-rowlink" href="{{ route('account.addresses.index') }}">{{ __('Address book') }}</a>
                     <form action="{{ route('logout') }}" method="post" class="pro-mnav-logout">@csrf
@@ -361,7 +362,7 @@
         </script>
     @endif
 
-    @php $footerBrand = config('app.name', 'Alluringstyle'); @endphp
+    @php $footerBrand = config('app.name', 'Devbhoomi Naturals'); @endphp
     <footer class="cb-footer pro-footer-mk">
         <div class="cb-container position-relative">
             <button type="button" class="pro-footer-mk__scroll-top" id="proScrollTop"
@@ -386,7 +387,7 @@
                         </li>
                         <li class="pro-footer-mk__contact-item">
                             <i class="bi bi-telephone" aria-hidden="true"></i>
-                            <a href="tel:+91 9217732670">{{ __('Call Us') }}: +91 9217732670 </a>
+                            <a href="tel:+919217732670">{{ __('Call Us') }}: +91 9217732670 </a>
                         </li>
                         <li class="pro-footer-mk__contact-item">
                             <i class="bi bi-envelope" aria-hidden="true"></i>
@@ -414,7 +415,11 @@
                     @else
                         <a href="{{ route('login') }}">{{ __('My account') }}</a>
                     @endauth
-                    <a href="{{ route('orders.track') }}">{{ __('Track order') }}</a>
+                    @auth
+                        <a href="{{ route('orders.track') }}">{{ __('Track order') }}</a>
+                    @else
+                        <a href="{{ route('login') }}">{{ __('Track order') }}</a>
+                    @endauth
                     <a href="{{ route('pages.contact') }}">{{ __('Contact us') }}</a>
                     <a href="{{ route('legal.terms') }}">{{ __('Terms & conditions') }}</a>
                     <a href="{{ route('legal.privacy') }}">{{ __('Privacy policy') }}</a>

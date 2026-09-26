@@ -28,9 +28,13 @@
             <span class="account-dash__nav-ico" aria-hidden="true"><i class="bi bi-person-vcard"></i></span>
             <span class="account-dash__nav-label">{{ __('Account details') }}</span>
         </a>
-        <a href="{{ route('orders.index') }}" class="account-dash__nav-link @if(request()->routeIs('orders.*')) is-active @endif">
+        <a href="{{ route('orders.index') }}" class="account-dash__nav-link @if(request()->routeIs('orders.index', 'orders.show')) is-active @endif">
             <span class="account-dash__nav-ico" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></span>
             <span class="account-dash__nav-label">{{ __('My orders') }}</span>
+        </a>
+        <a href="{{ route('orders.track') }}" class="account-dash__nav-link @if(request()->routeIs('orders.track', 'orders.track.lookup')) is-active @endif">
+            <span class="account-dash__nav-ico" aria-hidden="true"><i class="bi bi-truck"></i></span>
+            <span class="account-dash__nav-label">{{ __('Track order') }}</span>
         </a>
         <a href="{{ route('account.refunds') }}" class="account-dash__nav-link @if(request()->routeIs('account.refunds')) is-active @endif">
             <span class="account-dash__nav-ico" aria-hidden="true"><i class="bi bi-currency-dollar"></i></span>

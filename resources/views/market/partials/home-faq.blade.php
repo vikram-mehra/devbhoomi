@@ -11,7 +11,7 @@
         $faqItems = [
             ['question' => __('Are Devbhoomi products 100% organic?'), 'answer' => __('We source pure Himalayan organic millets, pulses and spices directly from verified Uttarakhand farmers.')],
             ['question' => __('Do you deliver across India?'), 'answer' => __('Yes — we ship pan-India. Free delivery on prepaid orders above ₹499.')],
-            ['question' => __('How can I track my order?'), 'answer' => __('Open Track order from the help menu and enter your order number plus the email or mobile used at checkout.')],
+            ['question' => __('How can I track my order?'), 'answer' => __('Log in to your account, open Track order, and enter your order number plus the email or mobile used at checkout.')],
         ];
     }
 @endphp
@@ -34,7 +34,11 @@
                     <div class="accordion-body text-secondary">
                         {{ $faq['answer'] }}
                         @if($i === 2)
-                            <a href="{{ route('orders.track') }}" class="d-inline-block mt-2">{{ __('Track order') }}</a>
+                            @auth
+                                <a href="{{ route('orders.track') }}" class="d-inline-block mt-2">{{ __('Track order') }}</a>
+                            @else
+                                <a href="{{ route('login') }}" class="d-inline-block mt-2">{{ __('Login to track order') }}</a>
+                            @endauth
                         @endif
                     </div>
                 </div>

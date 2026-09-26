@@ -28,7 +28,19 @@
     {{-- Hero: full-bleed background image + overlay copy --}}
     @if($banners->isNotEmpty())
         <section class="pro-hero p-0">
-            <div id="proHeroSlider" class="carousel slide" data-bs-ride="false" data-bs-interval="8000">
+            <div id="proHeroSlider" class="carousel slide" data-bs-ride="false" data-bs-interval="8000" data-bs-touch="true">
+                @if($banners->count() > 1)
+                    <div class="carousel-indicators pro-hero__dots">
+                        @foreach($banners as $i => $b)
+                            <button type="button"
+                                data-bs-target="#proHeroSlider"
+                                data-bs-slide-to="{{ $i }}"
+                                @class(['active' => $i === 0])
+                                @if($i === 0) aria-current="true" @endif
+                                aria-label="{{ __('Slide :n', ['n' => $i + 1]) }}"></button>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="carousel-inner">
                     @foreach($banners as $i => $b)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
@@ -272,12 +284,27 @@
                     hero.addEventListener('slide.bs.carousel', function (e) {
                         hydrateHeroSlide(e.relatedTarget);
                     });
+                    function heroCarousel() {
+                        if (!window.bootstrap || !bootstrap.Carousel) return null;
+                        return bootstrap.Carousel.getOrCreateInstance(hero, {
+                            interval: 8000,
+                            pause: false,
+                            wrap: true,
+                            touch: true
+                        });
+                    }
+                    hero.querySelectorAll('.pro-hero__dots [data-bs-slide-to]').forEach(function (dot) {
+                        dot.addEventListener('click', function () {
+                            var carousel = heroCarousel();
+                            if (carousel) carousel.cycle();
+                        });
+                    });
                     window.setTimeout(function () {
-                        if (!window.bootstrap || !bootstrap.Carousel) return;
                         var next = hero.querySelector('.carousel-item.active')?.nextElementSibling
                             || hero.querySelector('.carousel-item:not(.active)');
                         hydrateHeroSlide(next);
-                        bootstrap.Carousel.getOrCreateInstance(hero, { interval: 8000, pause: 'hover' }).cycle();
+                        var carousel = heroCarousel();
+                        if (carousel) carousel.cycle();
                     }, 8000);
                 }
 

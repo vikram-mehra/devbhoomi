@@ -72,6 +72,9 @@ body.cb-market-pro {
 .mk-myntra-search { display: flex; align-items: center; gap: .5rem; background: var(--mk-search-bg); border-radius: 6px; padding: .4rem .75rem; width: 100%; }
 .mk-myntra-search__input { flex: 1; border: 0; background: transparent; font-size: .875rem; outline: none; min-width: 0; }
 @media (max-width: 991.98px) {
+  .mk-myntra-search__input { font-size: 16px; }
+}
+@media (max-width: 991.98px) {
   .mk-myntra-bar {
     display: grid;
     grid-template-columns: 3.25rem minmax(0,1fr) 3.25rem;
@@ -85,6 +88,32 @@ body.cb-market-pro {
   .mk-myntra-actions { display: none !important; }
   .mk-myntra-search-wrap { grid-area: search; width: 92% !important; max-width: 22rem; margin: 0 auto; }
   .pro-hero .carousel-control-prev, .pro-hero .carousel-control-next { display: none !important; }
+  .pro-hero .pro-hero__dots {
+    display: flex;
+    position: absolute;
+    inset: auto 0 0.85rem;
+    z-index: 4;
+    margin: 0;
+    padding: 0;
+    gap: .45rem;
+    justify-content: center;
+    align-items: center;
+  }
+  .pro-hero .pro-hero__dots [data-bs-target] {
+    width: .5rem;
+    height: .5rem;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255,255,255,.5);
+    text-indent: -999px;
+    overflow: hidden;
+  }
+  .pro-hero .pro-hero__dots [data-bs-target].active {
+    width: 1.35rem;
+    background: #fff;
+  }
 }
 
 .pro-hero { position: relative; overflow: hidden; background: #111; }

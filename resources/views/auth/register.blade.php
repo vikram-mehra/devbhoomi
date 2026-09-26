@@ -231,6 +231,8 @@
                 <h1>{{ __('Create your account') }}</h1>
                 <p class="auth-register-sub">{{ __('Fill in your details — we will keep your data secure.') }}</p>
 
+                @include('auth.partials.google-signin')
+                
                 <form method="POST" action="{{ route('register') }}" class="auth-register-form">
                     @csrf
                     <div class="visually-hidden" aria-hidden="true">
@@ -271,8 +273,6 @@
                     </div>
                     <button type="submit" class="btn auth-register-submit w-100">{{ __('Create account') }}</button>
                 </form>
-
-                @include('auth.partials.google-signin')
 
                 <p class="text-center text-muted small mt-4 mb-0 auth-register-links">
                     {{ __('Already have an account?') }}

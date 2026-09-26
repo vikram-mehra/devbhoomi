@@ -244,6 +244,8 @@
                 <h1>{{ __('Welcome back') }}</h1>
                 <p class="auth-login-sub">{{ __('Enter your details to continue shopping.') }}</p>
 
+                @include('auth.partials.google-signin')
+                
                 <form method="POST" action="{{ route('login') }}" class="auth-login-form">
                     @csrf
                     <div class="mb-3">
@@ -275,10 +277,8 @@
                     <button type="submit" class="btn btn-primary auth-login-submit w-100 text-white">{{ __('Sign in') }}</button>
                 </form>
 
-                @include('auth.partials.google-signin')
-
                 @if (Route::has('register'))
-                    <p class="text-center text-muted small mt-4 mb-0">
+                    <p class="text-center text-muted small mt-4 mb-0 auth-login-links">
                         {{ __('New here?') }}
                         <a href="{{ route('register') }}">{{ __('Create an account') }}</a>
                     </p>

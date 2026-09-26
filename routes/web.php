@@ -32,6 +32,8 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\DelhiveryWebhookController;
+use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReturnRequestController;
@@ -80,6 +82,11 @@ Route::view('/shipping-policy', 'market.legal.shipping')->name('legal.shipping')
 Route::get('/about-us', [PageController::class, 'about'])->name('pages.about');
 Route::get('/contact-us', [PageController::class, 'contact'])->name('pages.contact');
 Route::post('/contact-us', [PageController::class, 'contactSubmit'])->name('pages.contact.submit');
+Route::get('/track-order', [OrderTrackingController::class, 'show'])->name('orders.track');
+Route::post('/track-order', [OrderTrackingController::class, 'lookup'])->middleware('throttle:8,1')->name('orders.track.lookup');
+Route::post('/webhooks/delhivery/tracking', [DelhiveryWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
+    ->name('webhooks.delhivery.tracking');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
 Route::redirect('/store/{slug}', '/')->name('vendor.shop');
@@ -243,6 +250,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders/{order}/label/print', [OrderAdminController::class, 'printShippingLabel'])->name('orders.label.print');
     Route::post('/orders/{order}/status', [OrderAdminController::class, 'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/payment', [OrderAdminController::class, 'updatePayment'])->name('orders.payment');
+    Route::post('/orders/{order}/shipping', [OrderAdminController::class, 'updateShipping'])->name('orders.shipping');
 
     Route::get('/returns', [ReturnAdminController::class, 'index'])->name('returns.index');
     Route::patch('/returns/{refund}', [ReturnAdminController::class, 'update'])->name('returns.update');

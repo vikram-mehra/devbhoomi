@@ -35,6 +35,15 @@ return [
         'secret' => env('RAZORPAY_SECRET'),
     ],
 
+    'delhivery' => [
+        'env' => env('DELHIVERY_ENV', 'test'),
+        'token' => env('DELHIVERY_TOKEN'),
+        'base_url' => env('DELHIVERY_BASE_URL'),
+        'test_token' => env('DELHIVERY_TEST_TOKEN'),
+        'live_token' => env('DELHIVERY_LIVE_TOKEN'),
+        'webhook_token' => env('DELHIVERY_WEBHOOK_TOKEN'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

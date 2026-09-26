@@ -40,6 +40,7 @@ class HtmlSitemapController extends Controller
             ['label' => __('Offers'), 'url' => route('offers.index')],
             ['label' => __('About us'), 'url' => route('pages.about')],
             ['label' => __('Contact'), 'url' => route('pages.contact')],
+            ['label' => __('Track order'), 'url' => route('orders.track')],
             ['label' => __('Terms & conditions'), 'url' => route('legal.terms')],
             ['label' => __('Privacy policy'), 'url' => route('legal.privacy')],
         ];

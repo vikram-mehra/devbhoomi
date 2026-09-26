@@ -18,6 +18,9 @@ class Order extends Model
         'shipping_address_id', 'tax_amount', 'transaction_id', 'razorpay_payment_id', 'courier_name',
         'tracking_id', 'delivery_date', 'confirmed_at', 'shipped_at', 'delivered_at',
         'customer_confirmation_sent_at', 'admin_notification_sent_at',
+        'delhivery_status', 'delhivery_status_type', 'delhivery_location', 'delhivery_origin',
+        'delhivery_destination', 'delhivery_expected_delivery', 'delhivery_last_synced_at',
+        'delhivery_last_attempt_at',
     ];
 
     protected $casts = [
@@ -34,6 +37,9 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'customer_confirmation_sent_at' => 'datetime',
         'admin_notification_sent_at' => 'datetime',
+        'delhivery_expected_delivery' => 'datetime',
+        'delhivery_last_synced_at' => 'datetime',
+        'delhivery_last_attempt_at' => 'datetime',
         'user_id' => 'integer',
     ];
 
@@ -112,6 +118,32 @@ class Order extends Model
         return $this->hasMany(OrderActivityLog::class)->latest();
     }
 
+    public function trackingEvents(): HasMany
+    {
+        return $this->hasMany(OrderTrackingEvent::class)->orderBy('scanned_at')->orderBy('id');
+    }
+
+    /** Existing `tracking_id` column is the Delhivery AWB / waybill. */
+    public function awb(): ?string
+    {
+        $awb = trim((string) $this->tracking_id);
+
+        return $awb !== '' ? $awb : null;
+    }
+
+    public function needsDelhiveryPoll(): bool
+    {
+        if (! $this->awb() || in_array($this->status, ['delivered', 'cancelled', 'returned'], true)) {
+            return false;
+        }
+
+        if (! $this->delhivery_last_attempt_at) {
+            return true;
+        }
+
+        return $this->delhivery_last_attempt_at->lte(now()->subHours(2));
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -141,6 +173,7 @@ class Order extends Model
     {
         return [
             'pending' => __('Pending'),
+            'placed' => __('Placed'),
             'confirmed' => __('Confirmed'),
             'processing' => __('Processing'),
             'shipped' => __('Shipped'),

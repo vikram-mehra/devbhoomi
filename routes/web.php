@@ -81,9 +81,8 @@ Route::view('/shipping-policy', 'market.legal.shipping')->name('legal.shipping')
 
 Route::get('/about-us', [PageController::class, 'about'])->name('pages.about');
 Route::get('/contact-us', [PageController::class, 'contact'])->name('pages.contact');
+Route::get('/contact-us/captcha', [PageController::class, 'contactCaptcha'])->name('pages.contact.captcha');
 Route::post('/contact-us', [PageController::class, 'contactSubmit'])->name('pages.contact.submit');
-Route::get('/track-order', [OrderTrackingController::class, 'show'])->name('orders.track');
-Route::post('/track-order', [OrderTrackingController::class, 'lookup'])->middleware('throttle:8,1')->name('orders.track.lookup');
 Route::post('/webhooks/delhivery/tracking', [DelhiveryWebhookController::class, 'handle'])
     ->middleware('throttle:60,1')
     ->name('webhooks.delhivery.tracking');
@@ -129,6 +128,9 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
     Route::post('/pay/razorpay/verify', [PaymentController::class, 'razorpayVerify'])->name('pay.razorpay.verify');
     Route::post('/pay/razorpay/order/{order}', [PaymentController::class, 'createRazorpayOrder'])->name('pay.razorpay.order');
     Route::post('/pay/razorpay/abandon/{order}', [PaymentController::class, 'razorpayAbandon'])->name('pay.razorpay.abandon');
+
+    Route::get('/track-order', [OrderTrackingController::class, 'show'])->name('orders.track');
+    Route::post('/track-order', [OrderTrackingController::class, 'lookup'])->middleware('throttle:8,1')->name('orders.track.lookup');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');

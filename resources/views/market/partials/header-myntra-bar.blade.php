@@ -53,6 +53,7 @@
                     <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.dashboard') }}"><i class="bi bi-house-door" aria-hidden="true"></i>{{ __('Dashboard') }}</a></li>
                     <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.details') }}"><i class="bi bi-person-vcard" aria-hidden="true"></i>{{ __('Account details') }}</a></li>
                     <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('orders.index') }}"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>{{ __('My orders') }}</a></li>
+                    <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('orders.track') }}"><i class="bi bi-truck" aria-hidden="true"></i>{{ __('Track order') }}</a></li>
                     <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.refunds') }}"><i class="bi bi-currency-dollar" aria-hidden="true"></i>{{ __('Refund history') }}</a></li>
                     <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.addresses.index') }}"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ __('Address book') }}</a></li>
                     <li><hr class="dropdown-divider"></li>

@@ -306,6 +306,7 @@ body.cb-market-pro.cb-body {
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-search__input {
     text-align: start;
+    font-size: 16px;
   }
 
   .pro-hero .carousel-control-prev, .pro-hero .carousel-control-next {
@@ -1272,6 +1273,44 @@ body.cb-market-pro.cb-body {
   width: 1.25rem;
   height: 1.25rem;
 }
+.pro-hero .pro-hero__dots {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 0.85rem;
+  left: 0;
+  z-index: 4;
+  margin: 0;
+  padding: 0;
+  gap: 0.45rem;
+  justify-content: center;
+  align-items: center;
+}
+.pro-hero .pro-hero__dots [data-bs-target] {
+  box-sizing: border-box;
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  text-indent: -999px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: width 0.25s ease, background-color 0.25s ease;
+}
+.pro-hero .pro-hero__dots [data-bs-target].active {
+  width: 1.35rem;
+  background: #fff;
+}
+@media (max-width: 991.98px) {
+  .pro-hero .pro-hero__dots {
+    display: flex;
+  }
+}
 
 /* —— Section rhythm —— */
 .mk-section {
@@ -1707,11 +1746,32 @@ body.cb-market-pro.cb-body {
 }
 .zm-pro-card .zm-pro-add-form {
   margin-top: 0;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
-.zm-pro-card .zm-pro-add-form .btn {
+.cb-market-pro .zm-pro-card .zm-pro-add-form .btn {
   border-radius: var(--pro-radius-sm);
   font-weight: 600;
   font-size: 0.8125rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+}
+@media (max-width: 991.98px) {
+  .cb-market-pro .zm-pro-card .zm-pro-add-form .btn {
+    font-size: 0.7rem !important;
+    padding: 0.42rem 0.3rem !important;
+    min-height: 0 !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
 }
 .zm-pro-card__options {
   display: flex;
@@ -6927,6 +6987,28 @@ body.cb-market-pro .bi {
 .cb-market-pro .pro-pdp-tabs .nav-item {
   margin: 0;
 }
+@media (max-width: 767.98px) {
+  .cb-market-pro .pro-pdp-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    gap: 0.4rem;
+    padding: 0.75rem 0.75rem 0.55rem;
+  }
+  .cb-market-pro .pro-pdp-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .cb-market-pro .pro-pdp-tabs .nav-item {
+    flex: 0 0 auto;
+  }
+  .cb-market-pro .pro-pdp-tabs__btn.nav-link {
+    white-space: nowrap;
+    padding: 0.45rem 1rem;
+  }
+}
 .cb-market-pro .pro-pdp-tabs__btn.nav-link {
   margin: 0;
   border: 1px solid #d1d5db;
@@ -7695,7 +7777,7 @@ body.cb-market-pro .bi {
     font-size: 0.5625rem !important;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-search__input {
-    font-size: var(--pro-mobile-fs-sm) !important;
+    font-size: 16px !important;
   }
 
   /* —— Mobile offcanvas menu —— */

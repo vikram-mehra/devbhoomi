@@ -42,7 +42,7 @@
     <p>{{ __('Shipping charges, if applicable, will be displayed during checkout before payment is completed.') }}</p>
 
     <h2 class="h5 mt-4">{{ __('Order Tracking') }}</h2>
-    <p>{{ __('Once your order is shipped, tracking details will be shared via email, SMS, or WhatsApp (where applicable). You can also use Track order on this website with your order number and the email or mobile used at checkout.') }}</p>
+    <p>{{ __('Once your order is shipped, tracking details will be shared via email, SMS, or WhatsApp (where applicable). After logging in, you can also use Track order on this website with your order number and the email or mobile used at checkout.') }}</p>
 
     <h2 class="h5 mt-4">{{ __('Damaged or Lost Shipments') }}</h2>
     <p>{{ __('If your package arrives damaged or appears to be lost in transit, please contact us within 48 hours of delivery or expected delivery date. We will work with our logistics partner to resolve the issue.') }}</p>

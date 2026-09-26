@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none" role="img" aria-label="Devbhoomi Naturals">
+  <path fill="#14532d" d="M18 128C22 92 48 48 74 36c10-4 18 4 26 16 8-22 22-36 38-38 18-2 36 16 52 48 8 16 16 36 20 58-18 8-46 14-78 14s-62-6-82-16c-10 8-22 18-32 18-8 0-16-6-18-16z"/>
+  <path fill="#166534" d="M36 176c28 22 62 32 86 30 36-2 72-22 86-48-8 28-40 52-86 54-42 2-74-16-86-36z"/>
+  <path fill="#f7f4ec" d="M10 132c36-28 74-34 112-22-18 20-52 30-96 28-8-1-14-3-16-6z"/>
+  <path d="M124 176c8-34 18-72 28-118" stroke="#9a3412" stroke-width="5.5" stroke-linecap="round"/>
+  <g fill="#9a3412">
+    <ellipse cx="136" cy="78" rx="5" ry="8.2"/>
+    <ellipse cx="164" cy="78" rx="5" ry="8.2"/>
+    <ellipse cx="140" cy="60" rx="4.6" ry="7.6"/>
+    <ellipse cx="160" cy="60" rx="4.6" ry="7.6"/>
+    <ellipse cx="150" cy="44" rx="4.4" ry="7.2"/>
+    <ellipse cx="150" cy="28" rx="3.8" ry="6.2"/>
+    <ellipse cx="134" cy="96" rx="5" ry="8"/>
+    <ellipse cx="166" cy="96" rx="5" ry="8"/>
+    <ellipse cx="136" cy="114" rx="4.8" ry="7.6"/>
+    <ellipse cx="164" cy="114" rx="4.8" ry="7.6"/>
+    <ellipse cx="140" cy="132" rx="4.4" ry="7"/>
+    <ellipse cx="160" cy="132" rx="4.4" ry="7"/>
+  </g>
+</svg>

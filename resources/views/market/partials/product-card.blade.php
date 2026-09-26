@@ -37,7 +37,7 @@
     if ($qvImages === []) {
         $qvImages[] = \App\Support\OptimizedImage::url($url1, 600) ?: $url1;
     }
-    $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE);
+    $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE)->sortBy('id')->values();
     $hasMultipleVariants = $activeVariants->count() > 1;
     $variantPayload = [];
     if ($hasMultipleVariants) {
@@ -134,11 +134,9 @@
         </div>
         <a href="{{ route('product.show', $product) }}" class="zm-pro-card__title {{ $listing ? 'zm-pro-card__title--listing' : '' }}">{{ $product->name }}</a>
         <div class="zm-pro-card__price {{ $listing ? 'zm-pro-card__price--listing' : '' }}">
-            <span class="zm-pro-card__price-now">₹{{ number_format($price, 0) }}</span>
-            @if($compare && $compare > $price)
-                <del>₹{{ number_format($compare, 0) }}</del>
-                @if($pctOff)<span class="zm-pro-card__off">{{ $pctOff }}% {{ __('Off') }}</span>@endif
-            @endif
+            <span class="zm-pro-card__price-now js-card-price-now">₹{{ number_format($price, 0) }}</span>
+            <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
+            <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}% {{ __('Off') }}</span>
         </div>
         @if($listing && ($flash || ($pctOff && $pctOff > 0)))
             <div class="zm-pro-card__offer-strip">
@@ -151,38 +149,41 @@
             </div>
         @endif
         @if($v)
-            <div class="js-cart-add-container mt-2" data-variant-id="{{ $v->id }}" data-buyable="{{ $hasStock ? '1' : '0' }}">
+            <div class="js-cart-add-container" data-variant-id="{{ $v->id }}" data-buyable="{{ $v->isBuyable() ? '1' : '0' }}">
                 @php
-                    $cartItem = ($layoutCartItems ?? collect())->firstWhere('product_variant_id', $v->id);
+                    $optionLabel = $product->variant_label ?: __('pack');
                 @endphp
                 @if($hasMultipleVariants)
-                    <button type="button" class="btn btn-primary w-100 js-quick-view" data-bs-toggle="modal" data-bs-target="#quickViewModal"
-                        data-qv-name="{{ e($product->name) }}"
-                        data-qv-brand="{{ e($vendorName) }}"
-                        data-qv-desc="{{ e($qvDescription) }}"
-                        data-qv-price="{{ $price }}"
-                        data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
-                        data-qv-img="{{ e($url1) }}"
-                        data-qv-images="{{ json_encode($qvImages) }}"
-                        data-qv-url="{{ route('product.show', $product) }}"
-                        data-qv-variant="{{ $v?->id }}"
-                        data-qv-variants="{{ json_encode($variantPayload) }}"
-                        data-qv-label="{{ $product->variant_label ?: __('Size') }}">
-                        {{ __('Choose Options') }}
-                    </button>
-                @else
-                    <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if(!$hasStock) d-none @endif">
-                        @csrf
-                        <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
-                        <input type="hidden" name="qty" value="1">
-                        <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
-                        <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
-                    </form>
-                    @if(!$hasStock)
-                        <div class="js-pdp-oos-pill w-100">
-                            <button type="button" class="btn btn-secondary w-100" disabled>{{ __('Out of stock') }}</button>
-                        </div>
-                    @endif
+                    <div class="zm-pro-card__options" role="group" aria-label="{{ __('Select :label', ['label' => $optionLabel]) }}">
+                        @foreach($activeVariants as $vx)
+                            @php
+                                $optBuyable = $vx->isBuyable();
+                                $optCompare = $vx->unitPrice() > $vx->effectivePrice() ? $vx->unitPrice() : null;
+                            @endphp
+                            <button type="button"
+                                class="zm-pro-card__opt js-card-variant-pill {{ $vx->id === $v->id ? 'is-active' : '' }} {{ $optBuyable ? '' : 'is-disabled' }}"
+                                data-id="{{ $vx->id }}"
+                                data-price="{{ $vx->effectivePrice() }}"
+                                data-compare="{{ $optCompare ?: '' }}"
+                                data-buyable="{{ $optBuyable ? '1' : '0' }}"
+                                data-image="{{ $vx->variantImageUrl() }}"
+                                @if(! $optBuyable) disabled aria-disabled="true" title="{{ __('Out of stock') }}" @endif>
+                                {{ $vx->size ?: $vx->color ?: $vx->label() }}
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+                <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if(!$v->isBuyable()) d-none @endif">
+                    @csrf
+                    <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
+                    <input type="hidden" name="qty" value="1">
+                    <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
+                    <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
+                </form>
+                @if(!$v->isBuyable())
+                    <div class="js-pdp-oos-pill w-100">
+                        <button type="button" class="btn btn-secondary w-100" disabled>{{ __('Out of stock') }}</button>
+                    </div>
                 @endif
             </div>
         @endif

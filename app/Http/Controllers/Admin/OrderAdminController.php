@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Services\DelhiveryTrackingSyncService;
 use App\Services\StockLedgerService;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
@@ -39,8 +40,9 @@ class OrderAdminController extends Controller
         if (filled($request->payment_status)) {
             $query->where('payment_status', $request->payment_status);
         }
-        if (filled($request->order_status)) {
-            $query->where('status', $request->order_status);
+        $orderStatus = trim((string) $request->input('order_status', ''));
+        if ($orderStatus !== '') {
+            $query->where('status', $orderStatus);
         }
         if (filled($request->date_from)) {
             $query->whereDate('created_at', '>=', $request->date_from);
@@ -64,7 +66,7 @@ class OrderAdminController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['user', 'items.variant.product', 'shippingAddress', 'activityLogs.user']);
+        $order->load(['user', 'items.variant.product', 'shippingAddress', 'activityLogs.user', 'trackingEvents']);
 
         return view('admin.orders.show', compact('order'));
     }
@@ -106,6 +108,46 @@ class OrderAdminController extends Controller
         $order->update(['payment_status' => $request->payment_status]);
 
         return back()->with('status', 'Payment status updated.');
+    }
+
+    public function updateShipping(Request $request, Order $order, DelhiveryTrackingSyncService $sync)
+    {
+        $data = $request->validate([
+            'courier_name' => ['nullable', 'string', 'max:80'],
+            'tracking_id' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $awb = trim((string) ($data['tracking_id'] ?? ''));
+        $courier = trim((string) ($data['courier_name'] ?? ''));
+        if ($awb !== '' && $courier === '') {
+            $courier = 'Delhivery';
+        }
+
+        $previousAwb = trim((string) $order->tracking_id);
+        $order->update([
+            'courier_name' => $courier !== '' ? $courier : null,
+            'tracking_id' => $awb !== '' ? $awb : null,
+        ]);
+
+        if ($previousAwb !== $awb) {
+            $sync->resetStoredTracking($order->fresh() ?: $order);
+            $order->update([
+                'courier_name' => $courier !== '' ? $courier : null,
+                'tracking_id' => $awb !== '' ? $awb : null,
+            ]);
+        }
+
+        if ($awb !== '') {
+            try {
+                $sync->pollOrder($order->fresh() ?: $order, true);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return back()->with('status', $awb !== ''
+            ? 'Delhivery AWB saved. Tracking will update from webhook and the scheduled poll.'
+            : 'Shipping details updated.');
     }
 
     public function bulkUpdateStatus(Request $request)
@@ -156,10 +198,23 @@ class OrderAdminController extends Controller
         foreach ($validated['order_ids'] as $id) {
             $order = Order::find($id);
             if ($order) {
+                $awb = trim((string) $request->input("tracking_id.$id"));
+                $courier = trim((string) $request->input("courier_name.$id"));
+                if ($awb !== '' && $courier === '') {
+                    $courier = 'Delhivery';
+                }
+                $previousAwb = trim((string) $order->tracking_id);
                 $order->update([
-                    'courier_name' => $request->input("courier_name.$id"),
-                    'tracking_id' => $request->input("tracking_id.$id"),
+                    'courier_name' => $courier !== '' ? $courier : null,
+                    'tracking_id' => $awb !== '' ? $awb : null,
                 ]);
+                if ($previousAwb !== $awb) {
+                    app(DelhiveryTrackingSyncService::class)->resetStoredTracking($order->fresh() ?: $order);
+                    $order->update([
+                        'courier_name' => $courier !== '' ? $courier : null,
+                        'tracking_id' => $awb !== '' ? $awb : null,
+                    ]);
+                }
             }
         }
 

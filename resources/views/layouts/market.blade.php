@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
-    <link href="{{ asset('css/market-critical.css') }}?v=6" rel="stylesheet">
+    <link href="{{ asset('css/market-critical.css') }}?v=7" rel="stylesheet">
     <style>
         html.mk-wait { overflow: hidden; }
         #mkPagePreloader {
@@ -39,7 +39,7 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link href="{{ asset('css/market-pro.css') }}?v=159" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=172" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -131,8 +131,8 @@
         <div class="offcanvas-header pro-mnav-header">
             <a href="{{ route('market.home') }}" class="pro-mnav-brand text-decoration-none" id="marketNavLabel">
                 @if(!empty($siteLogoUrl))
-                    <img src="{{ \App\Support\OptimizedImage::url($siteLogoUrl, 300) }}" alt="{{ config('app.name') }}" class="pro-mnav-brand__logo" width="130"
-                        height="36" decoding="async">
+                    <img src="{{ \App\Support\OptimizedImage::url($siteLogoUrl, 420) }}" alt="{{ config('app.name') }}" class="pro-mnav-brand__logo" width="180"
+                        height="50" decoding="async">
                 @else
                     <span class="pro-mnav-brand__name font-anc-serif">{{ config('app.name') }}</span>
                 @endif
@@ -177,8 +177,10 @@
                     <a class="pro-mnav-rowlink" href="{{ route('orders.index') }}">{{ __('My orders') }}</a>
                     <a class="pro-mnav-rowlink" href="{{ route('account.refunds') }}">{{ __('Refund history') }}</a>
                     <a class="pro-mnav-rowlink" href="{{ route('account.addresses.index') }}">{{ __('Address book') }}</a>
-                    <form action="{{ route('logout') }}" method="post" class="pro-mnav-logout px-3 py-2">@csrf<button
-                            type="submit" class="btn btn-link text-danger p-0 text-start w-100">{{ __('Logout') }}</button>
+                    <form action="{{ route('logout') }}" method="post" class="pro-mnav-logout">@csrf
+                        <button type="submit" class="pro-mnav-logout__btn">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>{{ __('Logout') }}
+                        </button>
                     </form>
                 @endguest
             </nav>
@@ -394,37 +396,30 @@
                     </ul>
                 </div>
                 <div class="col-6 col-lg-4 col-xl-2">
-                    <h3 class="cb-footer-heading pro-footer-mk__heading">{{ __('Menu') }}</h3>
+                    <h3 class="cb-footer-heading pro-footer-mk__heading">{{ __('Our Products') }}</h3>
                     @include('market.partials.menu-footer-links')
                 </div>
                 <div class="col-6 col-lg-4 col-xl-2">
                     <h3 class="cb-footer-heading pro-footer-mk__heading">{{ __('Useful links') }}</h3>
                     <a href="{{ route('market.home') }}">{{ __('Home') }}</a>
-                    <a href="{{ route('shop.search') }}">{{ __('Collections') }}</a>
                     <a href="{{ route('pages.about') }}">{{ __('About us') }}</a>
                     <a href="{{ route('blog.index') }}">{{ __('Blogs') }}</a>
                     <a href="{{ route('offers.index') }}">{{ __('Offers') }}</a>
                     <a href="{{ route('shop.search') }}">{{ __('Search') }}</a>
-                    <!-- <a href="{{ route('vendor.register') }}" class="pro-footer-mk__sell">{{ __('Sell with us') }}</a> -->
                 </div>
                 <div class="col-6 col-lg-4 col-xl-2">
                     <h3 class="cb-footer-heading pro-footer-mk__heading">{{ __('Help center') }}</h3>
                     @auth
                         <a href="{{ route('account.dashboard') }}">{{ __('My account') }}</a>
-                        <a href="{{ route('orders.index') }}">{{ __('My orders') }}</a>
-                        <a href="{{ route('orders.index') }}">{{ __('Track order') }}</a>
-                        <a href="{{ route('wishlist.index') }}">{{ __('Wishlist') }}</a>
                     @else
                         <a href="{{ route('login') }}">{{ __('My account') }}</a>
-                        <a href="{{ route('login') }}">{{ __('My orders') }}</a>
-                        <a href="{{ route('login') }}">{{ __('Track order') }}</a>
-                        <a href="{{ route('login') }}">{{ __('Wishlist') }}</a>
                     @endauth
+                    <a href="{{ route('orders.track') }}">{{ __('Track order') }}</a>
+                    <a href="{{ route('pages.contact') }}">{{ __('Contact us') }}</a>
                     <a href="{{ route('legal.terms') }}">{{ __('Terms & conditions') }}</a>
                     <a href="{{ route('legal.privacy') }}">{{ __('Privacy policy') }}</a>
                     <a href="{{ route('legal.refund') }}">{{ __('Refund policy') }}</a>
                     <a href="{{ route('legal.shipping') }}">{{ __('Shipping policy') }}</a>
-                    <a href="{{ route('pages.contact') }}">{{ __('Contact us') }}</a>
                 </div>
                 <div class="col-12 col-md-6 col-xl-3">
                     <h3 class="cb-footer-heading pro-footer-mk__heading">{{ __('Follow us') }}</h3>
@@ -1498,6 +1493,58 @@
 
             document.addEventListener('click', function (e) {
                 var target = e.target;
+
+                var cardOpt = target.closest('.js-card-variant-pill');
+                if (cardOpt) {
+                    if (cardOpt.disabled || cardOpt.getAttribute('aria-disabled') === 'true') return;
+                    var card = cardOpt.closest('.zm-pro-card');
+                    if (!card) return;
+                    card.querySelectorAll('.js-card-variant-pill').forEach(function (btn) {
+                        btn.classList.toggle('is-active', btn === cardOpt);
+                    });
+                    var optId = cardOpt.getAttribute('data-id') || '';
+                    var optPrice = cardOpt.getAttribute('data-price');
+                    var optCompare = cardOpt.getAttribute('data-compare');
+                    var optBuyable = cardOpt.getAttribute('data-buyable') === '1';
+                    var optImage = cardOpt.getAttribute('data-image') || '';
+                    var container = card.querySelector('.js-cart-add-container');
+                    if (container) {
+                        container.setAttribute('data-variant-id', optId);
+                        container.setAttribute('data-buyable', optBuyable ? '1' : '0');
+                        var variantInput = container.querySelector('input[name="product_variant_id"]');
+                        if (variantInput) variantInput.value = optId;
+                    }
+                    var nowEl = card.querySelector('.js-card-price-now');
+                    var cmpEl = card.querySelector('.js-card-price-compare');
+                    var offEl = card.querySelector('.js-card-price-off');
+                    if (nowEl && optPrice !== null && optPrice !== '') {
+                        nowEl.textContent = '₹' + Math.round(Number(optPrice)).toLocaleString('en-IN');
+                    }
+                    if (cmpEl) {
+                        if (optCompare) {
+                            cmpEl.textContent = '₹' + Math.round(Number(optCompare)).toLocaleString('en-IN');
+                            cmpEl.hidden = false;
+                        } else {
+                            cmpEl.hidden = true;
+                        }
+                    }
+                    if (offEl) {
+                        if (optCompare && Number(optCompare) > Number(optPrice)) {
+                            offEl.textContent = Math.round(100 - (Number(optPrice) / Number(optCompare)) * 100) + '% Off';
+                            offEl.hidden = false;
+                        } else {
+                            offEl.hidden = true;
+                        }
+                    }
+                    if (optImage) {
+                        var cardImg = card.querySelector('.zm-pro-card__img--primary');
+                        if (cardImg) cardImg.src = optImage;
+                    }
+                    if (typeof window.syncCartCTAContainers === 'function') {
+                        window.syncCartCTAContainers(window.globalCartMap || {});
+                    }
+                    return;
+                }
 
                 var buyNowBtn = target.closest('.js-pdp-direct-buynow');
                 if (buyNowBtn) {

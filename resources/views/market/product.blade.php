@@ -138,18 +138,22 @@
         }
         $pdpMain = $galleryUrls->first();
         $sizeRank = ['XXS' => 0, 'XS' => 1, 'S' => 2, 'M' => 3, 'L' => 4, 'XL' => 5, 'XXL' => 6, '3XL' => 7, '4XL' => 8];
-        $activeVariants = $product->variants->values();
+        $activeVariants = $product->variants->sortBy('id')->values();
         $colorValues = $activeVariants->pluck('color')->filter(fn ($c) => filled($c))->unique()->values();
         $pdpColorFirst = $colorValues->isNotEmpty();
         $sizedVariants = $activeVariants
             ->filter(fn ($v) => filled($v->size))
             ->unique('size')
-            ->sortBy(function ($v) use ($sizeRank) {
-                $u = strtoupper(trim((string) $v->size));
-
-                return [$sizeRank[$u] ?? 100, $v->size];
-            })
             ->values();
+        $allClothingSizes = $sizedVariants->isNotEmpty()
+            && $sizedVariants->every(function ($v) use ($sizeRank) {
+                return isset($sizeRank[strtoupper(trim((string) $v->size))]);
+            });
+        if ($allClothingSizes) {
+            $sizedVariants = $sizedVariants->sortBy(function ($v) use ($sizeRank) {
+                return $sizeRank[strtoupper(trim((string) $v->size))] ?? 100;
+            })->values();
+        }
         $useSizePills = $activeVariants->isNotEmpty()
             && $activeVariants->every(fn ($v) => filled($v->size));
         $isSareeCategory = $product->menuItem?->isColorOnlyMenu() ?? false;
@@ -167,7 +171,7 @@
             'buyable' => $v->isBuyable(),
         ])->values()->all();
     @endphp
-    <div class="row g-4 pro-page-pad-mobile pro-pdp-page">
+    <div class="row g-4 pro-pdp-page">
         <div class="col-md-5">
             <div class="zm-card p-2 p-md-3">
                 <div class="pro-pdp-gallery pro-pdp-gallery--hero">
@@ -253,7 +257,7 @@
                     <div class="col-12 mb-1">
                         <div class="pro-pdp-size-head">
                             <span class="pro-pdp-size-head__title">Select {{ $product->variant_label ?: __('size') }}</span>
-                            <a href="#" class="pro-pdp-size-chart" onclick="return false;">{{ __('Size chart') }} &gt;</a>
+                            <!-- <a href="#" class="pro-pdp-size-chart" onclick="return false;">{{ __('Size chart') }} &gt;</a> -->
                         </div>
                         <div class="pro-pdp-sizes" role="group" aria-label="{{ __('Size') }}" id="pdpSizeGroup">
                             @foreach($sizedVariants as $v)
@@ -266,7 +270,7 @@
                                     data-variant-id="{{ $v->id }}"
                                     data-color="{{ $v->color ?? '' }}"
                                     data-size="{{ $v->size ?? '' }}"
-                                    @if(! $pillBuyable) disabled @endif>{{ $v->size }}</button>
+                                    @if(! $pillBuyable) aria-disabled="true" title="{{ __('Out of stock') }}" @endif>{{ $v->size }}</button>
                             @endforeach
                         </div>
                     </div>
@@ -274,11 +278,13 @@
                 @php
                     $cartItem = $defaultVariant ? ($layoutCartItems ?? collect())->firstWhere('product_variant_id', $defaultVariant->id) : null;
                 @endphp
-                <div class="col-md-3 col-lg-2 @if($cartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="pdpQtyCol">
-                    <label class="form-label">Qty</label>
-                    <input type="number" name="qty" id="pdpQtyInput" value="1" min="1" class="form-control">
+                <div class="col-12">
+                <div class="pro-pdp-purchase-row">
+                <div class="pro-pdp-purchase-row__qty @if($cartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="pdpQtyCol">
+                    <label class="form-label mb-1">Qty</label>
+                    <input type="number" name="qty" id="pdpQtyInput" value="1" min="1" class="form-control" aria-label="{{ __('Qty') }}">
                 </div>
-                <div class="js-cart-add-container col-12 col-md-auto d-flex flex-wrap gap-2 align-items-end" id="pdpActionButtonsWrapper" data-variant-id="{{ $defaultVariant?->id }}" data-pdp="1" data-buyable="{{ ($defaultVariant && $defaultVariant->isBuyable()) ? '1' : '0' }}">
+                <div class="js-cart-add-container pro-pdp-purchase-row__actions" id="pdpActionButtonsWrapper" data-variant-id="{{ $defaultVariant?->id }}" data-pdp="1" data-buyable="{{ ($defaultVariant && $defaultVariant->isBuyable()) ? '1' : '0' }}">
                     <div class="js-default-pdp-ctas d-flex gap-2 @if($cartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="pdpNormalCtas">
                         <button class="zm-btn zm-btn-primary pro-pdp-add-cart" type="submit" id="pdpAddCartBtn">{{ __('Add to cart') }}</button>
                         <button class="zm-btn zm-btn-ghost pro-pdp-buy-now" type="submit" name="buy_now" value="1" id="pdpBuyNowBtn">{{ __('Buy now') }}</button>
@@ -293,6 +299,8 @@
                         </div>
                     @endif
                 </div>
+                </div>
+                </div>
             </form>
 
             @auth
@@ -300,7 +308,7 @@
                     $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
                     $isWishlisted = in_array((int) $product->id, $wishlistIds, true);
                 @endphp
-                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist">@csrf
+                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist pro-pdp-wish-form">@csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <button class="zm-btn zm-btn-ghost {{ $isWishlisted ? 'is-wishlisted' : '' }}" type="submit" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}">
                         <i class="bi {{ $isWishlisted ? 'bi-heart-fill' : 'bi-heart' }}"></i>
@@ -311,7 +319,7 @@
         </div>
     </div>
 
-    <section class="pro-pdp-details mt-5 pt-2">
+    <section class="pro-pdp-details mt-3{{ $related->isEmpty() ? ' pro-page-pad-mobile' : '' }}">
         <div class="pro-pdp-details-card">
             <ul class="nav pro-pdp-tabs" id="pdpDetailTabs" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -385,7 +393,7 @@
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
         @endpush
         <section class="zm-section-title mt-5"><h2>{{ __('Related products') }}</h2></section>
-        <div class="pro-pdp-related-swiper position-relative">
+        <div class="pro-pdp-related-swiper position-relative pro-page-pad-mobile">
             <div class="swiper pro-product-swiper" id="proPdpRelatedSwiper">
                 <div class="swiper-wrapper">
                     @foreach($related as $rp)
@@ -599,14 +607,23 @@
                     btn.setAttribute('data-variant-id', String(match.id));
                     btn.setAttribute('data-color', match.color || '');
                     var buy = match.buyable;
-                    btn.disabled = !buy;
+                    btn.disabled = false;
                     btn.classList.toggle('is-disabled', !buy);
+                    if (buy) {
+                        btn.removeAttribute('aria-disabled');
+                        btn.removeAttribute('title');
+                    } else {
+                        btn.setAttribute('aria-disabled', 'true');
+                        btn.setAttribute('title', msgOut);
+                    }
                     if (!firstVisibleId) firstVisibleId = String(match.id);
                     if (buy && !firstBuyableId) firstBuyableId = String(match.id);
                 } else {
                     btn.classList.add('d-none');
-                    btn.disabled = true;
+                    btn.disabled = false;
                     btn.classList.add('is-disabled');
+                    btn.setAttribute('aria-disabled', 'true');
+                    btn.setAttribute('title', msgOut);
                 }
             });
             if (firstBuyableId) {
@@ -639,7 +656,7 @@
         if (variantInput && stickyVid) {
             document.querySelectorAll('.pro-pdp-size-pill').forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    if (btn.disabled) return;
+                    if (btn.disabled || btn.classList.contains('is-disabled') || btn.getAttribute('aria-disabled') === 'true') return;
                     var vid = btn.getAttribute('data-variant-id');
                     if (!vid) return;
                     setSelectedVariant(vid);

@@ -2,10 +2,6 @@
     $googleConfigured = app(\App\Services\GoogleAuthService::class)->isConfigured();
 @endphp
 
-<div class="auth-social-or" role="separator" aria-label="{{ __('or') }}">
-    <span>{{ __('or') }}</span>
-</div>
-
 @if($googleConfigured)
     <a href="{{ route('auth.google') }}" class="auth-google-btn" role="button">
         <span class="auth-google-btn__icon" aria-hidden="true">
@@ -21,3 +17,7 @@
         <span class="auth-google-btn__label">{{ __('Continue with Google') }}</span>
     </button>
 @endif
+
+<div class="auth-social-or" role="separator" aria-label="{{ __('or') }}">
+    <span>{{ __('or') }}</span>
+</div>

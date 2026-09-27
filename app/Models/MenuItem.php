@@ -182,4 +182,22 @@ class MenuItem extends Model
 
         return asset(ltrim($this->image_url, '/'));
     }
+
+    /**
+     * Storefront “Our Products” listing URL (header menu), falling back to search.
+     */
+    public static function ourProductsUrl(): string
+    {
+        $item = static::query()
+            ->active()
+            ->where(function ($q) {
+                $q->where('slug', 'our-products')
+                    ->orWhere('title', 'Our Products');
+            })
+            ->orderByRaw('CASE WHEN parent_id IS NULL OR parent_id = 0 THEN 0 ELSE 1 END')
+            ->orderBy('sort_order')
+            ->first();
+
+        return $item ? $item->resolvedUrl() : route('shop.search');
+    }
 }

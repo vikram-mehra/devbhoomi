@@ -26,6 +26,7 @@
     @endphp
 
     {{-- Hero: full-bleed background image + overlay copy --}}
+    @php $heroShopUrl = \App\Models\MenuItem::ourProductsUrl(); @endphp
     @if($banners->isNotEmpty())
         <section class="pro-hero p-0">
             <div id="proHeroSlider" class="carousel slide" data-bs-ride="false" data-bs-interval="8000" data-bs-touch="true">
@@ -45,6 +46,7 @@
                     @foreach($banners as $i => $b)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
                             <div class="mk-hero-full mk-hero-full--photo">
+                                <a href="{{ $b->link ? $b->resolvedLink() : $heroShopUrl }}" class="mk-hero-full__hit" aria-label="{{ $b->title ?: __('Our Products') }}"></a>
                                 <picture>
                                     @php
                                         $slideMobile = \App\Support\OptimizedImage::url($b->resolvedMobileImageUrl(), 768);
@@ -56,8 +58,6 @@
                                             src="{{ $slideDesktop }}"
                                             alt="{{ $b->title }}"
                                             class="mk-hero-full__img"
-                                            width="1400"
-                                            height="510"
                                             sizes="100vw"
                                             fetchpriority="high"
                                         >
@@ -68,8 +68,6 @@
                                             data-src="{{ $slideDesktop }}"
                                             alt="{{ $b->title }}"
                                             class="mk-hero-full__img"
-                                            width="1400"
-                                            height="510"
                                             sizes="100vw"
                                             loading="lazy"
                                             fetchpriority="low"
@@ -121,6 +119,7 @@
     @else
         <section class="pro-hero p-0">
             <div class="mk-hero-full mk-hero-full--photo">
+                <a href="{{ $heroShopUrl }}" class="mk-hero-full__hit" aria-label="{{ __('Our Products') }}"></a>
                 <img src="{{ $fallbackHeroImg }}" alt="" class="mk-hero-full__img" width="1920" height="700" fetchpriority="high" decoding="async">
                 <div class="mk-hero-full__overlay">
                     <div class="cb-container">

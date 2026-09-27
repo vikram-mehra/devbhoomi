@@ -1131,18 +1131,28 @@ body.cb-market-pro.cb-body {
   object-position: center center;
   z-index: 0;
 }
-.mk-hero-full__overlay {
+.mk-hero-full__hit {
   position: absolute;
   inset: 0;
   z-index: 1;
+}
+.mk-hero-full__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   background: none;
   pointer-events: none;
 }
 .mk-hero-full__overlay .cb-container {
-  pointer-events: auto;
+  pointer-events: none;
   width: 100%;
+}
+.mk-hero-full__overlay a {
+  pointer-events: auto;
+  position: relative;
+  z-index: 3;
 }
 .mk-hero-copy {
   padding: 2.5rem 0;
@@ -1620,7 +1630,8 @@ body.cb-market-pro.cb-body {
   width: 38px;
   height: 38px;
   border-radius: var(--pro-radius-sm);
-  border: none;
+  border: 2px solid transparent;
+  box-sizing: border-box;
   background: #fff;
   box-shadow: var(--pro-shadow);
   color: var(--pro-ink);
@@ -1628,12 +1639,20 @@ body.cb-market-pro.cb-body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: color 0.2s, background 0.2s;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
   text-decoration: none;
 }
 .zm-pro-icon-btn:hover {
   color: #fff;
   background: var(--pro-primary);
+  border-color: #fff;
+}
+.zm-pro-icon-btn:hover .bi {
+  color: #fff;
+}
+.zm-pro-card__wish .zm-pro-icon-btn:hover:not(.is-wishlisted) .bi-heart::before {
+  content: "\f415";
+  color: #fff;
 }
 .zm-pro-card__wish {
   position: absolute;
@@ -6031,6 +6050,18 @@ body.cb-market-pro .bi {
 }
 
 /* —— Header account dropdown (icon trigger; menu matches account sidebar) —— */
+.cb-market-pro .cb-header--myntra .mk-myntra-action--dropdown {
+  position: relative;
+}
+.cb-market-pro .cb-header--myntra .mk-myntra-action--dropdown .pro-header-account-menu {
+  min-width: 14rem;
+  top: 100%;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  margin-top: 0.4rem;
+  padding: 0.4rem 0 0.55rem;
+}
 .cb-market-pro .pro-header-account-menu .dropdown-item {
   font-size: 0.9rem;
 }
@@ -6046,6 +6077,41 @@ body.cb-market-pro .bi {
   width: 1.35rem;
   text-align: center;
   flex-shrink: 0;
+}
+.cb-market-pro .pro-header-account-menu .dropdown-item:hover,
+.cb-market-pro .pro-header-account-menu .dropdown-item:focus,
+.cb-market-pro .pro-header-account-menu .dropdown-item.active,
+.cb-market-pro .pro-header-account-menu .dropdown-item:active {
+  background: var(--pro-primary);
+  color: #fff;
+}
+.cb-market-pro .pro-header-account-menu .dropdown-item:hover i,
+.cb-market-pro .pro-header-account-menu .dropdown-item:focus i,
+.cb-market-pro .pro-header-account-menu .dropdown-item.active i,
+.cb-market-pro .pro-header-account-menu .dropdown-item:active i {
+  color: #fff;
+}
+.cb-market-pro .pro-header-account-menu__logout-item {
+  padding: 0.15rem 0.75rem 0.15rem;
+}
+.cb-market-pro .pro-header-account-menu__logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  border: none;
+  border-radius: var(--pro-radius-sm);
+  background: var(--pro-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.55rem 0.85rem;
+}
+.cb-market-pro .pro-header-account-menu__logout:hover,
+.cb-market-pro .pro-header-account-menu__logout:focus {
+  background: var(--pro-primary-dark);
+  color: #fff;
 }
 .cb-market-pro .pro-nav-drawer-profile {
   border: 1px solid var(--pro-border);
@@ -6504,6 +6570,15 @@ body.cb-market-pro .bi {
   width: 36px;
   height: 36px;
   color: var(--pro-muted);
+}
+.cb-market-pro .zm-pro-icon-btn--round:hover:not(.is-wishlisted) {
+  color: #fff;
+  background: var(--pro-primary);
+  border-color: #fff;
+}
+.cb-market-pro .zm-pro-icon-btn--round:hover:not(.is-wishlisted) i {
+  color: #fff;
+  background: transparent;
 }
 .cb-market-pro .zm-pro-icon-btn--round.is-wishlisted,
 .cb-market-pro .zm-pro-icon-btn--round.is-wishlisted:hover,
@@ -8124,11 +8199,12 @@ body.cb-market-pro .bi {
   color: #fff !important;
 }
 
-/* Floating WhatsApp FAB chatbot style */
+/* Floating WhatsApp FAB — stacked above scroll-to-top on the right */
 .pro-whatsapp-fab {
   position: fixed;
-  left: 1.25rem;
-  bottom: 1.75rem;
+  left: auto;
+  right: 0.65rem;
+  bottom: calc(1.75rem + 2.5rem + 0.65rem);
   z-index: 1030;
   width: 3.25rem;
   height: 3.25rem;
@@ -8184,8 +8260,9 @@ body.cb-market-pro .bi {
 /* Mobile responsive layout offsets to clear bottom navigation bar */
 @media (max-width: 991.98px) {
   .pro-whatsapp-fab {
-    bottom: 5.25rem;
-    left: 1rem;
+    left: auto;
+    right: 0.75rem;
+    bottom: calc(var(--pro-mobile-nav-h, 50px) + env(safe-area-inset-bottom, 0px) + 0.65rem + 2.15rem + 0.55rem);
     width: 3rem;
     height: 3rem;
   }

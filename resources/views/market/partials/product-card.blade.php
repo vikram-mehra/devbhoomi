@@ -92,17 +92,17 @@
         </div>
         <div class="zm-pro-card__actions {{ $listing ? 'zm-pro-card__actions--listing' : '' }}">
             <div class="zm-pro-card__hover-actions">
-                <button type="button" class="zm-pro-icon-btn {{ $listing ? 'zm-pro-icon-btn--round' : '' }} js-quick-view" title="{{ __('Quick view') }}" data-bs-toggle="modal" data-bs-target="#quickViewModal"
+                <button type="button" class="zm-pro-icon-btn js-quick-view" title="{{ __('Quick view') }}" data-bs-toggle="modal" data-bs-target="#quickViewModal"
                     data-qv-name="{{ e($product->name) }}"
                     data-qv-brand="{{ e($vendorName) }}"
                     data-qv-desc="{{ e($qvDescription) }}"
                     data-qv-price="{{ $price }}"
                     data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                     data-qv-img="{{ e($url1) }}"
-                    data-qv-images="{{ json_encode($qvImages) }}"
+                    data-qv-images="{{ e(json_encode($qvImages)) }}"
                     data-qv-url="{{ route('product.show', $product) }}"
                     data-qv-variant="{{ $v?->id }}"
-                    data-qv-variants="{{ json_encode($variantPayload) }}"
+                    data-qv-variants="{{ e(json_encode($variantPayload)) }}"
                     data-qv-label="{{ $product->variant_label ?: __('Size') }}">
                     <i class="bi bi-eye"></i>
                 </button>

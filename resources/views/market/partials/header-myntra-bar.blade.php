@@ -38,27 +38,32 @@
         @else
             @php $headerUser = auth()->user(); @endphp
             <div class="dropdown mk-myntra-action mk-myntra-action--dropdown">
-                <button class="mk-myntra-action__btn dropdown-toggle border-0 bg-transparent p-0 text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('Account menu') }}">
+                <button class="mk-myntra-action__btn dropdown-toggle border-0 bg-transparent p-0 text-dark" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" aria-label="{{ __('Account menu') }}">
                     <i class="bi bi-person mk-myntra-action__icon" aria-hidden="true"></i>
                     <span class="mk-myntra-action__label">{{ __('Profile') }}</span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 pro-header-account-menu" style="min-width: 14rem;">
+                <ul class="dropdown-menu shadow border-0 pro-header-account-menu">
                     @if($headerUser->role === 'admin')
-                        <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2" aria-hidden="true"></i>{{ __('Admin') }}</a></li>
+                        <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('admin.*')) active @endif" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2" aria-hidden="true"></i>{{ __('Admin') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
                     @elseif($headerUser->role === 'vendor')
-                        <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('vendor.dashboard') }}"><i class="bi bi-shop" aria-hidden="true"></i>{{ __('Seller hub') }}</a></li>
+                        <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('vendor.*')) active @endif" href="{{ route('vendor.dashboard') }}"><i class="bi bi-shop" aria-hidden="true"></i>{{ __('Seller hub') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
                     @endif
-                    <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.dashboard') }}"><i class="bi bi-house-door" aria-hidden="true"></i>{{ __('Dashboard') }}</a></li>
-                    <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.details') }}"><i class="bi bi-person-vcard" aria-hidden="true"></i>{{ __('Account details') }}</a></li>
-                    <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('orders.index') }}"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>{{ __('My orders') }}</a></li>
-                    <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('orders.track') }}"><i class="bi bi-truck" aria-hidden="true"></i>{{ __('Track order') }}</a></li>
-                    <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.refunds') }}"><i class="bi bi-currency-dollar" aria-hidden="true"></i>{{ __('Refund history') }}</a></li>
-                    <li><a class="dropdown-item pro-header-account-menu__link" href="{{ route('account.addresses.index') }}"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ __('Address book') }}</a></li>
+                    <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('account.dashboard')) active @endif" href="{{ route('account.dashboard') }}"><i class="bi bi-house-door" aria-hidden="true"></i>{{ __('Dashboard') }}</a></li>
+                    <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('account.details')) active @endif" href="{{ route('account.details') }}"><i class="bi bi-person-vcard" aria-hidden="true"></i>{{ __('Account details') }}</a></li>
+                    <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('orders.index', 'orders.show')) active @endif" href="{{ route('orders.index') }}"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>{{ __('My orders') }}</a></li>
+                    <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('orders.track', 'orders.track.lookup')) active @endif" href="{{ route('orders.track') }}"><i class="bi bi-truck" aria-hidden="true"></i>{{ __('Track order') }}</a></li>
+                    <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('account.refunds')) active @endif" href="{{ route('account.refunds') }}"><i class="bi bi-currency-dollar" aria-hidden="true"></i>{{ __('Refund history') }}</a></li>
+                    <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('account.addresses.*')) active @endif" href="{{ route('account.addresses.index') }}"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ __('Address book') }}</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <form action="{{ route('logout') }}" method="post" class="px-3 py-1">@csrf<button type="submit" class="btn btn-link p-0 text-danger text-decoration-underline w-100 text-start">{{ __('Logout') }}</button></form>
+                    <li class="pro-header-account-menu__logout-item">
+                        <form action="{{ route('logout') }}" method="post">
+                            @csrf
+                            <button type="submit" class="pro-header-account-menu__logout">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>{{ __('Logout') }}
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>

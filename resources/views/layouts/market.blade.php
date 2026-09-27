@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
-    <link href="{{ asset('css/market-critical.css') }}?v=9" rel="stylesheet">
+    <link href="{{ asset('css/market-critical.css') }}?v=10" rel="stylesheet">
     <style>
         html.mk-wait { overflow: hidden; }
         #mkPagePreloader {
@@ -39,7 +39,7 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link href="{{ asset('css/market-pro.css') }}?v=184" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=186" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -932,27 +932,27 @@
     @stack('scripts')
 
     <nav class="pro-mobile-nav d-lg-none" id="proMobileNav" aria-label="{{ __('Bottom navigation') }}">
-        <a href="{{ route('market.home') }}" class="{{ request()->routeIs('market.home') ? 'active' : '' }}"><i
-                class="bi bi-house-door" aria-hidden="true"></i>{{ __('Home') }}</a>
-        <a href="{{ route('shop.search') }}"><i class="bi bi-search" aria-hidden="true"></i>{{ __('Search') }}</a>
+        <a href="{{ route('market.home') }}" class="{{ request()->routeIs('market.home') ? 'active' : '' }}" aria-label="{{ __('Home') }}"><i
+                class="bi bi-house-door" aria-hidden="true"></i><span class="visually-hidden">{{ __('Home') }}</span></a>
+        <a href="{{ route('shop.search') }}" aria-label="{{ __('Search') }}"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">{{ __('Search') }}</span></a>
         <span class="pro-mobile-nav__wrap">
             <button type="button" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer"
                 class="text-center border-0 bg-transparent p-0 d-flex flex-column align-items-center"
-                style="color:inherit;">
+                style="color:inherit;" aria-label="{{ __('Cart') }}">
                 <span class="position-relative d-inline-flex">
                     <i class="bi bi-bag" aria-hidden="true"></i>
                     <span class="pro-mobile-nav__badge" @if(($layoutCartCount ?? 0) === 0) style="display:none;"
                     @endif>{{ $layoutCartCount > 9 ? '9+' : $layoutCartCount }}</span>
                 </span>
-                <span class="mt-1">{{ __('Cart') }}</span>
+                <span class="visually-hidden">{{ __('Cart') }}</span>
             </button>
         </span>
         @auth
             <a href="{{ route('account.dashboard') }}"
-                class="{{ request()->routeIs('account.*', 'orders.*') ? 'active' : '' }}"><i class="bi bi-person"
-                    aria-hidden="true"></i>{{ __('Account') }}</a>
+                class="{{ request()->routeIs('account.*', 'orders.*') ? 'active' : '' }}" aria-label="{{ __('Account') }}"><i class="bi bi-person"
+                    aria-hidden="true"></i><span class="visually-hidden">{{ __('Account') }}</span></a>
         @else
-            <a href="{{ route('login') }}"><i class="bi bi-person" aria-hidden="true"></i>{{ __('Account') }}</a>
+            <a href="{{ route('login') }}" aria-label="{{ __('Account') }}"><i class="bi bi-person" aria-hidden="true"></i><span class="visually-hidden">{{ __('Account') }}</span></a>
         @endauth
     </nav>
     <script>

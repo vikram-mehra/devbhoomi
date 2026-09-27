@@ -20,8 +20,8 @@
                     <input type="text" name="eyebrow" class="form-control" value="{{ old('eyebrow') }}" placeholder="{{ __('e.g. New season') }}">
                 </div>
                 <div class="col-md-6 col-lg-4">
-                    <label class="form-label">{{ __('Heading (main title)') }} *</label>
-                    <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" placeholder="{{ __('Shown as large headline on slide') }}" required maxlength="255">
+                    <label class="form-label">{{ __('Heading (main title)') }} <span class="text-muted small">({{ __('optional') }})</span></label>
+                    <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" placeholder="{{ __('Shown as large headline on slide') }}" maxlength="255">
                     @error('title')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror

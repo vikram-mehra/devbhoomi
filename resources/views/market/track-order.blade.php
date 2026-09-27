@@ -1,17 +1,20 @@
-@extends('layouts.market')
+@extends('layouts.account')
 
-@section('title', __('Track order').' | Devbhoomi Naturals')
+@section('account_title', __('Track order'))
 @section('meta_description', __('Track your Devbhoomi Naturals shipment with your order number and email or mobile.'))
 @section('canonical', route('orders.track'))
 
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
         'title' => __('Track order'),
-        'items' => [['label' => __('Track order')]],
+        'items' => [
+            ['label' => __('My account'), 'url' => route('account.dashboard')],
+            ['label' => __('Track order')],
+        ],
     ])
 @endpush
 
-@section('content')
+@section('account_content')
 @php
     $dummyEnabled = $dummyEnabled ?? false;
     $dummy = $dummy ?? [];
@@ -19,11 +22,7 @@
     $shipment = $shipment ?? null;
 @endphp
 <div class="pro-track">
-    <header class="pro-track__intro">
-        <p class="pro-section-head__eyebrow mb-1">{{ __('Help center') }}</p>
-        <h1 class="pro-track__title">{{ __('Track your order') }}</h1>
-        <p class="pro-track__lead">{{ __('Enter your order number and the email or mobile used at checkout.') }}</p>
-    </header>
+    <p class="pro-track__lead mb-3">{{ __('Enter your order number and the email or mobile used at checkout.') }}</p>
 
     <div class="pro-track__dummy" role="status">
         <div class="pro-track__dummy-head">

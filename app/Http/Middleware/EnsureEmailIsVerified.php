@@ -26,6 +26,8 @@ class EnsureEmailIsVerified
             ], 403);
         }
 
+        $request->session()->put('url.intended', $request->fullUrl());
+
         return redirect()
             ->route('verification.sent', ['email' => $user->email])
             ->with('warning', __('Please verify your email address to continue.'));

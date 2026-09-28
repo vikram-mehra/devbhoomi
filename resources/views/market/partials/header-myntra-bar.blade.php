@@ -4,7 +4,7 @@
 @endphp
 <div class="mk-myntra-bar">
     <button class="cb-icon-btn mk-myntra-hamburger d-lg-none flex-shrink-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#marketNav" aria-controls="marketNav" aria-label="{{ __('Menu') }}">
-        <i class="bi bi-list fs-5" aria-hidden="true"></i>
+        <i class="bi bi-list" aria-hidden="true"></i>
     </button>
 
     <a href="{{ route('market.home') }}" class="mk-myntra-brand flex-shrink-0 text-decoration-none" aria-label="{{ $brandName }}">

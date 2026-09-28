@@ -138,6 +138,7 @@
                                 <div class="col-md-6">
                                     <label class="pro-checkout-address-tile">
                                         <input type="radio" name="address_id" value="{{ $a->id }}" class="pro-checkout-address-tile__input"
+                                            data-pincode="{{ $a->pincode }}"
                                             @if($selectedAddressId === (string) $a->id) checked @endif>
                                         <span class="pro-checkout-address-tile__box">
                                             <span class="pro-checkout-radio" aria-hidden="true"></span>
@@ -177,11 +178,11 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="pro-checkout-field-label">{{ __('Pincode') }}</label>
-                                <input class="pro-checkout-input" name="pincode" placeholder="{{ __('Pincode') }}" value="{{ old('pincode') }}">
+                                <input class="pro-checkout-input js-checkout-pincode-field" name="pincode" placeholder="{{ __('Pincode') }}" value="{{ old('pincode') }}" inputmode="numeric" maxlength="6">
                             </div>
                             <div class="col-md-4">
                                 <label class="pro-checkout-field-label">{{ __('City') }}</label>
-                                <input class="pro-checkout-input" name="city" placeholder="{{ __('City') }}" value="{{ old('city') }}">
+                                <input class="pro-checkout-input js-checkout-city-field" name="city" placeholder="{{ __('City') }}" value="{{ old('city') }}">
                             </div>
                             <div class="col-md-4 position-relative">
                                 <label class="pro-checkout-field-label">{{ __('State') }} *</label>
@@ -257,6 +258,14 @@
                     })();
                     </script>
                     @endif
+
+                    <div class="mt-4 pt-3 border-top border-light-subtle">
+                        @include('market.partials.pincode-check', [
+                            'pinId' => 'checkoutPincodeCheck',
+                            'pinValue' => old('pincode', optional($addresses->firstWhere('is_default') ?? $addresses->first())->pincode),
+                            'pinAutofill' => true,
+                        ])
+                    </div>
                 </div>
 
                 {{-- Payment: Razorpay only --}}
@@ -355,7 +364,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="pro-checkout-place-btn mt-4">{{ __('Place order') }}</button>
+                    <button type="submit" class="pro-checkout-place-btn mt-4" id="checkoutPlaceBtn">{{ __('Place order') }}</button>
                 </div>
             </div>
         </div>

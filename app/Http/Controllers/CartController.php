@@ -61,7 +61,9 @@ class CartController extends Controller
                 return redirect()->route('checkout.index');
             }
 
-            return redirect()->guest(route('login'));
+            $request->session()->put('url.intended', route('checkout.index'));
+
+            return redirect()->route('login');
         }
 
         if ($request->wantsJson()) {

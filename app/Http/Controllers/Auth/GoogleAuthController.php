@@ -27,6 +27,8 @@ class GoogleAuthController extends Controller
         }
 
         $redirectUri = $googleAuth->syncRedirectConfig($request);
+        app(CartService::class)->rememberGuestSession();
+        AppUrl::rememberIntendedFromPrevious();
 
         return Socialite::driver('google')
             ->redirectUrl($redirectUri)
@@ -59,6 +61,7 @@ class GoogleAuthController extends Controller
                 ->with('error', __('Google sign-in was cancelled or failed. Please try again.'));
         }
 
+        app(CartService::class)->rememberGuestSession();
         Auth::login($user, true);
         $request->session()->regenerate();
         app(CartService::class)->mergeGuestCart();

@@ -296,7 +296,50 @@ body.cb-market-pro.cb-body {
     grid-area: menu;
     justify-self: start;
     margin-left: 0;
-    padding: 0.5rem;
+    padding: 0;
+    width: 2.35rem;
+    height: 2.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    border: 1px solid #d8dbe0;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--mk-header-ink);
+    box-shadow: none;
+    transform: none;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .cb-market-pro .cb-header--myntra .mk-myntra-hamburger .bi {
+    display: block;
+    font-size: 1.35rem;
+    line-height: 1;
+    width: 1em;
+    height: 1em;
+    margin: 0;
+  }
+  .cb-market-pro .cb-header--myntra .mk-myntra-hamburger .bi::before {
+    display: block;
+    line-height: 1;
+  }
+  .cb-market-pro .cb-header--myntra .mk-myntra-hamburger:hover,
+  .cb-market-pro .cb-header--myntra .mk-myntra-hamburger:focus {
+    border-color: var(--pro-primary);
+    background: var(--pro-primary);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+    outline: none;
+  }
+  .cb-market-pro .cb-header--myntra .mk-myntra-hamburger:active {
+    border-color: var(--pro-primary-dark);
+    background: var(--pro-primary-dark);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-brand {
     grid-area: logo;
@@ -1521,6 +1564,7 @@ body.cb-market-pro.cb-body {
   height: 100%; */
   display: flex;
   flex-direction: column;
+  height: 100%;
   transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.2s ease;
   border: 1px solid #eee;
   background-color: #fff;
@@ -1695,7 +1739,8 @@ body.cb-market-pro.cb-body {
   padding: 0.55rem 0.75rem 0.35rem;
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .zm-pro-card__rating {
   font-size: 0.8125rem;
@@ -1732,8 +1777,8 @@ body.cb-market-pro.cb-body {
   color: var(--pro-primary);
 }
 .zm-pro-card__price {
-  margin-top: 0.15rem;
-  padding-top: 0;
+  margin-top: auto;
+  padding-top: 0.35rem;
   font-weight: 800;
   font-size: 1.05rem;
   color: var(--pro-ink);
@@ -2567,9 +2612,11 @@ body.cb-market-pro.cb-body {
 }
 .cb-market-pro .pro-product-swiper .swiper-slide__inner {
   display: flex;
+  height: 100%;
 }
 .cb-market-pro .pro-product-swiper .swiper-slide__inner > .zm-pro-card {
   width: 100%;
+  height: 100%;
 }
 .cb-market-pro .pro-product-swiper__nav {
   width: var(--swiper-navigation-size, 46px);
@@ -6628,8 +6675,8 @@ body.cb-market-pro .bi {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 0.5rem;
-  margin-top: 0.15rem;
-  padding-top: 0;
+  margin-top: auto;
+  padding-top: 0.35rem;
 }
 .cb-market-pro .zm-pro-card__offer-strip {
   margin-top: 0.65rem;
@@ -6691,10 +6738,134 @@ body.cb-market-pro .bi {
 .cb-market-pro #productAddForm .pro-pdp-add-cart {
   box-shadow: 0 3px 12px rgba(125, 92, 61, 0.22);
 }
-.cb-market-pro .pro-pdp-wish-form {
-  display: inline-block;
-  margin-top: 0.35rem;
+.cb-market-pro .pro-pdp-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.cb-market-pro .pro-pdp-title-row .pro-pdp-title {
+  flex: 1 1 auto;
+  min-width: 0;
   margin-bottom: 0;
+}
+.cb-market-pro .pro-pdp-wish-form {
+  display: inline-flex;
+  margin: 0;
+  flex-shrink: 0;
+}
+.cb-market-pro .pro-pdp-wish-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d8dbe0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--pro-ink);
+  text-decoration: none;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 0;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.cb-market-pro .pro-pdp-wish-btn .bi {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.cb-market-pro .pro-pdp-wish-btn:hover {
+  background: var(--pro-primary);
+  border-color: var(--pro-primary);
+  color: #fff;
+}
+.cb-market-pro .pro-pdp-wish-btn.is-wishlisted,
+.cb-market-pro .pro-pdp-wish-btn.is-wishlisted:hover {
+  color: #e11d48;
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+.cb-market-pro .pro-pdp-rating-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.cb-market-pro .pro-pdp-reviews-link {
+  color: var(--pro-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 0.875rem;
+}
+.cb-market-pro .pro-pdp-reviews-link:hover {
+  color: var(--pro-primary-dark);
+}
+.cb-market-pro .pro-pincode-check {
+  margin-top: 1.1rem;
+  max-width: 22rem;
+}
+.cb-market-pro .pro-pincode-check__label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pro-ink);
+  margin-bottom: 0.4rem;
+}
+.cb-market-pro .pro-pincode-check__row {
+  display: flex;
+  gap: 0.5rem;
+}
+.cb-market-pro .pro-pincode-check__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 2.5rem;
+  border: 1px solid #d8dbe0;
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  font-size: 0.9375rem;
+}
+.cb-market-pro .pro-pincode-check__input:focus {
+  outline: none;
+  border-color: var(--pro-primary);
+  box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.12);
+}
+.cb-market-pro .pro-pincode-check__btn {
+  flex: 0 0 auto;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--pro-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.cb-market-pro .pro-pincode-check__btn:hover,
+.cb-market-pro .pro-pincode-check__btn:focus {
+  background: var(--pro-primary-dark);
+  color: #fff;
+}
+.cb-market-pro .pro-pincode-check__btn:disabled {
+  opacity: 0.7;
+}
+.cb-market-pro .pro-pincode-check__msg {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.cb-market-pro .pro-pincode-check__msg.is-ok {
+  color: #166534;
+}
+.cb-market-pro .pro-pincode-check__msg.is-bad {
+  color: #b91c1c;
+}
+.cb-market-pro .pro-checkout-place-btn.is-disabled,
+.cb-market-pro .pro-checkout-place-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .cb-market-pro .pro-pdp-details {
   margin-top: 1rem;
@@ -7831,8 +8002,11 @@ body.cb-market-pro .bi {
     font-size: 0.75rem !important;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-hamburger {
-    font-size: var(--pro-mobile-icon-lg) !important;
-    padding: 0.5rem !important;
+    font-size: inherit !important;
+    padding: 0 !important;
+  }
+  .cb-market-pro .cb-header--myntra .mk-myntra-hamburger .bi {
+    font-size: 1.35rem !important;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-action {
     min-width: 2.35rem !important;

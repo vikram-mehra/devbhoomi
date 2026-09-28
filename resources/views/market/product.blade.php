@@ -202,8 +202,34 @@
                 @endif
                 <span>{{ $product->vendor->shop_name }}</span>
             </div>
-            <p class="h3 fw-bold mb-2">{{ $product->name }}</p>
-            <div class="mb-2"><i class="bi bi-star-fill text-warning" aria-hidden="true"></i> {{ number_format($product->rating_avg, 1) }} <span class="text-muted small">({{ $product->rating_count }} reviews)</span></div>
+            @php
+                $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
+                $isWishlisted = auth()->check() && in_array((int) $product->id, $wishlistIds, true);
+                $wishIcon = $isWishlisted ? 'bi-heart-fill' : 'bi-heart';
+                $wishTitle = $isWishlisted ? __('Remove from wishlist') : __('Wishlist');
+            @endphp
+            <div class="pro-pdp-title-row">
+                <p class="h3 fw-bold mb-0 pro-pdp-title">{{ $product->name }}</p>
+                @auth
+                    <form action="{{ route('wishlist.store') }}" method="post" class="js-ajax-wishlist pro-pdp-wish-form">@csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <button class="pro-pdp-wish-btn {{ $isWishlisted ? 'is-wishlisted' : '' }}" type="submit" title="{{ $wishTitle }}" aria-label="{{ $wishTitle }}" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}">
+                            <i class="bi {{ $wishIcon }}" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="pro-pdp-wish-btn" title="{{ __('Wishlist') }}" aria-label="{{ __('Wishlist') }}">
+                        <i class="bi bi-heart" aria-hidden="true"></i>
+                    </a>
+                @endauth
+            </div>
+            <div class="pro-pdp-rating-line">
+                <i class="bi bi-star-fill text-warning" aria-hidden="true"></i>
+                {{ number_format($product->rating_avg, 1) }}
+                <a href="#pdp-tab-rev" class="pro-pdp-reviews-link js-pdp-reviews-link">
+                    ({{ $product->rating_count }} {{ __('reviews') }})
+                </a>
+            </div>
             @php $fp = $defaultVariant ? $defaultVariant->effectivePrice() : $product->effectivePrice(); @endphp
             <div class="mb-3"><span class="zm-price fs-4" id="pdpPriceNow">{!! '&#8377;' !!}{{ number_format($fp, 0) }}</span>
                 <span class="zm-price-was @if(!($product->compare_price && (float) $product->compare_price > $fp)) d-none @endif" id="pdpPriceWas">@if($product->compare_price && (float) $product->compare_price > $fp){!! '&#8377;' !!}{{ number_format($product->compare_price, 0) }}@endif</span>
@@ -303,19 +329,8 @@
                 </div>
             </form>
 
-            @auth
-                @php
-                    $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
-                    $isWishlisted = in_array((int) $product->id, $wishlistIds, true);
-                @endphp
-                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist pro-pdp-wish-form">@csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <button class="zm-btn zm-btn-ghost {{ $isWishlisted ? 'is-wishlisted' : '' }}" type="submit" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}">
-                        <i class="bi {{ $isWishlisted ? 'bi-heart-fill' : 'bi-heart' }}"></i>
-                        <span class="js-wish-label">{{ $isWishlisted ? __('Wishlisted') : __('Wishlist') }}</span>
-                    </button>
-                </form>
-            @endauth
+            @include('market.partials.pincode-check', ['pinId' => 'pdpPincodeCheck'])
+
         </div>
     </div>
 
@@ -723,6 +738,38 @@
 
         // Initial setup
         updateStars(selectedRating);
+    })();
+    </script>
+    <script>
+    (function () {
+        var links = document.querySelectorAll('.js-pdp-reviews-link');
+        var tabBtn = document.getElementById('pdp-tab-rev-btn');
+        var tabs = document.getElementById('pdpDetailTabs');
+        if (!links.length || !tabBtn || !tabs) return;
+
+        function headerOffset() {
+            var header = document.querySelector('.cb-header--myntra');
+            return (header && window.matchMedia('(min-width: 992px)').matches) ? header.offsetHeight + 12 : 16;
+        }
+
+        function openReviews() {
+            if (window.bootstrap && bootstrap.Tab) {
+                bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+            } else {
+                tabBtn.click();
+            }
+            window.setTimeout(function () {
+                var top = tabs.getBoundingClientRect().top + window.pageYOffset - headerOffset();
+                window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            }, 60);
+        }
+
+        links.forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                openReviews();
+            });
+        });
     })();
     </script>
     @if(!empty($recentPurchaseFeed))

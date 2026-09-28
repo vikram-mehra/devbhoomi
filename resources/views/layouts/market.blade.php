@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
-    <link href="{{ asset('css/market-critical.css') }}?v=13" rel="stylesheet">
+    <link href="{{ asset('css/market-critical.css') }}?v=16" rel="stylesheet">
     <style>
         html.mk-wait { overflow: hidden; }
         #mkPagePreloader {
@@ -39,7 +39,7 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link href="{{ asset('css/market-pro.css') }}?v=191" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=197" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -233,7 +233,7 @@
                         <i class="bi bi-arrow-right-short fs-5 transition-arrow"></i>
                     </a>
                 @else
-                    <a href="{{ route('login') }}"
+                    <a href="{{ route('checkout.index') }}"
                         class="btn btn-primary w-100 rounded-pill py-2 fw-semibold mb-2 shadow-sm d-flex align-items-center justify-content-center gap-1">
                         {{ __('Login to checkout') }}
                         <i class="bi bi-arrow-right-short fs-5 transition-arrow"></i>

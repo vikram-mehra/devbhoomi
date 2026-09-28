@@ -50,6 +50,8 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PincodeController;
+use App\Http\Controllers\Admin\PincodeServiceabilityAdminController;
 use App\Http\Controllers\Admin\AboutPageAdminController;
 use App\Http\Controllers\Admin\ContactPageAdminController;
 use App\Http\Controllers\Admin\SeoAdminController;
@@ -88,6 +90,7 @@ Route::post('/webhooks/delhivery/tracking', [DelhiveryWebhookController::class, 
     ->name('webhooks.delhivery.tracking');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
+Route::post('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
 Route::redirect('/store/{slug}', '/')->name('vendor.shop');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -295,6 +298,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/shipping-settings', [ShippingSettingAdminController::class, 'edit'])->name('shipping-settings.edit');
     Route::post('/shipping-settings', [ShippingSettingAdminController::class, 'update'])->name('shipping-settings.update');
+
+    Route::get('/pincodes', [PincodeServiceabilityAdminController::class, 'index'])->name('pincodes.index');
+    Route::post('/pincodes', [PincodeServiceabilityAdminController::class, 'store'])->name('pincodes.store');
+    Route::patch('/pincodes/{pincode}', [PincodeServiceabilityAdminController::class, 'update'])->name('pincodes.update');
+    Route::post('/pincodes/{pincode}/toggle', [PincodeServiceabilityAdminController::class, 'toggle'])->name('pincodes.toggle');
+    Route::delete('/pincodes/{pincode}', [PincodeServiceabilityAdminController::class, 'destroy'])->name('pincodes.destroy');
 
     Route::get('/about-page', [AboutPageAdminController::class, 'edit'])->name('about-page.edit');
     Route::post('/about-page', [AboutPageAdminController::class, 'update'])->name('about-page.update');

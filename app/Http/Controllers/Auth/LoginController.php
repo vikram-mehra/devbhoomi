@@ -42,8 +42,18 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
+    public function showLoginForm()
+    {
+        AppUrl::rememberIntendedFromPrevious();
+        app(CartService::class)->rememberGuestSession();
+
+        return view('auth.login');
+    }
+
     protected function attemptLogin(Request $request)
     {
+        app(CartService::class)->rememberGuestSession();
+
         // Email/password login: no OTP step here — only validate credentials.
         return $this->guard()->attempt(
             $this->credentials($request),

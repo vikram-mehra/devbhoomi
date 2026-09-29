@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\MenuItemAdminController;
 use App\Http\Controllers\Admin\CouponAdminController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrderAdminController;
+use App\Http\Controllers\Admin\CourierShipmentController;
+use App\Http\Controllers\Admin\CourierPartnerAdminController;
 use App\Http\Controllers\Admin\ProductAdminController;
 use App\Http\Controllers\Admin\InventoryDashboardController;
 use App\Http\Controllers\Admin\InventoryLedgerAdminController;
@@ -33,6 +35,7 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DelhiveryWebhookController;
+use App\Http\Controllers\CourierWebhookController;
 use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
@@ -88,6 +91,9 @@ Route::post('/contact-us', [PageController::class, 'contactSubmit'])->name('page
 Route::post('/webhooks/delhivery/tracking', [DelhiveryWebhookController::class, 'handle'])
     ->middleware('throttle:60,1')
     ->name('webhooks.delhivery.tracking');
+Route::post('/webhooks/couriers/{courier}', [CourierWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
+    ->name('webhooks.couriers');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
 Route::post('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
@@ -249,6 +255,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders/export', [OrderAdminController::class, 'export'])->name('orders.export');
     Route::post('/orders/bulk-status', [OrderAdminController::class, 'bulkUpdateStatus'])->name('orders.bulk-status');
     Route::post('/orders/bulk-shipping', [OrderAdminController::class, 'bulkUpdateShipping'])->name('orders.bulk-shipping');
+    Route::post('/orders/shipments', [CourierShipmentController::class, 'store'])->middleware('throttle:20,1')->name('orders.shipments.store');
+    Route::get('/orders/{order}/shipment', [CourierShipmentController::class, 'show'])->name('orders.shipments.show');
+    Route::post('/orders/{order}/shipment/track', [CourierShipmentController::class, 'track'])->middleware('throttle:20,1')->name('orders.shipments.track');
+    Route::post('/orders/{order}/shipment/cancel', [CourierShipmentController::class, 'cancel'])->middleware('throttle:10,1')->name('orders.shipments.cancel');
+    Route::post('/orders/{order}/shipment/retry', [CourierShipmentController::class, 'retry'])->middleware('throttle:20,1')->name('orders.shipments.retry');
     Route::get('/orders/{order}', [OrderAdminController::class, 'show'])->name('orders.show');
     Route::get('/orders/{order}/invoice/print', [OrderAdminController::class, 'printInvoice'])->name('orders.invoice.print');
     Route::get('/orders/{order}/invoice/pdf', [OrderAdminController::class, 'downloadInvoicePdf'])->name('orders.invoice.pdf');
@@ -296,6 +307,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/seo/report', [SeoAdminController::class, 'report'])->name('seo.report');
     Route::post('/seo/apply-fixes', [SeoAdminController::class, 'applyFixes'])->name('seo.apply-fixes');
 
+    Route::get('/courier-partners', [CourierPartnerAdminController::class, 'index'])->name('courier-partners.index');
     Route::get('/shipping-settings', [ShippingSettingAdminController::class, 'edit'])->name('shipping-settings.edit');
     Route::post('/shipping-settings', [ShippingSettingAdminController::class, 'update'])->name('shipping-settings.update');
 

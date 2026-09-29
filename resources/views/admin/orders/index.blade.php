@@ -16,6 +16,9 @@
 @endphp
 
 @section('content')
+    @if(session('courier_shipment_summary'))
+        @include('admin.orders.partials.shipment-summary', ['summary' => session('courier_shipment_summary')])
+    @endif
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg">
             <div class="admin-stat-card h-100"><div class="admin-stat-card__label">Total Orders</div><div class="admin-stat-card__value">{{ number_format($stats['total_orders']) }}</div></div>
@@ -111,48 +114,84 @@
                 </div>
                 <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Update Selected</button>
                 <button type="submit" formaction="{{ route('admin.orders.bulk-shipping') }}" class="btn btn-sm btn-outline-success text-nowrap">Save Shipping Selected</button>
+                @if(!empty($couriers))
+                    <div class="d-flex flex-wrap align-items-center gap-2 ms-lg-2 ps-lg-2 border-start">
+                        <span class="small text-muted text-nowrap" data-selected-count>Selected: 0 orders</span>
+                        <select name="courier" class="form-select form-select-sm" style="min-width: 10rem;" data-courier-select>
+                            <option value="">{{ __('Select Courier') }}</option>
+                            @foreach($couriers as $key => $name)
+                                <option value="{{ $key }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary text-nowrap" formaction="{{ route('admin.orders.shipments.store') }}" data-create-shipment>
+                            {{ __('Create Shipment') }}
+                        </button>
+                    </div>
+                @endif
             </div>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 admin-table">
                 <thead>
                     <tr>
-                        <th style="width: 2.5rem;"><input type="checkbox" onclick="document.querySelectorAll('.order-checkbox').forEach(cb=>cb.checked=this.checked)"></th>
+                        <th style="width: 2.5rem;"><input type="checkbox" data-select-all-orders onclick="document.querySelectorAll('.order-checkbox').forEach(cb=>cb.checked=this.checked)"></th>
                         <th>Order Number</th>
                         <th>Customer Name</th>
-                        <th>Customer Phone</th>
+                        <th>Shipping address</th>
+                        <th>Products</th>
                         <th>Total Amount</th>
                         <th>Payment Status</th>
+                        <th>Order Status</th>
+                        <th>Shipment</th>
                         <th>Courier Name</th>
                         <th>AWB / Tracking ID</th>
-                        <th>Order Status</th>
                         <th>Order Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($orders as $o)
+                        @php
+                            $shipment = $o->latestShipment;
+                            $shipStatus = $shipment?->status;
+                        @endphp
                         <tr>
                             <td><input class="order-checkbox" type="checkbox" name="order_ids[]" value="{{ $o->id }}"></td>
                             <td class="fw-semibold text-nowrap">{{ $o->order_number }}</td>
                             <td>{{ $o->customer_name ?: ($o->user->name ?? 'N/A') }}</td>
-                            <td class="text-nowrap">{{ $o->customer_phone ?: ($o->shippingAddress->phone ?? 'N/A') }}</td>
+                            <td class="small" style="min-width: 11rem;">
+                                {{ $o->shippingAddress?->fullAddress() ?: implode(', ', $o->shippingAddressLines()) }}
+                            </td>
+                            <td class="small" style="min-width: 9rem;">
+                                {{ $o->items->pluck('product_name')->filter()->take(2)->implode(', ') ?: '—' }}
+                                @if($o->items->count() > 2)
+                                    <span class="text-muted">+{{ $o->items->count() - 2 }}</span>
+                                @endif
+                            </td>
                             <td class="fw-semibold text-nowrap">₹{{ number_format((float) $o->total, 2) }}</td>
                             <td><span class="badge bg-{{ $o->payment_status === 'paid' ? 'success' : ($o->payment_status === 'failed' ? 'danger' : 'warning text-dark') }}">{{ ucfirst((string) $o->payment_status) }}</span></td>
-                            <td>
-                                <input type="text" name="courier_name[{{ $o->id }}]" value="{{ old('courier_name.'.$o->id, $o->courier_name) }}" class="form-control form-control-sm" style="min-width: 120px;">
-                            </td>
-                            <td>
-                                <input type="text" name="tracking_id[{{ $o->id }}]" value="{{ old('tracking_id.'.$o->id, $o->tracking_id) }}" class="form-control form-control-sm" style="min-width: 120px;">
-                            </td>
                             <td><span class="badge bg-{{ $statusClasses[$o->status] ?? 'secondary' }}">{{ \App\Models\Order::statusLabel($o->status) }}</span></td>
+                            <td>
+                                @if($shipment)
+                                    <span class="badge bg-{{ $shipStatus === 'failed' ? 'danger' : ($shipStatus === 'delivered' ? 'success' : 'info') }}">{{ $shipment->statusLabel() }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                <input type="text" name="courier_name[{{ $o->id }}]" value="{{ old('courier_name.'.$o->id, $shipment?->partnerLabel() ?: $o->courier_name) }}" class="form-control form-control-sm" style="min-width: 120px;">
+                            </td>
+                            <td>
+                                <input type="text" name="tracking_id[{{ $o->id }}]" value="{{ old('tracking_id.'.$o->id, $shipment?->trackingNumber() ?: $o->tracking_id) }}" class="form-control form-control-sm" style="min-width: 120px;">
+                            </td>
                             <td class="text-nowrap">{{ $o->created_at?->format('d M Y, h:i A') }}</td>
                             <td class="text-nowrap">
                                 <a href="{{ route('admin.orders.show', $o) }}" class="btn btn-sm btn-outline-dark">View</a>
+                                <a href="{{ route('admin.orders.shipments.show', $o) }}" class="btn btn-sm btn-outline-secondary">Ship</a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="11" class="text-center py-5 text-muted">No orders found.</td></tr>
+                        <tr><td colspan="13" class="text-center py-5 text-muted">No orders found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -269,6 +308,47 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && isOpen()) closeMenu();
     });
+})();
+(function () {
+    var countEl = document.querySelector('[data-selected-count]');
+    var courier = document.querySelector('[data-courier-select]');
+    var createBtn = document.querySelector('[data-create-shipment]');
+    function boxes() {
+        return Array.prototype.slice.call(document.querySelectorAll('.order-checkbox'));
+    }
+    function selected() {
+        return boxes().filter(function (cb) { return cb.checked; });
+    }
+    function refresh() {
+        if (!countEl) return;
+        var n = selected().length;
+        countEl.textContent = 'Selected: ' + n + ' order' + (n === 1 ? '' : 's');
+    }
+    document.addEventListener('change', function (e) {
+        if (e.target && (e.target.classList.contains('order-checkbox') || e.target.hasAttribute('data-select-all-orders'))) {
+            refresh();
+        }
+    });
+    refresh();
+    if (createBtn) {
+        createBtn.addEventListener('click', function (e) {
+            var n = selected().length;
+            var partner = courier ? (courier.options[courier.selectedIndex] ? courier.options[courier.selectedIndex].text : '') : '';
+            if (!n) {
+                e.preventDefault();
+                alert('Select at least one order.');
+                return;
+            }
+            if (!courier || !courier.value) {
+                e.preventDefault();
+                alert('Select a courier partner.');
+                return;
+            }
+            if (!confirm('Create shipments for ' + n + ' selected order' + (n === 1 ? '' : 's') + ' using ' + partner + '?')) {
+                e.preventDefault();
+            }
+        });
+    }
 })();
 </script>
 @endpush

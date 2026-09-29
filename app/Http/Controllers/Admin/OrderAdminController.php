@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Services\Courier\CourierManager;
 use App\Services\DelhiveryTrackingSyncService;
 use App\Services\StockLedgerService;
 use Illuminate\Http\Response;
@@ -17,7 +18,7 @@ class OrderAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::query()->with(['user', 'items', 'shippingAddress']);
+        $query = Order::query()->with(['user', 'items', 'shippingAddress', 'latestShipment']);
 
         if (filled($request->order_id)) {
             $query->where(function ($q) use ($request) {
@@ -61,7 +62,9 @@ class OrderAdminController extends Controller
             'today_orders' => (int) Order::whereDate('created_at', now()->toDateString())->count(),
         ];
 
-        return view('admin.orders.index', compact('orders', 'stats'));
+        $couriers = app(CourierManager::class)->availableDrivers();
+
+        return view('admin.orders.index', compact('orders', 'stats', 'couriers'));
     }
 
     public function show(Order $order)

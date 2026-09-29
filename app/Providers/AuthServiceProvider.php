@@ -25,6 +25,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::define('manage-courier-shipments', function ($user) {
+            return $user instanceof \App\Models\User && $user->isAdmin();
+        });
     }
 }

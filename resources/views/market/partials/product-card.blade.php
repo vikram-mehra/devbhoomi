@@ -28,14 +28,25 @@
     $wishTitle = $isWishlisted ? __('Remove from wishlist') : __('Wishlist');
     $qvDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) ($product->short_description ?: $product->description)))), 220);
     $qvImages = [];
-    foreach ($product->images as $im) {
-        $u = \App\Models\Product::publicImageUrl($im->path);
-        if ($u) {
-            $qvImages[] = \App\Support\OptimizedImage::url($u, 600);
+    $pushQvImage = static function (?string $url) use (&$qvImages): void {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return;
         }
+        $opt = \App\Support\OptimizedImage::url($url, 600) ?: $url;
+        if ($opt !== '' && ! in_array($opt, $qvImages, true)) {
+            $qvImages[] = $opt;
+        }
+    };
+    $pushQvImage($url1);
+    if (! empty($url2) && $url2 !== $url1) {
+        $pushQvImage($url2);
+    }
+    foreach ($product->images as $im) {
+        $pushQvImage(\App\Models\Product::publicImageUrl($im->path));
     }
     if ($qvImages === []) {
-        $qvImages[] = \App\Support\OptimizedImage::url($url1, 600) ?: $url1;
+        $qvImages[] = $url1;
     }
     $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE)->sortBy('id')->values();
     $hasMultipleVariants = $activeVariants->count() > 1;
@@ -99,10 +110,10 @@
                     data-qv-price="{{ $price }}"
                     data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
                     data-qv-img="{{ e($url1) }}"
-                    data-qv-images="{{ e(json_encode($qvImages)) }}"
+                    data-qv-images='@json($qvImages)'
                     data-qv-url="{{ route('product.show', $product) }}"
                     data-qv-variant="{{ $v?->id }}"
-                    data-qv-variants="{{ e(json_encode($variantPayload)) }}"
+                    data-qv-variants='@json($variantPayload)'
                     data-qv-label="{{ $product->variant_label ?: __('Size') }}">
                     <i class="bi bi-eye"></i>
                 </button>

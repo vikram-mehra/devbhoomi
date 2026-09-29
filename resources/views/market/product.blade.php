@@ -386,15 +386,31 @@
                         <button class="zm-btn zm-btn-primary btn-sm mt-2" type="submit">{{ __('Submit review') }}</button>
                     </form>
                 @endauth
-                @forelse($product->reviews as $r)
-                    <div class="border-bottom py-3">
-                        <strong>{{ $r->user->name }}</strong> &mdash; <i class="bi bi-star-fill text-warning" aria-hidden="true"></i> {{ $r->rating }}
-                        <div class="small text-muted">{{ $r->title }}</div>
-                        <div>{{ $r->body }}</div>
+                @if($product->reviews->isNotEmpty())
+                    <div class="pro-pdp-reviews">
+                        <div class="pro-pdp-reviews__grid">
+                            @foreach($product->reviews as $r)
+                                <article class="pro-pdp-review-card">
+                                    <div class="pro-pdp-review-card__top">
+                                        <div class="pro-pdp-review-card__who">
+                                            <span class="pro-pdp-review-card__avatar" aria-hidden="true">{{ mb_substr(trim((string) ($r->user->name ?? __('C'))), 0, 1) }}</span>
+                                            <strong>{{ $r->user->name }}</strong>
+                                        </div>
+                                        <span class="pro-pdp-review-card__rating"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ $r->rating }}</span>
+                                    </div>
+                                    @if(filled($r->title))
+                                        <div class="pro-pdp-review-card__title">{{ $r->title }}</div>
+                                    @endif
+                                    @if(filled($r->body))
+                                        <p class="pro-pdp-review-card__body">{{ $r->body }}</p>
+                                    @endif
+                                </article>
+                            @endforeach
+                        </div>
                     </div>
-                @empty
+                @else
                     <p class="text-muted mb-0">{{ __('No reviews yet. Be the first to review this product.') }}</p>
-                @endforelse
+                @endif
             </div>
             <div class="tab-pane fade" id="pdp-tab-qa" role="tabpanel" aria-labelledby="pdp-tab-qa-btn" tabindex="0">
                 <p class="text-muted mb-0">{{ __('Questions and answers will appear here. Chat with the seller for more help.') }}</p>

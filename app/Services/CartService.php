@@ -10,9 +10,29 @@ use Illuminate\Validation\ValidationException;
 
 class CartService
 {
+    public const GUEST_SID_KEY = 'guest_cart_sid';
+
     public function sessionKey(): string
     {
         return Session::getId();
+    }
+
+    public function rememberGuestSession(): void
+    {
+        if (Auth::check()) {
+            return;
+        }
+
+        if (! Session::has(self::GUEST_SID_KEY)) {
+            Session::put(self::GUEST_SID_KEY, $this->sessionKey());
+        }
+    }
+
+    public function guestSessionId(): ?string
+    {
+        $sid = Session::get(self::GUEST_SID_KEY);
+
+        return is_string($sid) && $sid !== '' ? $sid : null;
     }
 
     public function count(): int
@@ -22,6 +42,10 @@ class CartService
 
     public function query()
     {
+        if (! Auth::check()) {
+            $this->rememberGuestSession();
+        }
+
         $q = CartItem::query()->with([
             'variant' => function ($vq) {
                 $vq->with([
@@ -44,6 +68,9 @@ class CartService
     {
         $variant = ProductVariant::findOrFail($variantId);
         $userId = Auth::id();
+        if (! $userId) {
+            $this->rememberGuestSession();
+        }
         $sessionId = $userId ? null : $this->sessionKey();
 
         $row = CartItem::query()
@@ -77,8 +104,18 @@ class CartService
         }
 
         $userId = Auth::id();
+        $guestSids = array_values(array_unique(array_filter([
+            $this->guestSessionId(),
+            $this->sessionKey(),
+        ])));
+        Session::forget(self::GUEST_SID_KEY);
+
+        if ($guestSids === []) {
+            return;
+        }
+
         $guestItems = CartItem::query()
-            ->where('session_id', $this->sessionKey())
+            ->whereIn('session_id', $guestSids)
             ->whereNull('user_id')
             ->get();
 

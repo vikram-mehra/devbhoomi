@@ -86,6 +86,7 @@ class EmailVerificationController extends Controller
         }
 
         if (config('verification.auto_login_after_verify', true)) {
+            app(CartService::class)->rememberGuestSession();
             Auth::login($user, false);
             $request->session()->regenerate();
             app(CartService::class)->mergeGuestCart();

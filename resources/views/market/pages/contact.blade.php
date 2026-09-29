@@ -11,7 +11,7 @@
 @endif
 
 @push('head')
-    <link href="{{ asset('css/pages-static.css') }}?v=2" rel="stylesheet">
+    <link href="{{ asset('css/pages-static.css') }}?v=3" rel="stylesheet">
 @endpush
 
 @push('schema')
@@ -144,6 +144,28 @@
                                     @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-12">
+                                    <label class="form-label" for="c_captcha">{{ __('Security code') }} *</label>
+                                    <div class="pro-contact-captcha">
+                                        <div class="pro-contact-captcha__image-wrap">
+                                            <img
+                                                src="{{ route('pages.contact.captcha') }}?t={{ time() }}"
+                                                alt="{{ __('Security code') }}"
+                                                class="pro-contact-captcha__image"
+                                                id="c_captcha_image"
+                                                width="150"
+                                                height="48"
+                                            >
+                                            <button type="button" class="btn pro-contact-captcha__refresh" id="c_captcha_refresh" title="{{ __('Refresh code') }}" aria-label="{{ __('Refresh code') }}">
+                                                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                        <div class="pro-contact-captcha__field">
+                                            <input type="text" name="captcha" id="c_captcha" class="form-control @error('captcha') is-invalid @enderror" value="" required maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="{{ __('Enter the code') }}">
+                                            @error('captcha')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
                                     <button type="submit" class="btn pro-contact-submit">{{ __('Send message') }} <i class="bi bi-send" aria-hidden="true"></i></button>
                                 </div>
                             </form>
@@ -154,3 +176,18 @@
         </section>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    var img = document.getElementById('c_captcha_image');
+    var btn = document.getElementById('c_captcha_refresh');
+    if (!img || !btn) return;
+    btn.addEventListener('click', function () {
+        img.src = @json(route('pages.contact.captcha')) + '?t=' + Date.now();
+        var input = document.getElementById('c_captcha');
+        if (input) input.value = '';
+    });
+})();
+</script>
+@endpush

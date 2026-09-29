@@ -1,13 +1,13 @@
 @extends('layouts.account')
 
-@section('account_title', __('Order :num', ['num' => $order->order_number]))
+@section('account_title', __('Order :num', ['num' => '#' . $order->order_number]))
 
 @push('breadcrumb')
     @include('market.partials.breadcrumbs', [
-        'title' => $order->order_number,
+        'title' => '#' . $order->order_number,
         'items' => [
             ['label' => __('My orders'), 'url' => route('orders.index')],
-            ['label' => $order->order_number],
+            ['label' => '#' . $order->order_number],
         ],
     ])
 @endpush
@@ -22,6 +22,7 @@
     $methodLabel = $methodLabels[$methodKey] ?? ucfirst($methodKey);
     $payStatusKey = strtolower((string) $order->payment_status);
     $itemCount = $order->items->count();
+    $shipment = $shipment ?? null;
 @endphp
 <div class="pro-order-detail">
     <a href="{{ route('orders.index') }}" class="pro-order-detail__back">
@@ -34,7 +35,7 @@
             <p class="pro-order-detail__eyebrow">{{ __('Order details') }}</p>
             <h1 class="pro-order-detail__title">
                 <span class="pro-order-detail__order-label">{{ __('Order') }}</span>
-                <span class="pro-order-detail__order-id">{{ $order->order_number }}</span>
+                <span class="pro-order-detail__order-id">{{ '#' . $order->order_number }}</span>
             </h1>
             <div class="pro-order-detail__meta">
                 <span class="pro-order-detail__pill"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ $order->created_at->format('d M Y') }}</span>
@@ -106,6 +107,37 @@
                     <span class="pro-order-detail__status-chip-dot" aria-hidden="true"></span>
                     <span>{{ __('Current status') }}: <strong>{{ \App\Models\Order::statusLabel($order->status) }}</strong></span>
                 </div>
+
+                @if(!empty($shipment) && ($order->awb() || !empty($shipment['events'])))
+                    <div class="pro-track__result mt-4 mb-0 shadow-none">
+                        <p class="pro-track__result-kicker mb-1">{{ __('Shipment tracking') }}</p>
+                        <div class="pro-track__meta mb-2">
+                            <div>
+                                <span>{{ __('AWB / Waybill') }}</span>
+                                <strong>{{ $shipment['tracking_id'] ?: __('Assigned after dispatch') }}</strong>
+                            </div>
+                            <div>
+                                <span>{{ __('Shipment status') }}</span>
+                                <strong>{{ $shipment['status_label'] }}</strong>
+                            </div>
+                            <div>
+                                <span>{{ __('Current location') }}</span>
+                                <strong>{{ $shipment['location'] ?: __('Not available yet') }}</strong>
+                            </div>
+                            <div>
+                                <span>{{ __('Last updated') }}</span>
+                                <strong>
+                                    @if($shipment['last_updated'])
+                                        {{ $shipment['last_updated']->tz('Asia/Kolkata')->format('d M Y, h:i A') }}
+                                    @else
+                                        {{ __('Waiting for courier scans') }}
+                                    @endif
+                                </strong>
+                            </div>
+                        </div>
+                        <a href="{{ route('orders.track') }}" class="small">{{ __('Open Track order') }}</a>
+                    </div>
+                @endif
             </div>
         </div>
 

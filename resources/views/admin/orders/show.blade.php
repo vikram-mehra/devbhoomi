@@ -91,10 +91,40 @@
     <div class="row g-3">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <h6 class="mb-3">Shipping Details</h6>
-                <p class="mb-1"><strong>Courier Name:</strong> {{ $order->courier_name ?: 'N/A' }}</p>
-                <p class="mb-1"><strong>Tracking ID:</strong> {{ $order->tracking_id ?: 'N/A' }}</p>
+                <h6 class="mb-3">Delhivery shipping</h6>
+                <form method="post" action="{{ route('admin.orders.shipping', $order) }}" class="row g-2 mb-3">
+                    @csrf
+                    <div class="col-md-5">
+                        <label class="form-label small mb-1" for="adminCourierName">Courier</label>
+                        <input id="adminCourierName" type="text" name="courier_name" value="{{ old('courier_name', $order->courier_name ?: 'Delhivery') }}" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-7">
+                        <label class="form-label small mb-1" for="adminAwb">AWB / Waybill</label>
+                        <input id="adminAwb" type="text" name="tracking_id" value="{{ old('tracking_id', $order->tracking_id) }}" class="form-control form-control-sm" placeholder="Delhivery AWB">
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-sm btn-primary">Save AWB</button>
+                    </div>
+                </form>
+                <p class="mb-1"><strong>Current status:</strong> {{ $order->delhivery_status ?: 'Awaiting scans' }}</p>
+                <p class="mb-1"><strong>Location:</strong> {{ $order->delhivery_location ?: 'N/A' }}</p>
+                <p class="mb-1"><strong>Last synced:</strong> {{ $order->delhivery_last_synced_at?->tz('Asia/Kolkata')->format('d M Y, h:i A') ?: 'Not yet' }}</p>
                 <p class="mb-0"><strong>Delivery Date:</strong> {{ $order->delivery_date?->format('d M Y') ?: 'N/A' }}</p>
+                @if($order->trackingEvents->isNotEmpty())
+                    <hr>
+                    <p class="small text-muted mb-2">Stored scan history</p>
+                    <ul class="small mb-0 ps-3">
+                        @foreach($order->trackingEvents as $event)
+                            <li class="mb-1">
+                                <strong>{{ $event->status }}</strong>
+                                @if($event->location) · {{ $event->location }}@endif
+                                @if($event->scanned_at)
+                                    <span class="text-muted"> · {{ $event->scanned_at->tz('Asia/Kolkata')->format('d M Y, h:i A') }}</span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </div></div>
         </div>
         <div class="col-lg-6">

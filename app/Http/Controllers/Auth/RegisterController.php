@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CartService;
 use App\Services\EmailVerificationService;
+use App\Support\AppUrl;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -20,9 +22,20 @@ class RegisterController extends Controller
         $this->middleware('throttle:registration')->only('register');
     }
 
+    public function showRegistrationForm()
+    {
+        AppUrl::rememberIntendedFromPrevious();
+        app(CartService::class)->rememberGuestSession();
+
+        return view('auth.register');
+    }
+
     public function register(Request $request)
     {
         $this->validator($request->all())->validate();
+
+        app(CartService::class)->rememberGuestSession();
+        AppUrl::rememberIntendedFromPrevious();
 
         $user = $this->create($request->all());
 

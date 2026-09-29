@@ -95,7 +95,7 @@ class Product extends Model
         return $this->hasMany(Review::class)->where('is_approved', true);
     }
 
-    /** Formatted weight for PDP (e.g. "1 kg", "0.5 kg"), or null if not set. */
+    /** Formatted weight for PDP (e.g. "1 kg", "500 gm"), or null if not set. */
     public function formattedWeightKg(): ?string
     {
         if ($this->weight_kg === null || $this->weight_kg === '') {
@@ -105,6 +105,19 @@ class Product extends Model
         if ($kg <= 0) {
             return null;
         }
+
+        if ($kg < 1) {
+            $grams = (int) round($kg * 1000);
+            if ($grams <= 0) {
+                return null;
+            }
+            if ($grams >= 1000) {
+                return '1 '.__('kg');
+            }
+
+            return $grams.' '.__('gm');
+        }
+
         $text = rtrim(rtrim(number_format($kg, 3, '.', ''), '0'), '.');
 
         return $text.' '.__('kg');

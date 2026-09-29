@@ -106,6 +106,46 @@ class AppUrl
         }
     }
 
+    /**
+     * Keep the storefront page the guest came from so login/OTP/Google can return there.
+     * Does not overwrite an intended URL already set (e.g. checkout via auth middleware).
+     */
+    public static function rememberIntendedFromPrevious(): void
+    {
+        static::forgetInvalidIntended();
+        if (session()->has('url.intended')) {
+            return;
+        }
+
+        $previous = url()->previous();
+        if (! static::isWithinApp($previous)) {
+            return;
+        }
+
+        $path = parse_url($previous, PHP_URL_PATH) ?: '';
+        $base = static::basePath();
+        $relative = $base !== '' && strpos($path, $base) === 0
+            ? substr($path, strlen($base))
+            : $path;
+        $relative = '/'.ltrim((string) $relative, '/');
+
+        foreach ([
+            '/login',
+            '/register',
+            '/password',
+            '/auth/google',
+            '/email/',
+            '/admin/login',
+            '/login/phone',
+        ] as $prefix) {
+            if ($relative === $prefix || strpos($relative, $prefix) === 0) {
+                return;
+            }
+        }
+
+        session()->put('url.intended', $previous);
+    }
+
     public static function redirectIntended(string $default, int $status = 302): RedirectResponse
     {
         $intended = session()->pull('url.intended');

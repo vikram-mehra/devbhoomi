@@ -36,7 +36,7 @@
 
     <div class="card border-0 shadow-sm admin-data-card mb-3">
         <div class="card-body">
-            <form method="get" class="row g-2 align-items-end">
+            <form method="get" id="ordersFilterForm" action="{{ route('admin.orders.index') }}" class="row g-2 align-items-end">
                 <div class="col-6 col-md-4 col-xl-2">
                     <label class="form-label small text-muted mb-1">Order Number</label>
                     <input type="text" class="form-control" name="order_id" value="{{ request('order_id') }}" placeholder="Order Number">
@@ -59,25 +59,16 @@
                     </select>
                 </div>
                 <div class="col-6 col-md-4 col-xl-2">
-                    <label class="form-label small text-muted mb-1">Order Status</label>
-                    <select class="form-select" name="order_status">
-                        <option value="">All</option>
-                        @foreach(\App\Models\Order::adminStatusOptions() as $k => $v)
-                            <option value="{{ $k }}" @selected(request('order_status') === $k)>{{ $v }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-6 col-md-4 col-xl-1">
                     <label class="form-label small text-muted mb-1">From</label>
                     <input type="date" class="form-control" name="date_from" value="{{ request('date_from') }}">
                 </div>
-                <div class="col-6 col-md-4 col-xl-1">
+                <div class="col-6 col-md-4 col-xl-2">
                     <label class="form-label small text-muted mb-1">To</label>
                     <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
                 </div>
-                <div class="col-12 col-xl-12">
+                <div class="col-12">
                     <div class="d-flex flex-wrap gap-2 pt-xl-1">
-                        <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Apply</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Apply</button>
                         <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">Reset</a>
                         <a href="{{ route('admin.orders.export', ['type' => 'csv'] + request()->query()) }}" class="btn btn-outline-success">Export CSV</a>
                         <a href="{{ route('admin.orders.export', ['type' => 'excel'] + request()->query()) }}" class="btn btn-outline-success">Export Excel</a>
@@ -87,19 +78,39 @@
         </div>
     </div>
 
-    <form method="post" action="{{ route('admin.orders.bulk-status') }}" class="card border-0 shadow-sm admin-data-card mb-4">
+    <form method="post" action="{{ route('admin.orders.bulk-status') }}" class="card border-0 shadow-sm admin-data-card admin-orders-card mb-4">
         @csrf
-        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <strong>Orders</strong>
-            <div class="d-flex flex-wrap gap-2">
-                <select name="status" class="form-select form-select-sm" style="min-width: 10rem;">
-                    <option value="">Bulk Status</option>
-                    @foreach(\App\Models\Order::adminStatusOptions() as $k => $v)
-                        <option value="{{ $k }}">{{ $v }}</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="btn btn-sm btn-outline-primary">Update Selected</button>
-                <button type="submit" formaction="{{ route('admin.orders.bulk-shipping') }}" class="btn btn-sm btn-outline-success">Save Shipping Selected</button>
+        <div class="card-header admin-orders-toolbar">
+            <strong class="admin-orders-toolbar__title">Orders</strong>
+            <div class="admin-orders-toolbar__row">
+                <div class="admin-status-search" data-admin-status-search>
+                    <label class="visually-hidden" for="orderStatusSearch">{{ __('Search status') }}</label>
+                    <select id="orderStatusSearch" name="order_status" form="ordersFilterForm" class="form-select form-select-sm admin-status-search__native" aria-label="{{ __('Search status') }}" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+                        <option value="">{{ __('Search status') }}</option>
+                        @foreach(\App\Models\Order::adminStatusOptions() as $k => $v)
+                            <option value="{{ $k }}" @selected(request('order_status') === $k)>{{ $v }}</option>
+                        @endforeach
+                    </select>
+                    <div class="admin-status-search__enhanced" hidden>
+                        <button type="button" class="form-select form-select-sm admin-status-search__toggle" aria-expanded="false" aria-haspopup="listbox">
+                            <span class="admin-status-search__label">
+                                {{ request()->filled('order_status') ? \App\Models\Order::statusLabel(request('order_status')) : __('Search status') }}
+                            </span>
+                        </button>
+                        <div class="admin-status-search__menu" hidden>
+                            <input type="search" class="form-control form-control-sm admin-status-search__input" placeholder="{{ __('Search status…') }}" autocomplete="off" aria-label="{{ __('Search status') }}">
+                            <div class="admin-status-search__list" role="listbox">
+                                <button type="button" class="admin-status-search__option{{ ! request()->filled('order_status') ? ' is-active' : '' }}" role="option" data-value="" data-label="{{ __('Search status') }}">{{ __('All statuses') }}</button>
+                                @foreach(\App\Models\Order::adminStatusOptions() as $k => $v)
+                                    <button type="button" class="admin-status-search__option{{ request('order_status') === $k ? ' is-active' : '' }}" role="option" data-value="{{ $k }}" data-label="{{ $v }}">{{ $v }}</button>
+                                @endforeach
+                            </div>
+                            <div class="admin-status-search__empty" hidden>{{ __('No status found.') }}</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Update Selected</button>
+                <button type="submit" formaction="{{ route('admin.orders.bulk-shipping') }}" class="btn btn-sm btn-outline-success text-nowrap">Save Shipping Selected</button>
             </div>
         </div>
         <div class="table-responsive">
@@ -113,7 +124,7 @@
                         <th>Total Amount</th>
                         <th>Payment Status</th>
                         <th>Courier Name</th>
-                        <th>Tracking ID</th>
+                        <th>AWB / Tracking ID</th>
                         <th>Order Status</th>
                         <th>Order Date</th>
                         <th>Actions</th>
@@ -169,3 +180,95 @@
         @endif
     </form>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    var root = document.querySelector('[data-admin-status-search]');
+    if (!root) return;
+    var native = root.querySelector('.admin-status-search__native');
+    var enhanced = root.querySelector('.admin-status-search__enhanced');
+    var toggle = root.querySelector('.admin-status-search__toggle');
+    var menu = root.querySelector('.admin-status-search__menu');
+    var input = root.querySelector('.admin-status-search__input');
+    var empty = root.querySelector('.admin-status-search__empty');
+    var label = root.querySelector('.admin-status-search__label');
+    var form = document.getElementById('ordersFilterForm');
+    var options = Array.prototype.slice.call(root.querySelectorAll('.admin-status-search__option'));
+    if (!toggle || !menu || !input) return;
+    if (enhanced) enhanced.hidden = false;
+    if (native) native.hidden = true;
+    root.classList.add('is-enhanced');
+
+    function isOpen() {
+        return !menu.hidden;
+    }
+    function openMenu() {
+        menu.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        root.classList.add('is-open');
+        input.value = '';
+        filterOptions('');
+        setTimeout(function () { input.focus(); }, 0);
+    }
+    function closeMenu() {
+        menu.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+        root.classList.remove('is-open');
+    }
+    function filterOptions(query) {
+        var q = (query || '').toLowerCase().trim();
+        var visible = 0;
+        options.forEach(function (btn) {
+            var text = (btn.getAttribute('data-label') || btn.textContent || '').toLowerCase();
+            var show = !q || text.indexOf(q) !== -1;
+            btn.hidden = !show;
+            if (show) visible += 1;
+        });
+        if (empty) empty.hidden = visible > 0;
+    }
+    function applyStatus(value, text) {
+        if (native) native.value = value || '';
+        if (label) label.textContent = text || @json(__('Search status'));
+        closeMenu();
+        if (form) {
+            if (typeof form.requestSubmit === 'function') form.requestSubmit();
+            else form.submit();
+        }
+    }
+
+    toggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (isOpen()) closeMenu(); else openMenu();
+    });
+    input.addEventListener('input', function () {
+        filterOptions(input.value);
+    });
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeMenu();
+            toggle.focus();
+            return;
+        }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            var first = options.find(function (btn) { return !btn.hidden; });
+            if (first) applyStatus(first.getAttribute('data-value'), first.getAttribute('data-label'));
+        }
+    });
+    options.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            applyStatus(btn.getAttribute('data-value'), btn.getAttribute('data-label'));
+        });
+    });
+    document.addEventListener('click', function (e) {
+        if (!root.contains(e.target)) closeMenu();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && isOpen()) closeMenu();
+    });
+})();
+</script>
+@endpush

@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\AboutPage;
 use App\Models\ContactInquiry;
 use App\Models\ContactPage;
+use App\Services\ContactCaptcha;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class PageController extends Controller
 {
@@ -29,7 +32,12 @@ class PageController extends Controller
         return view('market.pages.contact', compact('page'));
     }
 
-    public function contactSubmit(Request $request)
+    public function contactCaptcha(ContactCaptcha $captcha): Response
+    {
+        return $captcha->imageResponse();
+    }
+
+    public function contactSubmit(Request $request, ContactCaptcha $captcha)
     {
         $page = ContactPage::cached();
         if (! $page->is_published) {
@@ -42,7 +50,19 @@ class PageController extends Controller
             'phone' => 'nullable|string|max:30',
             'subject' => 'nullable|string|max:200',
             'message' => 'required|string|max:5000',
+            'captcha' => 'required|string|max:12',
         ]);
+
+        if (! $captcha->matches($data['captcha'] ?? null)) {
+            $captcha->forget();
+
+            throw ValidationException::withMessages([
+                'captcha' => __('The security code is incorrect. Please try again.'),
+            ]);
+        }
+
+        $captcha->forget();
+        unset($data['captcha']);
 
         ContactInquiry::create($data);
 

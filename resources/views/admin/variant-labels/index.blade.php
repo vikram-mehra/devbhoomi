@@ -26,7 +26,7 @@
 
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">{{ __('Initial Options') }}</label>
-                            <input type="text" name="options" class="form-control @error('options') is-invalid @enderror" placeholder="e.g. 0.5kg, 1kg, 2kg" value="{{ old('options') }}">
+                            <input type="text" name="options" class="form-control @error('options') is-invalid @enderror" placeholder="e.g. 500gm, 1kg, 2kg" value="{{ old('options') }}">
                             @error('options')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <div class="form-text small">{{ __('Comma separated values to load initially.') }}</div>
                         </div>

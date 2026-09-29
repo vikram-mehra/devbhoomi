@@ -251,7 +251,7 @@ input.js-cart-qty-input {
                     @auth
                         <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Proceed to checkout') }}</a>
                     @else
-                        <a href="{{ route('login') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Login to checkout') }}</a>
+                        <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Login to checkout') }}</a>
                     @endauth
                 </div>
             </div>

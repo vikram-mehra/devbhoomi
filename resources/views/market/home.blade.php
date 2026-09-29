@@ -26,13 +26,27 @@
     @endphp
 
     {{-- Hero: full-bleed background image + overlay copy --}}
+    @php $heroShopUrl = \App\Models\MenuItem::ourProductsUrl(); @endphp
     @if($banners->isNotEmpty())
         <section class="pro-hero p-0">
-            <div id="proHeroSlider" class="carousel slide" data-bs-ride="false" data-bs-interval="8000">
+            <div id="proHeroSlider" class="carousel slide" data-bs-ride="false" data-bs-interval="8000" data-bs-touch="true">
+                @if($banners->count() > 1)
+                    <div class="carousel-indicators pro-hero__dots">
+                        @foreach($banners as $i => $b)
+                            <button type="button"
+                                data-bs-target="#proHeroSlider"
+                                data-bs-slide-to="{{ $i }}"
+                                @class(['active' => $i === 0])
+                                @if($i === 0) aria-current="true" @endif
+                                aria-label="{{ __('Slide :n', ['n' => $i + 1]) }}"></button>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="carousel-inner">
                     @foreach($banners as $i => $b)
                         <div class="carousel-item {{ $i === 0 ? 'active' : '' }}">
                             <div class="mk-hero-full mk-hero-full--photo">
+                                <a href="{{ $b->link ? $b->resolvedLink() : $heroShopUrl }}" class="mk-hero-full__hit" aria-label="{{ $b->title ?: __('Our Products') }}"></a>
                                 <picture>
                                     @php
                                         $slideMobile = \App\Support\OptimizedImage::url($b->resolvedMobileImageUrl(), 768);
@@ -44,8 +58,6 @@
                                             src="{{ $slideDesktop }}"
                                             alt="{{ $b->title }}"
                                             class="mk-hero-full__img"
-                                            width="1400"
-                                            height="510"
                                             sizes="100vw"
                                             fetchpriority="high"
                                         >
@@ -56,31 +68,46 @@
                                             data-src="{{ $slideDesktop }}"
                                             alt="{{ $b->title }}"
                                             class="mk-hero-full__img"
-                                            width="1400"
-                                            height="510"
                                             sizes="100vw"
                                             loading="lazy"
                                             fetchpriority="low"
                                         >
                                     @endif
                                 </picture>
+                                @php
+                                    $heroHasCopy = filled($b->eyebrow) || filled($b->title) || filled($b->subtitle) || filled($b->button_label) || filled($b->secondary_button_label);
+                                @endphp
+                                @if($heroHasCopy)
                                 <div class="mk-hero-full__overlay">
                                     <div class="cb-container">
                                         <div class="mk-hero-copy">
-                                            <span class="pro-hero__eyebrow">{{ $b->eyebrow ?: __('New season') }}</span>
-                                            @if($i === 0)
-                                            <h1 class="pro-hero__title">{{ $b->title }}</h1>
-                                            @else
-                                            <h2 class="pro-hero__title">{{ $b->title }}</h2>
+                                            @if (filled($b->eyebrow))
+                                                <span class="pro-hero__eyebrow">{{ $b->eyebrow }}</span>
                                             @endif
-                                            <p class="pro-hero__text">{{ $b->subtitle ?: __('Curated picks from verified sellers — easy returns & secure checkout.') }}</p>
+                                            @if (filled($b->title))
+                                                @if($i === 0)
+                                                <h1 class="pro-hero__title">{{ $b->title }}</h1>
+                                                @else
+                                                <h2 class="pro-hero__title">{{ $b->title }}</h2>
+                                                @endif
+                                            @endif
+                                            @if (filled($b->subtitle))
+                                                <p class="pro-hero__text">{{ $b->subtitle }}</p>
+                                            @endif
+                                            @if (filled($b->button_label) || filled($b->secondary_button_label))
                                             <div class="pro-hero__actions">
-                                                <a href="{{ $b->link ?: route('shop.search') }}" class="pro-btn-white">{{ $b->button_label ?: __('Shop now') }}</a>
-                                                <a href="{{ $b->secondary_link ?: route('vendor.register') }}" class="pro-btn-outline-light">{{ $b->secondary_button_label ?: __('Sell with us') }}</a>
+                                                @if (filled($b->button_label))
+                                                    <a href="{{ $b->link ?: route('shop.search') }}" class="pro-btn-white">{{ $b->button_label }}</a>
+                                                @endif
+                                                @if (filled($b->secondary_button_label))
+                                                    <a href="{{ $b->secondary_link ?: route('vendor.register') }}" class="pro-btn-outline-light">{{ $b->secondary_button_label }}</a>
+                                                @endif
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
+                                @endif
                             </div>
                         </div>
                     @endforeach
@@ -92,6 +119,7 @@
     @else
         <section class="pro-hero p-0">
             <div class="mk-hero-full mk-hero-full--photo">
+                <a href="{{ $heroShopUrl }}" class="mk-hero-full__hit" aria-label="{{ __('Our Products') }}"></a>
                 <img src="{{ $fallbackHeroImg }}" alt="" class="mk-hero-full__img" width="1920" height="700" fetchpriority="high" decoding="async">
                 <div class="mk-hero-full__overlay">
                     <div class="cb-container">
@@ -272,12 +300,27 @@
                     hero.addEventListener('slide.bs.carousel', function (e) {
                         hydrateHeroSlide(e.relatedTarget);
                     });
+                    function heroCarousel() {
+                        if (!window.bootstrap || !bootstrap.Carousel) return null;
+                        return bootstrap.Carousel.getOrCreateInstance(hero, {
+                            interval: 8000,
+                            pause: false,
+                            wrap: true,
+                            touch: true
+                        });
+                    }
+                    hero.querySelectorAll('.pro-hero__dots [data-bs-slide-to]').forEach(function (dot) {
+                        dot.addEventListener('click', function () {
+                            var carousel = heroCarousel();
+                            if (carousel) carousel.cycle();
+                        });
+                    });
                     window.setTimeout(function () {
-                        if (!window.bootstrap || !bootstrap.Carousel) return;
                         var next = hero.querySelector('.carousel-item.active')?.nextElementSibling
                             || hero.querySelector('.carousel-item:not(.active)');
                         hydrateHeroSlide(next);
-                        bootstrap.Carousel.getOrCreateInstance(hero, { interval: 8000, pause: 'hover' }).cycle();
+                        var carousel = heroCarousel();
+                        if (carousel) carousel.cycle();
                     }, 8000);
                 }
 

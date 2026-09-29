@@ -23,7 +23,7 @@ class BannerAdminController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'eyebrow' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:2000',
             'image' => ['required', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
@@ -59,7 +59,7 @@ class BannerAdminController extends Controller
         }
 
         Banner::create([
-            'title' => $request->title,
+            'title' => $request->filled('title') ? $request->title : null,
             'eyebrow' => $request->eyebrow,
             'subtitle' => $request->subtitle,
             'image' => $imageValue,
@@ -117,7 +117,7 @@ class BannerAdminController extends Controller
         }
 
         $banner->update([
-            'title' => $request->title,
+            'title' => $request->filled('title') ? $request->title : null,
             'eyebrow' => $request->eyebrow,
             'subtitle' => $request->subtitle,
             'image' => $imageValue,

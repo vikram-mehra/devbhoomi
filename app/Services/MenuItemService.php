@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\MenuItem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class MenuItemService
 {
@@ -86,22 +87,45 @@ class MenuItemService
     }
 
     /**
-     * Flat list of root + child links for footer (active only).
+     * Shop/category links for the footer Menu column.
+     * Skips site pages already listed under Useful links / Help center.
      */
     public function footerLinks(int $limit = 12): Collection
     {
         $links = collect();
 
         foreach ($this->headerTree() as $root) {
-            $links->push($root);
-            foreach ($root->children as $child) {
-                if ($child->is_active) {
+            if ($this->isReservedFooterPage($root)) {
+                continue;
+            }
+            $activeKids = $root->children->where('is_active', true)
+                ->filter(fn (MenuItem $child) => ! $this->isReservedFooterPage($child))
+                ->values();
+            if ($activeKids->isNotEmpty()) {
+                foreach ($activeKids as $child) {
                     $links->push($child);
                 }
+            } else {
+                $links->push($root);
             }
         }
 
-        return $links->take($limit);
+        return $links->unique('id')->take($limit);
+    }
+
+    private function isReservedFooterPage(MenuItem $item): bool
+    {
+        if ($item->isBuiltInPage()) {
+            return true;
+        }
+        $slug = Str::lower(trim((string) $item->slug));
+        $title = Str::lower(trim((string) $item->title));
+        $reserved = [
+            'home', 'about', 'about-us', 'contact', 'contact-us',
+            'blog', 'blogs', 'offers', 'search', 'collections',
+        ];
+
+        return in_array($slug, $reserved, true) || in_array($title, $reserved, true);
     }
 
     /**

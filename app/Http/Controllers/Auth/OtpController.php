@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CartService;
 use App\Services\OtpService;
+use App\Support\AppUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +16,9 @@ class OtpController extends Controller
 {
     public function showPhoneForm()
     {
+        AppUrl::rememberIntendedFromPrevious();
+        app(CartService::class)->rememberGuestSession();
+
         return view('auth.phone-login');
     }
 
@@ -54,9 +59,10 @@ class OtpController extends Controller
             $user->update(['phone_verified_at' => now()]);
         }
 
+        app(CartService::class)->rememberGuestSession();
         Auth::login($user, true);
-        app(\App\Services\CartService::class)->mergeGuestCart();
+        app(CartService::class)->mergeGuestCart();
 
-        return redirect()->intended('/');
+        return AppUrl::redirectIntended(route('market.home'));
     }
 }

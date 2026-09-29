@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="{{ asset('css/admin-dashboard.css') }}?v=10" rel="stylesheet">
+    <link href="{{ asset('css/admin-dashboard.css') }}?v=13" rel="stylesheet">
     @stack('styles')
 </head>
 @php
@@ -25,7 +25,7 @@
         <aside id="adminSidebar" class="admin-sidebar" aria-label="{{ __('Admin navigation') }}">
             <a href="{{ route('admin.dashboard') }}" class="admin-sidebar__brand">
                 @if(!empty($siteLogoUrl))
-                    <img src="{{ $siteLogoUrl }}" alt="{{ config('app.name') }}" class="admin-sidebar__brand-logo" width="130" height="36" decoding="async">
+                    <img src="{{ $siteLogoUrl }}" alt="{{ config('app.name') }}" class="admin-sidebar__brand-logo" width="180" height="50" decoding="async">
                 @else
                     <span class="admin-sidebar__brand-mark">{{ strtoupper(substr(config('app.name', 'Z'), 0, 1)) }}</span>
                     <span>{{ config('app.name', 'Admin') }}</span>
@@ -77,6 +77,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a49.902 49.902 0 00-2.654-.816A12.023 12.023 0 0118.75 16.5c0-2.136.547-4.142 1.523-5.952M17.25 16.5A12.023 12.023 0 0012 18.75c-2.136 0-4.142-.547-5.952-1.523M17.25 16.5v1.875c0 .621-.504 1.125-1.125 1.125H7.875c-.621 0-1.125-.504-1.125-1.125V16.5m12 0V9.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 9.75v6.75"/></svg>
                     {{ __('Shipping') }}
                 </a>
+                <a href="{{ route('admin.pincodes.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.pincodes.*') ? 'is-active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                    {{ __('Pincodes') }}
+                </a>
                 <a href="{{ route('admin.seo.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.seo.*') ? 'is-active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                     {{ __('SEO') }}
@@ -101,6 +105,13 @@
                 <button type="button" class="admin-topbar__toggle" id="adminSidebarToggle" aria-controls="adminSidebar" aria-expanded="false" aria-label="{{ __('Open menu') }}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
                 </button>
+                <a href="{{ route('admin.dashboard') }}" class="admin-topbar__brand" aria-label="{{ config('app.name') }}">
+                    @if(!empty($siteLogoUrl))
+                        <img src="{{ $siteLogoUrl }}" alt="{{ config('app.name') }}" class="admin-sidebar__brand-logo" width="180" height="50" decoding="async">
+                    @else
+                        <span class="admin-sidebar__brand-mark">{{ $adminInitial }}</span>
+                    @endif
+                </a>
                 <div class="admin-topbar__search">
                     <span class="admin-topbar__search-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
@@ -108,7 +119,7 @@
                     <input type="search" name="admin_q" placeholder="{{ __('Type to search…') }}" autocomplete="off" aria-label="{{ __('Search') }}">
                 </div>
                 <div class="admin-topbar__actions">
-                    <button type="button" class="admin-topbar__icon-btn" id="adminThemeToggle" title="{{ __('Toggle theme') }}" aria-label="{{ __('Toggle theme') }}">
+                    <button type="button" class="admin-topbar__icon-btn" data-admin-theme-toggle title="{{ __('Toggle theme') }}" aria-label="{{ __('Toggle theme') }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
                     </button>
                     <a href="{{ route('market.home') }}" class="admin-topbar__icon-btn" title="{{ __('Store') }}" aria-label="{{ __('Store') }}">
@@ -127,6 +138,32 @@
                             <span class="admin-topbar__user-role d-block">{{ __('Administrator') }}</span>
                         </span>
                     </a>
+                    <div class="dropdown admin-topbar__more">
+                        <button type="button" class="admin-topbar__avatar admin-topbar__more-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('Account menu') }}">
+                            {{ $adminInitial }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 admin-topbar__more-menu">
+                            <li>
+                                <button type="button" class="dropdown-item" data-admin-theme-toggle>
+                                    <i class="bi bi-moon" aria-hidden="true"></i>{{ __('Toggle theme') }}
+                                </button>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('market.home') }}" target="_blank" rel="noopener">
+                                    <i class="bi bi-bag" aria-hidden="true"></i>{{ __('View store') }}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{{ route('logout') }}" method="post">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>{{ __('Log out') }}
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </header>
 
@@ -218,18 +255,17 @@
                 });
             }
             var root = document.documentElement;
-            var themeBtn = document.getElementById('adminThemeToggle');
             try {
                 var saved = localStorage.getItem('adminTheme');
                 if (saved === 'dark' || saved === 'light') root.setAttribute('data-admin-theme', saved);
             } catch (e) {}
-            if (themeBtn) {
+            document.querySelectorAll('[data-admin-theme-toggle]').forEach(function (themeBtn) {
                 themeBtn.addEventListener('click', function () {
                     var next = root.getAttribute('data-admin-theme') === 'dark' ? 'light' : 'dark';
                     root.setAttribute('data-admin-theme', next);
                     try { localStorage.setItem('adminTheme', next); } catch (e) {}
                 });
-            }
+            });
 
             document.querySelectorAll('[data-nav-group]').forEach(function (group) {
                 var toggle = group.querySelector('.admin-nav-group__toggle');

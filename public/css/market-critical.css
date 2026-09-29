@@ -68,9 +68,15 @@ body.cb-market-pro {
 .mk-myntra-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; padding: .25rem 0; min-height: 3.25rem; }
 .mk-myntra-brand { display: inline-flex; align-items: center; color: var(--mk-header-ink); }
 .mk-myntra-brand__logo { display: block; height: 2.75rem; width: auto; max-width: 14rem; object-fit: contain; }
-.mk-myntra-hamburger { border: 0; background: none; padding: .5rem; }
+.mk-myntra-hamburger { border: 1px solid #d8dbe0; background: #fff; padding: 0; width: 2.35rem; height: 2.35rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; line-height: 0; box-shadow: none; transform: none; -webkit-tap-highlight-color: transparent; }
+.mk-myntra-hamburger .bi { display: block; font-size: 1.35rem; line-height: 1; }
+.mk-myntra-hamburger:hover,
+.mk-myntra-hamburger:focus { border-color: #2d5a3d; background: #2d5a3d; color: #fff; box-shadow: none; transform: none; }
 .mk-myntra-search { display: flex; align-items: center; gap: .5rem; background: var(--mk-search-bg); border-radius: 6px; padding: .4rem .75rem; width: 100%; }
 .mk-myntra-search__input { flex: 1; border: 0; background: transparent; font-size: .875rem; outline: none; min-width: 0; }
+@media (max-width: 991.98px) {
+  .mk-myntra-search__input { font-size: 16px; }
+}
 @media (max-width: 991.98px) {
   .mk-myntra-bar {
     display: grid;
@@ -85,18 +91,42 @@ body.cb-market-pro {
   .mk-myntra-actions { display: none !important; }
   .mk-myntra-search-wrap { grid-area: search; width: 92% !important; max-width: 22rem; margin: 0 auto; }
   .pro-hero .carousel-control-prev, .pro-hero .carousel-control-next { display: none !important; }
+  .pro-hero .pro-hero__dots {
+    display: flex;
+    position: absolute;
+    inset: auto 0 0.85rem;
+    z-index: 4;
+    margin: 0;
+    padding: 0;
+    gap: .45rem;
+    justify-content: center;
+    align-items: center;
+  }
+  .pro-hero .pro-hero__dots [data-bs-target] {
+    width: .5rem;
+    height: .5rem;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255,255,255,.5);
+    text-indent: -999px;
+    overflow: hidden;
+  }
+  .pro-hero .pro-hero__dots [data-bs-target].active {
+    width: 1.35rem;
+    background: #fff;
+  }
 }
 
 .pro-hero { position: relative; overflow: hidden; background: #111; }
-.pro-hero .carousel-inner, .pro-hero .carousel-item, .mk-hero-full { min-height: 420px; }
-@media (min-width: 768px) {
-  .pro-hero .carousel-inner, .pro-hero .carousel-item, .mk-hero-full { min-height: 500px; }
-}
-.mk-hero-full { position: relative; width: 100%; background: #222; }
-.mk-hero-full__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: 0; }
+.pro-hero .carousel-inner, .pro-hero .carousel-item, .mk-hero-full { min-height: 0; height: auto; }
+.mk-hero-full { position: relative; width: 100%; background: #111; }
+.mk-hero-full picture { display: block; width: 100%; }
+.mk-hero-full__img { position: relative; inset: auto; display: block; width: 100%; height: auto; object-fit: contain; object-position: center; z-index: 0; }
 .mk-hero-full__overlay {
   position: absolute; inset: 0; z-index: 1; display: flex; align-items: center;
-  background: linear-gradient(105deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.45) 45%, rgba(0,0,0,.2) 100%);
+  background: none;
 }
 .mk-hero-copy { padding: 2.5rem 0; max-width: 36rem; color: #fff; }
 .pro-hero__eyebrow { display: inline-block; font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(244,200,160,.95); margin-bottom: .5rem; }
@@ -121,6 +151,6 @@ body.cb-market-pro {
 }
 .pro-mobile-nav a, .pro-mobile-nav button {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px; font-size: .6rem; font-weight: 600; color: var(--pro-muted); text-decoration: none;
-  border: 0; background: none; min-height: 40px;
+  gap: 3px; font-size: .7rem; font-weight: 700; color: #111; text-decoration: none;
+  border: 0; background: none; min-height: 44px;
 }

@@ -32,6 +32,8 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\DelhiveryWebhookController;
+use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReturnRequestController;
@@ -48,6 +50,8 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PincodeController;
+use App\Http\Controllers\Admin\PincodeServiceabilityAdminController;
 use App\Http\Controllers\Admin\AboutPageAdminController;
 use App\Http\Controllers\Admin\ContactPageAdminController;
 use App\Http\Controllers\Admin\SeoAdminController;
@@ -79,9 +83,14 @@ Route::view('/shipping-policy', 'market.legal.shipping')->name('legal.shipping')
 
 Route::get('/about-us', [PageController::class, 'about'])->name('pages.about');
 Route::get('/contact-us', [PageController::class, 'contact'])->name('pages.contact');
+Route::get('/contact-us/captcha', [PageController::class, 'contactCaptcha'])->name('pages.contact.captcha');
 Route::post('/contact-us', [PageController::class, 'contactSubmit'])->name('pages.contact.submit');
+Route::post('/webhooks/delhivery/tracking', [DelhiveryWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
+    ->name('webhooks.delhivery.tracking');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
+Route::post('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
 Route::redirect('/store/{slug}', '/')->name('vendor.shop');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -122,6 +131,9 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
     Route::post('/pay/razorpay/verify', [PaymentController::class, 'razorpayVerify'])->name('pay.razorpay.verify');
     Route::post('/pay/razorpay/order/{order}', [PaymentController::class, 'createRazorpayOrder'])->name('pay.razorpay.order');
     Route::post('/pay/razorpay/abandon/{order}', [PaymentController::class, 'razorpayAbandon'])->name('pay.razorpay.abandon');
+
+    Route::get('/track-order', [OrderTrackingController::class, 'show'])->name('orders.track');
+    Route::post('/track-order', [OrderTrackingController::class, 'lookup'])->middleware('throttle:8,1')->name('orders.track.lookup');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -243,6 +255,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders/{order}/label/print', [OrderAdminController::class, 'printShippingLabel'])->name('orders.label.print');
     Route::post('/orders/{order}/status', [OrderAdminController::class, 'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/payment', [OrderAdminController::class, 'updatePayment'])->name('orders.payment');
+    Route::post('/orders/{order}/shipping', [OrderAdminController::class, 'updateShipping'])->name('orders.shipping');
 
     Route::get('/returns', [ReturnAdminController::class, 'index'])->name('returns.index');
     Route::patch('/returns/{refund}', [ReturnAdminController::class, 'update'])->name('returns.update');
@@ -285,6 +298,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/shipping-settings', [ShippingSettingAdminController::class, 'edit'])->name('shipping-settings.edit');
     Route::post('/shipping-settings', [ShippingSettingAdminController::class, 'update'])->name('shipping-settings.update');
+
+    Route::get('/pincodes', [PincodeServiceabilityAdminController::class, 'index'])->name('pincodes.index');
+    Route::post('/pincodes', [PincodeServiceabilityAdminController::class, 'store'])->name('pincodes.store');
+    Route::patch('/pincodes/{pincode}', [PincodeServiceabilityAdminController::class, 'update'])->name('pincodes.update');
+    Route::post('/pincodes/{pincode}/toggle', [PincodeServiceabilityAdminController::class, 'toggle'])->name('pincodes.toggle');
+    Route::delete('/pincodes/{pincode}', [PincodeServiceabilityAdminController::class, 'destroy'])->name('pincodes.destroy');
 
     Route::get('/about-page', [AboutPageAdminController::class, 'edit'])->name('about-page.edit');
     Route::post('/about-page', [AboutPageAdminController::class, 'update'])->name('about-page.update');

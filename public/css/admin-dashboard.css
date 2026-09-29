@@ -69,8 +69,8 @@ body.admin-body {
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    min-height: var(--admin-topbar-h);
-    padding: 0 1.25rem;
+    min-height: 76px;
+    padding: 0.7rem 1.25rem;
     background:#f0f7ff;
     color: #fff;
     text-decoration: none;
@@ -97,9 +97,9 @@ body.admin-body {
 
 .admin-sidebar__brand-logo {
     display: block;
-    height: 2rem;
+    height: 2.85rem;
     width: auto;
-    max-width: 9.5rem;
+    max-width: 13.5rem;
     object-fit: contain;
 }
 
@@ -127,8 +127,8 @@ body.admin-body {
     border-radius: var(--admin-radius-sm);
     color: var(--admin-text);
     text-decoration: none;
-    font-weight: 500;
-    font-size: 0.775rem;
+    font-weight: 600;
+    font-size: 0.9rem;
     transition: background 0.15s, color 0.15s;
 }
 
@@ -356,6 +356,43 @@ html[data-admin-theme="dark"] .admin-topbar__search input {
     color: var(--admin-text-muted);
 }
 
+.admin-topbar__brand {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    text-decoration: none;
+}
+
+.admin-topbar__more {
+    display: none;
+}
+
+.admin-topbar__more-btn {
+    border: 0;
+    cursor: pointer;
+}
+
+.admin-topbar__more-menu {
+    min-width: 12.5rem;
+    padding: 0.4rem 0;
+}
+
+.admin-topbar__more-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.55rem 0.9rem;
+}
+
+.admin-topbar__more-menu .dropdown-item i {
+    width: 1.1rem;
+    text-align: center;
+    opacity: 0.75;
+}
+
 /* ——— Page content ——— */
 .admin-content {
     flex: 1;
@@ -539,6 +576,11 @@ html[data-admin-theme="dark"] .admin-app .table tbody tr:hover {
 
 /* ——— Mobile ——— */
 @media (max-width: 991.98px) {
+    body.admin-body,
+    .admin-app {
+        overflow-x: hidden;
+    }
+
     .admin-sidebar {
         transform: translateX(-100%);
     }
@@ -552,8 +594,46 @@ html[data-admin-theme="dark"] .admin-app .table tbody tr:hover {
         margin-left: 0;
     }
 
+    .admin-topbar {
+        display: grid;
+        grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
+        align-items: center;
+        column-gap: 0.35rem;
+        flex-wrap: nowrap;
+        padding-top: calc(0.55rem + env(safe-area-inset-top, 0px));
+        padding-bottom: 0.55rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        overflow: visible;
+    }
+
     .admin-topbar__toggle {
         display: inline-flex;
+        flex-shrink: 0;
+        grid-column: 1;
+    }
+
+    .admin-topbar__brand {
+        display: flex;
+        grid-column: 2;
+    }
+
+    .admin-topbar__search,
+    .admin-topbar__actions .admin-topbar__icon-btn,
+    .admin-topbar__actions .admin-topbar__logout-form,
+    .admin-topbar__actions .admin-topbar__user {
+        display: none !important;
+    }
+
+    .admin-topbar__actions {
+        grid-column: 3;
+        justify-self: end;
+        margin-left: 0;
+        gap: 0;
+    }
+
+    .admin-topbar__more {
+        display: block;
     }
 
     .admin-sidebar-backdrop {
@@ -897,7 +977,7 @@ html[data-admin-theme="dark"] .admin-chip--muted {
     background: transparent;
     color: var(--admin-text);
     font-weight: 600;
-    font-size: 0.78rem;
+    font-size: 0.9rem;
     text-align: left;
     transition: background 0.15s, color 0.15s;
 }
@@ -939,7 +1019,7 @@ html[data-admin-theme="dark"] .admin-chip--muted {
 
 .admin-nav-group__panel .admin-sidebar__link {
     padding-left: 1.35rem;
-    font-size: 0.76rem;
+    font-size: 0.875rem;
 }
 
 .admin-sidebar__link i.bi {
@@ -1148,5 +1228,113 @@ html[data-admin-theme="dark"] .admin-chip--muted {
     .admin-stock-stepper .btn {
         min-height: 32px;
         padding: 0.2rem 0.45rem;
+    }
+
+    .admin-content {
+        padding-top: 1.15rem;
+    }
+}
+
+/* —— Admin orders toolbar (status search + bulk actions) —— */
+.admin-app .admin-data-card.admin-orders-card {
+    overflow: visible;
+}
+.admin-app .admin-data-card.admin-orders-card > .card-header {
+    z-index: 5;
+    overflow: visible;
+}
+.admin-orders-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+}
+.admin-orders-toolbar__title {
+    flex: 0 0 auto;
+}
+.admin-orders-toolbar__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+.admin-orders-toolbar__bulk {
+    min-width: 9.5rem;
+}
+.admin-status-search {
+    position: relative;
+    min-width: 11rem;
+    flex: 0 1 12rem;
+}
+.admin-status-search.is-enhanced .admin-status-search__native {
+    display: none;
+}
+.admin-status-search__toggle {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+.admin-status-search__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.admin-status-search__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    padding: 0.5rem;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    background: var(--admin-card-bg);
+    box-shadow: var(--admin-shadow);
+}
+.admin-status-search__input {
+    margin-bottom: 0.4rem;
+}
+.admin-status-search__list {
+    max-height: 14rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.admin-status-search__option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: var(--admin-text);
+    border-radius: 6px;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.8125rem;
+}
+.admin-status-search__option:hover,
+.admin-status-search__option.is-active {
+    background: var(--admin-teal-soft);
+    color: var(--admin-teal-hover);
+}
+.admin-status-search__empty {
+    padding: 0.4rem 0.55rem;
+    font-size: 0.75rem;
+    color: var(--admin-text-muted);
+}
+@media (min-width: 992px) {
+    .admin-orders-toolbar,
+    .admin-orders-toolbar__row {
+        flex-wrap: nowrap;
+    }
+    .admin-orders-toolbar__row > .btn,
+    .admin-orders-toolbar__bulk,
+    .admin-status-search {
+        flex: 0 0 auto;
     }
 }

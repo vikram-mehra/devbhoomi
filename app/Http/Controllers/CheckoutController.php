@@ -14,7 +14,7 @@ use App\Models\State;
 use App\Services\CartService;
 use App\Services\CheckoutPricingService;
 use App\Services\CouponService;
-use App\Services\OrderConfirmationMailService;
+use App\Services\PincodeServiceabilityService;
 use App\Services\ShippingService;
 use App\Services\StockLedgerService;
 use App\Services\GoogleAnalyticsService;
@@ -225,6 +225,18 @@ class CheckoutController extends Controller
 
         $addressId = $request->address_id;
         if (! $addressId) {
+            $pincodeToCheck = $request->pincode;
+        } else {
+            abort_unless($user->addresses()->where('id', $addressId)->exists(), 403);
+            $pincodeToCheck = optional($user->addresses()->find($addressId))->pincode;
+        }
+
+        $pinCheck = app(PincodeServiceabilityService::class)->check($pincodeToCheck);
+        if (! $pinCheck['serviceable']) {
+            return back()->withInput()->with('error', $pinCheck['message']);
+        }
+
+        if (! $addressId) {
             $addr = Address::create([
                 'user_id' => $user->id,
                 'label' => 'Shipping',
@@ -238,8 +250,6 @@ class CheckoutController extends Controller
                 'is_default' => $user->addresses()->count() === 0,
             ]);
             $addressId = $addr->id;
-        } else {
-            abort_unless($user->addresses()->where('id', $addressId)->exists(), 403);
         }
 
         $defaultCommission = (float) Setting::getValue('default_commission_percent', '12');

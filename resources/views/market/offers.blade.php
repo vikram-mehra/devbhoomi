@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 navigator.clipboard.writeText(code).catch(function () {});
             }
             var label = btn.textContent;
-            btn.textContent = {{ json_encode(__('Copied!')) }};
+            btn.textContent = @json(__('Copied!'));
             setTimeout(function () { btn.textContent = label; }, 1600);
         });
     });

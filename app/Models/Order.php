@@ -159,6 +159,16 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class)->latest('id');
+    }
+
+    public function latestShipment(): HasOne
+    {
+        return $this->hasOne(Shipment::class)->latestOfMany();
+    }
+
     public function shippingAddress(): HasOne
     {
         return $this->hasOne(ShippingAddress::class);

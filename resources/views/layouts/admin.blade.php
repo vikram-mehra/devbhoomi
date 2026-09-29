@@ -77,6 +77,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a49.902 49.902 0 00-2.654-.816A12.023 12.023 0 0118.75 16.5c0-2.136.547-4.142 1.523-5.952M17.25 16.5A12.023 12.023 0 0012 18.75c-2.136 0-4.142-.547-5.952-1.523M17.25 16.5v1.875c0 .621-.504 1.125-1.125 1.125H7.875c-.621 0-1.125-.504-1.125-1.125V16.5m12 0V9.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 9.75v6.75"/></svg>
                     {{ __('Shipping') }}
                 </a>
+                <a href="{{ route('admin.courier-partners.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.courier-partners.*') ? 'is-active' : '' }}">
+                    {{ __('Courier partners') }}
+                </a>
                 <a href="{{ route('admin.pincodes.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.pincodes.*') ? 'is-active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
                     {{ __('Pincodes') }}

@@ -64,7 +64,7 @@ body.cb-market-pro {
 .pro-announcement a { color: #fff; text-decoration: none; }
 .pro-announcement__marquee { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.25rem; text-align: center; }
 
-.cb-header--myntra { background: #fff; border-bottom: 1px solid #eaeaec; position: relative; z-index: 1030; font-family: var(--font-ui); }
+.cb-header--myntra { background: #fff; border-bottom: 1px solid #eaeaec; position: relative; z-index: 2000; font-family: var(--font-ui); }
 .mk-myntra-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1rem; padding: .25rem 0; min-height: 3.25rem; }
 .mk-myntra-brand { display: inline-flex; align-items: center; color: var(--mk-header-ink); }
 .mk-myntra-brand__logo { display: block; height: 2.75rem; width: auto; max-width: 14rem; object-fit: contain; }

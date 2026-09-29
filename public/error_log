@@ -1,0 +1,32 @@
+[02-Jun-2026 17:03:39 UTC] PHP Warning:  symlink(): No such file or directory in /home/devbhoom/public_html/public/symlink.php on line 10
+[02-Jun-2026 17:06:40 UTC] PHP Warning:  symlink(): No such file or directory in /home/devbhoom/public_html/public/symlink.php on line 10
+[02-Jun-2026 17:06:44 UTC] PHP Warning:  symlink(): No such file or directory in /home/devbhoom/public_html/public/symlink.php on line 10
+[02-Jun-2026 17:06:57 UTC] PHP Warning:  symlink(): No such file or directory in /home/devbhoom/public_html/public/symlink.php on line 10
+[02-Jun-2026 17:07:01 UTC] PHP Warning:  symlink(): No such file or directory in /home/devbhoom/public_html/public/symlink.php on line 10
+[02-Jun-2026 17:18:24 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function public_path() in /home/devbhoom/public_html/public/test.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/devbhoom/public_html/public/test.php on line 3
+[02-Jun-2026 17:18:28 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function public_path() in /home/devbhoom/public_html/public/test.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/devbhoom/public_html/public/test.php on line 3
+[02-Jun-2026 17:19:28 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function dd() in /home/devbhoom/public_html/public/test.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/devbhoom/public_html/public/test.php on line 3
+[09-Jun-2026 18:15:31 UTC] PHP Warning:  unlink(/home/devbhoom/public_html/public/storage): Is a directory in /home/devbhoom/public_html/public/symlink.php on line 7
+[09-Jun-2026 18:15:31 UTC] PHP Warning:  symlink(): File exists in /home/devbhoom/public_html/public/symlink.php on line 10
+[09-Jun-2026 18:15:34 UTC] PHP Warning:  unlink(/home/devbhoom/public_html/public/storage): Is a directory in /home/devbhoom/public_html/public/symlink.php on line 7
+[09-Jun-2026 18:15:34 UTC] PHP Warning:  symlink(): File exists in /home/devbhoom/public_html/public/symlink.php on line 10
+[09-Jun-2026 18:15:36 UTC] PHP Warning:  unlink(/home/devbhoom/public_html/public/storage): Is a directory in /home/devbhoom/public_html/public/symlink.php on line 7
+[09-Jun-2026 18:15:36 UTC] PHP Warning:  symlink(): File exists in /home/devbhoom/public_html/public/symlink.php on line 10
+[09-Jun-2026 18:18:10 UTC] PHP Warning:  readlink(): Invalid argument in /home/devbhoom/public_html/public/slcheck.php on line 12
+[09-Jun-2026 18:20:01 UTC] PHP Warning:  readlink(): No such file or directory in /home/devbhoom/public_html/public/slcheck.php on line 12
+[09-Jun-2026 18:20:03 UTC] PHP Warning:  readlink(): No such file or directory in /home/devbhoom/public_html/public/slcheck.php on line 12
+[13-Jun-2026 11:38:21 UTC] PHP Warning:  unlink(/home/devbhoom/public_html/public/storage): Is a directory in /home/devbhoom/public_html/public/symlink.php on line 7
+[13-Jun-2026 11:38:21 UTC] PHP Warning:  symlink(): File exists in /home/devbhoom/public_html/public/symlink.php on line 10
+[13-Jun-2026 11:48:10 UTC] PHP Warning:  readlink(): Invalid argument in /home/devbhoom/public_html/public/slcheck.php on line 12
+[13-Jun-2026 11:48:52 UTC] PHP Warning:  unlink(/home/devbhoom/public_html/public/storage): Is a directory in /home/devbhoom/public_html/public/symlink.php on line 7
+[13-Jun-2026 11:48:52 UTC] PHP Warning:  symlink(): File exists in /home/devbhoom/public_html/public/symlink.php on line 10
+[13-Jun-2026 11:48:56 UTC] PHP Warning:  readlink(): Invalid argument in /home/devbhoom/public_html/public/slcheck.php on line 12

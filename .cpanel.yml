@@ -1,0 +1,4 @@
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/devbhoom/public_html
+    - /bin/cp -R app bootstrap config database public resources routes artisan composer.json composer.lock $DEPLOYPATH

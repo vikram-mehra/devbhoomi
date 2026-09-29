@@ -1,0 +1,15 @@
+# Copy these lines into your .env to send real emails (Gmail example).
+# Use an App Password: https://myaccount.google.com/apppasswords
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your@gmail.com
+MAIL_PASSWORD=your-16-char-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+MAIL_SUPPORT_ADDRESS=your@gmail.com
+
+# Then run: php artisan config:clear
+# Or run: php artisan mail:set-password

@@ -32,7 +32,7 @@
                     <h2 class="h6 fw-bold mb-3">{{ __('Categories') }}</h2>
                     <ul class="list-unstyled mb-0 small">
                         @forelse($categories as $cat)
-                            <li class="mb-2"><a href="{{ route('shop.menu', $cat->slug) }}">{{ $cat->title }}</a></li>
+                            <li class="mb-2"><a href="{{ $cat->resolvedUrl() }}">{{ $cat->title }}</a></li>
                         @empty
                             <li class="text-muted">{{ __('No categories yet.') }}</li>
                         @endforelse

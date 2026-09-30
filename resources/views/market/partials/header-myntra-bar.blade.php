@@ -1,6 +1,8 @@
 @php
     $brandName = config('app.name', 'Devbhoomi Naturals');
-    $currentMenuSlug = request()->routeIs('shop.menu') ? request()->route('slug') : null;
+    $currentMenuSlug = request()->routeIs('shop.products')
+        ? 'our-products'
+        : (request()->routeIs('shop.menu') ? request()->route('slug') : null);
 @endphp
 <div class="mk-myntra-bar">
     <button class="cb-icon-btn mk-myntra-hamburger d-lg-none flex-shrink-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#marketNav" aria-controls="marketNav" aria-label="{{ __('Menu') }}">

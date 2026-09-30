@@ -122,7 +122,7 @@ class SeoService
 
     public function hasThinListingQuery(): bool
     {
-        if (! request()->routeIs(['shop.search', 'shop.menu'])) {
+        if (! request()->routeIs(['shop.search', 'shop.menu', 'shop.products'])) {
             return false;
         }
 

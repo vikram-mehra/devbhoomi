@@ -37,13 +37,13 @@ class SitemapController extends Controller
 
         MenuItem::where('is_active', true)
             ->whereNotNull('slug')
-            ->get(['slug', 'updated_at'])
+            ->get(['slug', 'title', 'updated_at'])
             ->each(function (MenuItem $menuItem) use ($entries) {
                 if ($menuItem->isBuiltInPage()) {
                     return;
                 }
                 $entries->push([
-                    'loc' => route('shop.menu', $menuItem->slug),
+                    'loc' => $menuItem->resolvedUrl(),
                     'lastmod' => optional($menuItem->updated_at)->toAtomString(),
                     'changefreq' => 'weekly',
                     'priority' => '0.8',

@@ -114,7 +114,7 @@
     @php
         $crumbs = [];
         if ($product->menuItem) {
-            $crumbs[] = ['label' => $product->menuItem->title, 'url' => route('shop.menu', $product->menuItem->slug)];
+            $crumbs[] = ['label' => $product->menuItem->title, 'url' => $product->menuItem->resolvedUrl()];
         }
         $crumbs[] = ['label' => $product->name];
     @endphp
@@ -197,7 +197,7 @@
         <div class="col-md-7">
             <div class="small text-muted">
                 @if($product->menuItem)
-                    <a href="{{ route('shop.menu', $product->menuItem->slug) }}">{{ $product->menuItem->title }}</a>
+                    <a href="{{ $product->menuItem->resolvedUrl() }}">{{ $product->menuItem->title }}</a>
                     <span class="mx-1">·</span>
                 @endif
                 <span>{{ $product->vendor->shop_name }}</span>

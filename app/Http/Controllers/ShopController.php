@@ -12,6 +12,25 @@ use Illuminate\Support\Arr;
 
 class ShopController extends Controller
 {
+    public function products(Request $request)
+    {
+        $menuItem = MenuItem::query()
+            ->active()
+            ->where(function ($q) {
+                $q->where('slug', 'our-products')
+                    ->orWhere('title', 'Our Products');
+            })
+            ->orderByRaw('CASE WHEN parent_id IS NULL OR parent_id = 0 THEN 0 ELSE 1 END')
+            ->orderBy('sort_order')
+            ->first();
+
+        if (! $menuItem) {
+            return redirect()->route('shop.search');
+        }
+
+        return $this->renderMenuListing($menuItem, $request);
+    }
+
     public function menu(string $slug, Request $request)
     {
         $builtInRoute = MenuItem::builtInPageRouteName($slug);
@@ -19,8 +38,32 @@ class ShopController extends Controller
             return redirect()->route($builtInRoute, 301);
         }
 
+        if ($slug === 'our-products') {
+            return redirect()->route('shop.products', $request->query(), 301);
+        }
+
         $menuItem = MenuItem::where('slug', $slug)->where('is_active', true)->firstOrFail();
 
+        return $this->renderMenuListing($menuItem, $request);
+    }
+
+    /** @deprecated Old /menu/{slug} URLs */
+    public function legacyMenu(string $slug, Request $request)
+    {
+        $builtInRoute = MenuItem::builtInPageRouteName($slug);
+        if ($builtInRoute !== null) {
+            return redirect()->route($builtInRoute, 301);
+        }
+
+        if ($slug === 'our-products') {
+            return redirect()->route('shop.products', $request->query(), 301);
+        }
+
+        return redirect()->route('shop.menu', array_merge(['slug' => $slug], $request->query()), 301);
+    }
+
+    protected function renderMenuListing(MenuItem $menuItem, Request $request)
+    {
         $q = Product::with(['images', 'vendor', 'variants', 'flashSale', 'menuItem'])
             ->storefront()
             ->whereIn('menu_item_id', MenuItemTree::subtreeIds($menuItem->id));
@@ -194,7 +237,7 @@ class ShopController extends Controller
         }
 
         foreach ($menuItems as $m) {
-            $push($m->title, route('shop.menu', $m->slug));
+            $push($m->title, $m->resolvedUrl());
         }
 
         foreach ($brands as $v) {

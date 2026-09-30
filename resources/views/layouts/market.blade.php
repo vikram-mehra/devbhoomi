@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Assistant:wght@500;600;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet"></noscript>
-    <link href="{{ asset('css/market-critical.css') }}?v=17" rel="stylesheet">
+    <link href="{{ asset('css/market-critical.css') }}?v=25" rel="stylesheet">
     <style>
         html.mk-wait { overflow: hidden; }
         #mkPagePreloader {
@@ -39,7 +39,7 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link href="{{ asset('css/market-pro.css') }}?v=233" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=245" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">

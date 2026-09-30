@@ -62,14 +62,12 @@
     <article class="pro-blog-article pro-blog-detail">
         <header class="pro-blog-detail__hero">
             <div class="pro-blog-detail__hero-glow" aria-hidden="true"></div>
-            <div class="pro-blog-detail__hero-media ratio ratio-16x9">
+            <div class="pro-blog-detail__hero-media">
                 <img
                     src="{{ $post->imageUrl() }}"
-                    class="object-fit-cover w-100 h-100"
+                    class="pro-blog-detail__hero-img"
                     alt="{{ $post->title }}"
                     loading="eager"
-                    width="1200"
-                    height="675"
                 >
             </div>
             <div class="pro-blog-detail__title-card">

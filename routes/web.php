@@ -71,7 +71,9 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots');
 Route::get('/sitemap', [HtmlSitemapController::class, 'index'])->name('pages.sitemap');
 
-Route::get('/menu/{slug}', [ShopController::class, 'menu'])->name('shop.menu');
+Route::get('/products', [ShopController::class, 'products'])->name('shop.products');
+Route::get('/products/{slug}', [ShopController::class, 'menu'])->name('shop.menu');
+Route::get('/menu/{slug}', [ShopController::class, 'legacyMenu'])->name('shop.menu.legacy');
 Route::get('/category/{slug}', [ShopController::class, 'category'])->name('shop.category');
 Route::get('/search', [ShopController::class, 'search'])->name('shop.search');
 Route::get('/search/suggest', [ShopController::class, 'searchSuggest'])->name('shop.search.suggest');

@@ -224,6 +224,11 @@ body.cb-market-pro.cb-body {
     justify-content: space-between;
   }
 }
+@media (max-width: 991.98px) {
+  .pro-announcement {
+    display: none !important;
+  }
+}
 
 /* —— Header —— */
 .cb-market-pro .cb-header {
@@ -687,10 +692,10 @@ body.cb-market-pro.cb-body {
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
-  background: var(--mk-search-bg);
+  background: transparent;
   border-radius: 6px;
   padding: 0.4rem 0.75rem;
-  border: 1px solid transparent;
+  border: 1px solid #e0e0e0;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 .cb-market-pro .cb-header--myntra .mk-myntra-search-wrap {
@@ -783,9 +788,9 @@ body.cb-market-pro.cb-body {
   margin: 0;
 }
 .cb-market-pro .cb-header--myntra .mk-myntra-search:focus-within {
-  background: #fff;
-  border-color: #eaeaec;
-  box-shadow: 0 2px 8px rgba(40, 44, 63, 0.08);
+  background: transparent;
+  border-color: #d0d0d0;
+  box-shadow: none;
 }
 .cb-market-pro .cb-header--myntra .mk-myntra-search__icon {
   color: var(--mk-header-muted);
@@ -1176,6 +1181,32 @@ body.cb-market-pro.cb-body {
   object-position: center center;
   z-index: 0;
 }
+@media (max-width: 767.98px) {
+  .cb-market-pro .pro-hero,
+  .cb-market-pro .mk-hero-full {
+    background: #fff;
+  }
+  .cb-market-pro .pro-hero .carousel-inner,
+  .cb-market-pro .pro-hero .carousel-item,
+  .cb-market-pro .mk-hero-full {
+    height: auto;
+    max-height: none;
+  }
+  .cb-market-pro .mk-hero-full picture {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .cb-market-pro .mk-hero-full__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: none;
+    object-fit: contain;
+    object-position: center top;
+  }
+}
 .mk-hero-full__hit {
   position: absolute;
   inset: 0;
@@ -1373,6 +1404,14 @@ body.cb-market-pro.cb-body {
 .pro-section-head {
   text-align: center;
   margin-bottom: 2rem;
+}
+@media (max-width: 767.98px) {
+  .cb-market-pro .mk-home-band.mk-section {
+    padding: 20px 0;
+  }
+  .cb-market-pro .pro-section-head {
+    margin-bottom: 1rem;
+  }
 }
 .pro-section-head__eyebrow {
   font-size: 0.75rem;
@@ -3445,21 +3484,21 @@ a.mk-banner-overlay:hover .mk-banner-overlay__cta {
 .cb-market-pro .pro-blog-detail__hero-media {
   position: relative;
   z-index: 1;
+  width: 100%;
+  height: auto;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
   border: 1px solid rgba(15, 23, 42, 0.06);
+  background: #fff;
 }
-.cb-market-pro .pro-blog-detail__hero-media img {
-  transition: transform 0.6s ease;
-}
-.cb-market-pro .pro-blog-detail__hero:hover .pro-blog-detail__hero-media img {
-  transform: scale(1.02);
-}
-@media (prefers-reduced-motion: reduce) {
-  .cb-market-pro .pro-blog-detail__hero:hover .pro-blog-detail__hero-media img {
-    transform: none;
-  }
+.cb-market-pro .pro-blog-detail__hero-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 .cb-market-pro .pro-blog-detail__title-card {
   position: relative;
@@ -4009,8 +4048,33 @@ body.cb-market-pro:has(#marketNav.show) > .offcanvas-backdrop,
 body.cb-market-pro:has(#marketNav.showing) > .offcanvas-backdrop {
   z-index: 2090;
 }
+body.cb-market-pro:has(#marketNav.show) > .offcanvas-backdrop,
+body.cb-market-pro:has(#marketNav.showing) > .offcanvas-backdrop,
+body.cb-market-pro:has(#marketNav.hiding) > .offcanvas-backdrop {
+  transition: opacity 0.55s ease-in-out;
+}
 .cb-market-pro #marketNav.pro-nav-offcanvas {
   z-index: 2100;
+  display: flex !important;
+  visibility: hidden;
+  transform: translateX(-100%);
+  --bs-offcanvas-transition: transform 0.55s ease-in-out;
+  transition: transform 0.55s ease-in-out, visibility 0.55s ease-in-out;
+}
+.cb-market-pro #marketNav.pro-nav-offcanvas.showing,
+.cb-market-pro #marketNav.pro-nav-offcanvas.show:not(.hiding) {
+  visibility: visible;
+  transform: translateX(0);
+}
+.cb-market-pro #marketNav.pro-nav-offcanvas.hiding {
+  visibility: hidden;
+  transform: translateX(-100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cb-market-pro #marketNav.pro-nav-offcanvas,
+  #marketNav.offcanvas {
+    transition: none;
+  }
 }
 /* Quick view: keep header (Bag / Profile) above the dim layer, modal above the header */
 .cb-market-pro .modal-backdrop {
@@ -8206,8 +8270,7 @@ body.cb-market-pro .bi {
 
   /* —— Header & announcement —— */
   .pro-announcement {
-    font-size: 0.6875rem !important;
-    padding: 0.35rem 0 !important;
+    display: none !important;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-bar {
     min-height: 3.6rem !important;

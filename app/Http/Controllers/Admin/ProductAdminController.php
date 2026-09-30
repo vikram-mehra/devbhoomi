@@ -270,7 +270,7 @@ class ProductAdminController extends Controller
     public function store(Request $request)
     {
         $data = $this->validatedProduct($request);
-        $slug = Str::slug($data['name']).'-'.Str::lower(Str::random(4));
+        $slug = $this->uniqueProductSlug($data['name']);
 
         $product = Product::create([
             'vendor_id' => $data['vendor_id'],
@@ -351,6 +351,7 @@ class ProductAdminController extends Controller
             'vendor_id' => $data['vendor_id'],
             'menu_item_id' => $data['menu_item_id'],
             'name' => $data['name'],
+            'slug' => $this->uniqueProductSlug($data['name'], (int) $product->id),
             'weight_kg' => $data['weight_kg'],
             'barcode' => $data['barcode'] ?? null,
             'brand' => $data['brand'] ?? null,
@@ -906,6 +907,23 @@ class ProductAdminController extends Controller
         $data['sku'] = trim((string) ($data['sku'] ?? '')) ?: null;
 
         return $data;
+    }
+
+    protected function uniqueProductSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'product';
+        $slug = $base;
+        $i = 2;
+
+        while (Product::query()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->exists()) {
+            $slug = $base.'-'.$i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     protected function ensureDefaultVariant(Product $product): void

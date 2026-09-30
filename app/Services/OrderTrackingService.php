@@ -13,11 +13,6 @@ class OrderTrackingService
     {
     }
 
-    public function dummyEnabled(): bool
-    {
-        return (bool) config('tracking.dummy', true);
-    }
-
     /**
      * @return array{name: string, env: string, is_test: bool, configured: bool}
      */
@@ -32,20 +27,6 @@ class OrderTrackingService
     }
 
     /**
-     * @return array{order: string, email: string, phone: string, courier: string, awb: string}
-     */
-    public function dummyCredentials(): array
-    {
-        return [
-            'order' => (string) config('tracking.dummy_order', '100001'),
-            'email' => (string) config('tracking.dummy_email', 'track@demo.test'),
-            'phone' => (string) config('tracking.dummy_phone', '9999999999'),
-            'courier' => (string) config('tracking.dummy_courier', 'Delhivery'),
-            'awb' => (string) config('tracking.dummy_awb', 'DBN7X4K9Q2M'),
-        ];
-    }
-
-    /**
      * @return array<string, mixed>|null
      */
     public function lookup(string $orderNumber, string $contact): ?array
@@ -55,10 +36,6 @@ class OrderTrackingService
 
         if ($orderNumber === '' || $contact === '') {
             return null;
-        }
-
-        if ($this->dummyEnabled() && $this->matchesDummy($orderNumber, $contact)) {
-            return $this->dummyShipment();
         }
 
         $order = $this->findAccessibleOrder($orderNumber, $contact);
@@ -79,23 +56,6 @@ class OrderTrackingService
         $order->loadMissing(['items', 'address', 'shippingAddress', 'user', 'trackingEvents']);
 
         return $this->shipmentFromStoredOrder($order);
-    }
-
-    protected function matchesDummy(string $orderNumber, string $contact): bool
-    {
-        $dummy = $this->dummyCredentials();
-
-        return strcasecmp($orderNumber, $dummy['order']) === 0
-            && $this->matchesDummyContact($contact);
-    }
-
-    protected function matchesDummyContact(string $contact): bool
-    {
-        $dummy = $this->dummyCredentials();
-        $normalized = $this->normalizeContact($contact);
-
-        return $normalized === $this->normalizeContact($dummy['email'])
-            || $normalized === $this->normalizeContact($dummy['phone']);
     }
 
     protected function findAccessibleOrder(string $orderNumber, string $contact): ?Order
@@ -128,52 +88,6 @@ class OrderTrackingService
         ]);
 
         return in_array($this->normalizeContact($contact), $needles, true);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function dummyShipment(): array
-    {
-        $dummy = $this->dummyCredentials();
-        $now = now();
-
-        $events = [
-            ['at' => $now->copy()->subDays(4)->setTime(11, 20), 'title' => __('Order placed'), 'detail' => __('We received your order and started packing.'), 'location' => 'Ranikhet, Uttarakhand'],
-            ['at' => $now->copy()->subDays(3)->setTime(16, 5), 'title' => __('Packed'), 'detail' => __('Shipment handed to the warehouse dispatch desk.'), 'location' => 'Ranikhet, Uttarakhand'],
-            ['at' => $now->copy()->subDays(2)->setTime(9, 40), 'title' => __('Picked up'), 'detail' => __('Courier collected the parcel from our facility.'), 'location' => 'Ranikhet, Uttarakhand'],
-            ['at' => $now->copy()->subDay()->setTime(18, 15), 'title' => __('In transit'), 'detail' => __('Reached the origin hub and moved toward destination.'), 'location' => 'Haldwani hub'],
-            ['at' => $now->copy()->subHours(8), 'title' => __('Arrived at destination city'), 'detail' => __('Shipment is at the local delivery centre.'), 'location' => 'New Delhi, Delhi'],
-            ['at' => $now->copy()->subHours(2), 'title' => __('Out for delivery'), 'detail' => __('Your parcel is with the delivery executive today.'), 'location' => 'New Delhi, Delhi'],
-        ];
-
-        return $this->formatShipment([
-            'source' => 'dummy',
-            'courier_env' => $this->delhivery->environment(),
-            'order_number' => $dummy['order'],
-            'status' => 'shipped',
-            'courier' => $dummy['courier'],
-            'tracking_id' => $dummy['awb'],
-            'expected_delivery' => $now->copy()->addDay()->startOfDay(),
-            'origin' => 'Ranikhet, Uttarakhand',
-            'destination' => 'New Delhi, Delhi',
-            'location' => 'New Delhi, Delhi',
-            'last_updated' => $now->copy()->subHours(2),
-            'items' => $this->dummyItems(),
-            'events' => $events,
-            'current_index' => count($events) - 1,
-        ]);
-    }
-
-    /**
-     * @return list<array{name: string, qty: int}>
-     */
-    protected function dummyItems(): array
-    {
-        return [
-            ['name' => 'Pahadi Red Rice', 'qty' => 1],
-            ['name' => 'Pahadi Gahat Dal', 'qty' => 1],
-        ];
     }
 
     /**

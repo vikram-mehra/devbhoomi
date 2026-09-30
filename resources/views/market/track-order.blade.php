@@ -16,43 +16,14 @@
 
 @section('account_content')
 @php
-    $dummyEnabled = $dummyEnabled ?? false;
-    $dummy = $dummy ?? [];
-    $courier = $courier ?? ['name' => 'Delhivery', 'env' => 'test', 'is_test' => true, 'configured' => false];
     $shipment = $shipment ?? null;
 @endphp
 <div class="pro-track">
     <p class="pro-track__lead mb-3">{{ __('Enter your order number and the email or mobile used at checkout.') }}</p>
 
-    <div class="pro-track__dummy" role="status">
-        <div class="pro-track__dummy-head">
-            <i class="bi bi-truck" aria-hidden="true"></i>
-            <strong>{{ __('Delhivery') }}</strong>
-            <span class="pro-track__env">{{ !empty($courier['is_test']) ? __('Test API') : __('Live API') }}</span>
-        </div>
-        @if(!empty($courier['is_test']))
-            <p class="mb-2">{{ __('Tracking is connected to Delhivery’s test API. Live credentials can be switched on later.') }}</p>
-        @else
-            <p class="mb-2">{{ __('Tracking is connected to Delhivery’s live API.') }}</p>
-        @endif
-        <p class="pro-track__token-state mb-2">
-            @if(!empty($courier['configured']))
-                {{ __('Shipment scans are stored on this site. Track order reads our database, not Delhivery, on each visit.') }}
-            @else
-                {{ __('A Delhivery token is not set yet. Dummy credentials below still show a sample timeline.') }}
-            @endif
-        </p>
-        @if($dummyEnabled)
-            <p class="mb-2">{{ __('Use these dummy details to preview the module:') }}</p>
-            <dl class="pro-track__dummy-creds">
-                <div><dt>{{ __('Order number') }}</dt><dd><code>{{ $dummy['order'] }}</code></dd></div>
-                <div><dt>{{ __('Email') }}</dt><dd><code>{{ $dummy['email'] }}</code></dd></div>
-                <div><dt>{{ __('Mobile') }}</dt><dd><code>{{ $dummy['phone'] }}</code></dd></div>
-                <div><dt>{{ __('Test AWB') }}</dt><dd><code>{{ $dummy['awb'] }}</code></dd></div>
-            </dl>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill js-track-fill-dummy">{{ __('Fill dummy credentials') }}</button>
-        @endif
-    </div>
+    @if(session('track_error'))
+        <div class="alert alert-danger" role="alert">{{ session('track_error') }}</div>
+    @endif
 
     <form method="post" action="{{ route('orders.track.lookup') }}" class="pro-track__form" id="proTrackForm">
         @csrf
@@ -167,18 +138,3 @@
     @endif
 </div>
 @endsection
-
-@push('scripts')
-<script>
-(function () {
-    var btn = document.querySelector('.js-track-fill-dummy');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-        var order = document.getElementById('trackOrderNumber');
-        var contact = document.getElementById('trackContact');
-        if (order) order.value = @json($dummy['order'] ?? '');
-        if (contact) contact.value = @json($dummy['email'] ?? '');
-    });
-})();
-</script>
-@endpush

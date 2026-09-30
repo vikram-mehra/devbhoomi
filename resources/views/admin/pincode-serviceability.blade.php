@@ -45,6 +45,33 @@
         <p class="small text-muted mt-2 mb-0">{{ __('Day offset is added to today to show the estimated delivery date on the storefront.') }}</p>
     </form>
 
+    <form method="post" action="{{ route('admin.pincodes.import') }}" enctype="multipart/form-data" class="card border-0 shadow-sm p-3 p-md-4 mb-4">@csrf
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+            <div>
+                <h2 class="h6 fw-bold mb-1">{{ __('Upload CSV') }}</h2>
+                <p class="small text-muted mb-0">{{ __('Bulk add or update pincodes. Existing pincodes are updated.') }}</p>
+            </div>
+            <a href="{{ route('admin.pincodes.template') }}" class="btn btn-sm btn-outline-secondary">{{ __('Download sample CSV') }}</a>
+        </div>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label small">{{ __('CSV file') }} *</label>
+                <input type="file" name="file" class="form-control" accept=".csv,text/csv,text/plain" required>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100">{{ __('Upload CSV') }}</button>
+            </div>
+        </div>
+        <p class="small text-muted mt-2 mb-0">{{ __('Columns: pincode, city, state, day_offset, courier_name, status (1 or 0).') }}</p>
+        @if(session('pincode_import_errors'))
+            <ul class="small text-danger mt-2 mb-0">
+                @foreach(session('pincode_import_errors') as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        @endif
+    </form>
+
     <div class="card border-0 shadow-sm admin-data-card mb-4">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div>

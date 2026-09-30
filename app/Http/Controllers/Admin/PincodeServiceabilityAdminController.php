@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PincodeServiceability;
+use App\Services\PincodeCsvImporter;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PincodeServiceabilityAdminController extends Controller
 {
@@ -54,6 +56,41 @@ class PincodeServiceabilityAdminController extends Controller
         $pincode->update(['status' => ! $pincode->status]);
 
         return back()->with('status', __('Serviceability status updated.'));
+    }
+
+    public function template(): StreamedResponse
+    {
+        $filename = 'pincode-serviceability-template.csv';
+
+        return response()->streamDownload(function () {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['pincode', 'city', 'state', 'day_offset', 'courier_name', 'status']);
+            fputcsv($out, ['263645', 'Haldwani', 'Uttarakhand', '3', 'Delhivery', '1']);
+            fputcsv($out, ['201307', 'Noida', 'Uttar Pradesh', '2', 'Delhivery', '1']);
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function import(Request $request, PincodeCsvImporter $importer)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:2048',
+        ]);
+
+        $result = $importer->import($request->file('file')->getRealPath());
+        $message = __('Imported :created new and updated :updated pincodes.', [
+            'created' => $result['created'],
+            'updated' => $result['updated'],
+        ]);
+        if ($result['skipped'] > 0) {
+            $message .= ' '.__(':count row(s) skipped.', ['count' => $result['skipped']]);
+        }
+
+        return back()
+            ->with('status', $message)
+            ->with('pincode_import_errors', array_slice($result['errors'], 0, 20));
     }
 
     /**

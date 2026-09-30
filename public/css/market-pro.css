@@ -4012,6 +4012,26 @@ body.cb-market-pro:has(#marketNav.showing) > .offcanvas-backdrop {
 .cb-market-pro #marketNav.pro-nav-offcanvas {
   z-index: 2100;
 }
+/* Quick view: keep header (Bag / Profile) above the dim layer, modal above the header */
+.cb-market-pro .modal-backdrop {
+  z-index: 1990;
+}
+.cb-market-pro .modal,
+.cb-market-pro .modal.show {
+  z-index: 2110;
+}
+body.modal-open.cb-market-pro .cb-header,
+body.modal-open.cb-market-pro .cb-header--myntra,
+body.modal-open.cb-market-pro .pro-announcement {
+  width: calc(100% + var(--bs-scrollbar-width, 15px));
+  max-width: none;
+  padding-right: 0;
+  box-sizing: border-box;
+}
+body.modal-open.cb-market-pro .cb-header,
+body.modal-open.cb-market-pro .cb-header--myntra {
+  background-color: #fff;
+}
 .pro-cart-item {
   display: flex;
   gap: 0.75rem;
@@ -4557,8 +4577,28 @@ body.cb-market-pro:has(#marketNav.showing) > .offcanvas-backdrop {
   .cb-market-pro .pro-pdp-details {
     margin-top: 0.85rem !important;
   }
+  .cb-market-pro .cb-main:has(.pro-pdp-page) .pro-page-pad-mobile,
   .cb-market-pro .pro-pdp-related-swiper {
-    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0;
+  }
+  .cb-market-pro .cb-main:has(.pro-pdp-page) .zm-section-title {
+    margin-top: 1.15rem !important;
+    margin-bottom: 0.45rem !important;
+  }
+  .cb-market-pro .cb-main:has(.pro-pdp-page) .zm-section-title h2 {
+    font-size: 1.15rem;
+  }
+  body.cb-market-pro:has(.pro-pdp-page) .dn-ft-mobile-spacer {
+    height: calc(var(--pro-mobile-nav-h, 50px) + env(safe-area-inset-bottom, 0px));
+  }
+  body.cb-market-pro:has(.pro-pdp-page) .dn-ft__legal {
+    padding-top: 0.55rem;
+    padding-bottom: 0.45rem !important;
+  }
+  body.cb-market-pro:has(.pro-pdp-page) .dn-ft__trust {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 }
 
@@ -6784,26 +6824,30 @@ body.cb-market-pro .bi {
   text-align: center;
   padding-left: 0.35rem;
   padding-right: 0.35rem;
+  min-height: 2.5rem;
 }
 .cb-market-pro .pro-pdp-purchase-row__actions {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
 }
 .cb-market-pro .pro-pdp-purchase-row__actions .js-default-pdp-ctas {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  width: auto;
   min-width: 0;
 }
 .cb-market-pro #productAddForm .pro-pdp-add-cart,
 .cb-market-pro #productAddForm .pro-pdp-buy-now {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   width: auto;
-  max-width: none;
-  padding: 0.7rem 0.65rem;
+  min-width: 7.25rem;
+  max-width: 10rem;
+  padding: 0.65rem 0.9rem;
   font-size: 0.8125rem;
-  line-height: 1.25;
+  line-height: 1.2;
+  min-height: 2.5rem;
   white-space: nowrap;
 }
 .cb-market-pro #productAddForm .pro-pdp-add-cart {
@@ -6944,15 +6988,16 @@ body.cb-market-pro .bi {
 .cb-market-pro #productAddForm .pro-pdp-add-cart:hover {
   box-shadow: 0 5px 16px rgba(125, 92, 61, 0.3);
 }
-.cb-market-pro .pro-sticky-buy .pro-pdp-sticky-add.btn {
+.cb-market-pro .pro-sticky-buy .pro-pdp-sticky-add.btn,
+.cb-market-pro .pro-sticky-buy .pro-pdp-sticky-buy.btn {
   flex: 0 0 auto;
   width: fit-content;
   max-width: 100%;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.8125rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.35;
-  min-height: 42px;
+  line-height: 1.2;
+  min-height: 34px;
 }
 
 /* —— Product detail: simple hover zoom —— */
@@ -8143,6 +8188,21 @@ body.cb-market-pro .bi {
     padding-left: 0.9rem !important;
     padding-right: 0.9rem !important;
   }
+  .cb-market-pro #productAddForm .pro-pdp-add-cart,
+  .cb-market-pro #productAddForm .pro-pdp-buy-now {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    padding: 0.62rem 0.45rem !important;
+    font-size: 0.7rem !important;
+    min-height: 2.4rem !important;
+  }
+  .cb-market-pro .pro-sticky-buy .pro-pdp-sticky-add.btn,
+  .cb-market-pro .pro-sticky-buy .pro-pdp-sticky-buy.btn {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.72rem !important;
+    min-height: 32px !important;
+  }
 
   /* —— Header & announcement —— */
   .pro-announcement {
@@ -8855,7 +8915,7 @@ body.cb-market-pro .bi {
 }
 .dn-ft__logo {
   display: inline-block;
-  margin-bottom: 1.15rem;
+  /* margin-bottom: 1.15rem; */
   max-width: 100%;
 }
 .dn-ft__logo img {

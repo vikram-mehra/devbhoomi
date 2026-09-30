@@ -423,7 +423,7 @@
         @push('head')
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
         @endpush
-        <section class="zm-section-title mt-5"><h2>{{ __('Related products') }}</h2></section>
+        <section class="zm-section-title mt-4 mt-lg-5"><h2>{{ __('Related products') }}</h2></section>
         <div class="pro-pdp-related-swiper position-relative pro-page-pad-mobile">
             <div class="swiper pro-product-swiper" id="proPdpRelatedSwiper">
                 <div class="swiper-wrapper">

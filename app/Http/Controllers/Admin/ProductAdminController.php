@@ -270,7 +270,7 @@ class ProductAdminController extends Controller
     public function store(Request $request)
     {
         $data = $this->validatedProduct($request);
-        $slug = $this->uniqueProductSlug($data['name']);
+        $slug = $this->uniqueProductSlug($data['name']); 
 
         $product = Product::create([
             'vendor_id' => $data['vendor_id'],

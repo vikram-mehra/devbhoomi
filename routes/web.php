@@ -312,6 +312,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/shipping-settings', [ShippingSettingAdminController::class, 'update'])->name('shipping-settings.update');
 
     Route::get('/pincodes', [PincodeServiceabilityAdminController::class, 'index'])->name('pincodes.index');
+    Route::get('/pincodes/template', [PincodeServiceabilityAdminController::class, 'template'])->name('pincodes.template');
+    Route::post('/pincodes/import', [PincodeServiceabilityAdminController::class, 'import'])->name('pincodes.import');
     Route::post('/pincodes', [PincodeServiceabilityAdminController::class, 'store'])->name('pincodes.store');
     Route::patch('/pincodes/{pincode}', [PincodeServiceabilityAdminController::class, 'update'])->name('pincodes.update');
     Route::post('/pincodes/{pincode}/toggle', [PincodeServiceabilityAdminController::class, 'toggle'])->name('pincodes.toggle');

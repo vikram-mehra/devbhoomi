@@ -26,20 +26,10 @@
                 <p class="dn-ft__about">
                     {{ __('Bringing the true goodness of the Himalayas to your home. Our natural grains and pulses are carefully sourced, pure, and full of nutrition — just the way nature intended.') }}
                 </p>
-                <div class="dn-ft__scene">
-                    <p class="dn-ft__goodness">
-                        <span class="dn-ft__goodness-top">{{ __('Goodness') }}</span>
-                        <span class="dn-ft__goodness-line">
-                            {{ __('from the Himalayas') }}
-                            <svg class="dn-ft__goodness-mark" viewBox="0 0 148 18" aria-hidden="true">
-                                <path d="M4 11 C 38 4, 78 15, 118 8" fill="none" stroke="currentColor"
-                                    stroke-width="1.8" stroke-linecap="round" />
-                                <path d="M128 4.2c6 1.8 9.4 6.8 7.8 12.2-4.2-1.4-8.4-4-10.6-9.2 1.8.2 3.8.8 5.8 1.8z"
-                                    fill="currentColor" />
-                            </svg>
-                        </span>
-                    </p>
-                </div>
+                <p class="dn-ft__fssai">
+                    <span class="dn-ft__fssai-label">{{ __('FSSAI Lic. No.') }}</span>
+                    <span class="dn-ft__fssai-no">12626999000140</span>
+                </p>
             </div>
 
             <nav class="dn-ft__col" aria-label="{{ __('Quick Links') }}">

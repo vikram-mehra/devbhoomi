@@ -10,27 +10,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Dummy tracking credentials
-    |--------------------------------------------------------------------------
-    |
-    | Storefront preview when no real order / AWB is on file. Not used for
-    | live customer orders.
-    |
-    */
-    'dummy' => filter_var(env('TRACKING_DUMMY', true), FILTER_VALIDATE_BOOLEAN),
-
-    'dummy_order' => env('TRACKING_DUMMY_ORDER', '100001'),
-
-    'dummy_email' => env('TRACKING_DUMMY_EMAIL', 'track@demo.test'),
-
-    'dummy_phone' => env('TRACKING_DUMMY_PHONE', '9999999999'),
-
-    'dummy_courier' => env('TRACKING_DUMMY_COURIER', 'Delhivery'),
-
-    'dummy_awb' => env('TRACKING_DUMMY_AWB', 'DBN7X4K9Q2M'),
-
-    /*
-    |--------------------------------------------------------------------------
     | Delhivery
     |--------------------------------------------------------------------------
     |

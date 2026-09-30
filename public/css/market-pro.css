@@ -4004,8 +4004,13 @@ a.mk-banner-overlay:hover .mk-banner-overlay__cta {
   z-index: 2100;
 }
 body.cb-market-pro:has(#cartDrawer.show) > .offcanvas-backdrop,
-body.cb-market-pro:has(#cartDrawer.showing) > .offcanvas-backdrop {
+body.cb-market-pro:has(#cartDrawer.showing) > .offcanvas-backdrop,
+body.cb-market-pro:has(#marketNav.show) > .offcanvas-backdrop,
+body.cb-market-pro:has(#marketNav.showing) > .offcanvas-backdrop {
   z-index: 2090;
+}
+.cb-market-pro #marketNav.pro-nav-offcanvas {
+  z-index: 2100;
 }
 .pro-cart-item {
   display: flex;
@@ -6131,14 +6136,14 @@ body.cb-market-pro .bi {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: calc(100% - 2px);
+  top: 100%;
   width: 16rem;
-  height: 18px;
+  height: 22px;
   z-index: 2021;
 }
 .cb-market-pro .cb-header--myntra .mk-myntra-action--dropdown .pro-header-account-menu {
   min-width: 14rem;
-  top: calc(100% - 2px);
+  top: calc(100% + 12px);
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -8866,6 +8871,30 @@ body.cb-market-pro .bi {
   line-height: 1.65;
   color: var(--dn-leaf);
   font-weight: 500;
+}
+.dn-ft__fssai {
+  margin: 1rem 0 0.15rem;
+  max-width: 280px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  color: var(--dn-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+.dn-ft__fssai-label {
+  color: var(--dn-leaf);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+.dn-ft__fssai-no {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 .dn-ft__scene {
   margin: 1rem 0 0.15rem;

@@ -4084,17 +4084,57 @@ body.cb-market-pro:has(#marketNav.hiding) > .offcanvas-backdrop {
 .cb-market-pro .modal.show {
   z-index: 2110;
 }
+body.modal-open.cb-market-pro {
+  padding-right: 0 !important;
+  overflow-x: hidden;
+}
 body.modal-open.cb-market-pro .cb-header,
 body.modal-open.cb-market-pro .cb-header--myntra,
 body.modal-open.cb-market-pro .pro-announcement {
-  width: calc(100% + var(--bs-scrollbar-width, 15px));
+  width: 100%;
   max-width: none;
-  padding-right: 0;
+  padding-right: 0 !important;
   box-sizing: border-box;
 }
 body.modal-open.cb-market-pro .cb-header,
 body.modal-open.cb-market-pro .cb-header--myntra {
   background-color: #fff;
+}
+.cb-market-pro #quickViewModal {
+  overflow-x: hidden;
+}
+.cb-market-pro #quickViewModal .modal-dialog {
+  max-width: 800px;
+}
+.cb-market-pro #quickViewModal .modal-content,
+.cb-market-pro #quickViewModal .modal-body {
+  overflow-x: hidden;
+}
+@media (max-width: 767.98px) {
+  .cb-market-pro #quickViewModal .modal-dialog {
+    max-width: calc(100% - 1.5rem);
+    margin: 0.75rem auto;
+  }
+  .cb-market-pro #quickViewModal .row {
+    --bs-gutter-x: 0.85rem;
+    max-width: 100%;
+  }
+  .cb-market-pro #quickViewModal .js-ajax-add-to-cart {
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 100%;
+  }
+  .cb-market-pro #quickViewModal .js-qv-qty-wrap {
+    width: 100% !important;
+    max-width: 7.5rem;
+  }
+  .cb-market-pro #quickViewModal .js-qv-add-to-cart-btn,
+  .cb-market-pro #quickViewModal .js-qv-buy-now-btn {
+    flex: 1 1 calc(50% - 0.35rem);
+    min-width: 0;
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
 }
 .pro-cart-item {
   display: flex;
@@ -7656,20 +7696,22 @@ body.cb-market-pro .bi {
   .cb-market-pro .mk-shop-filter-col {
     position: fixed;
     inset: 0;
-    z-index: 1090;
+    z-index: 2120;
     width: 100%;
     max-width: none;
     padding: 0;
     margin: 0;
     pointer-events: none;
     visibility: hidden;
+    transition: visibility 0.5s ease-in-out;
   }
   .cb-market-pro .mk-shop-filter-col + .col-lg-9 {
     width: 100%;
     max-width: 100%;
     flex: 0 0 100%;
   }
-  .cb-market-pro .mk-shop-filter-col.is-open {
+  .cb-market-pro .mk-shop-filter-col.is-open,
+  .cb-market-pro .mk-shop-filter-col.is-closing {
     pointer-events: auto;
     visibility: visible;
   }
@@ -7679,7 +7721,7 @@ body.cb-market-pro .bi {
     inset: 0;
     background: rgba(26, 46, 34, 0.48);
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.5s ease-in-out;
   }
   .cb-market-pro .mk-shop-filter-col.is-open .mk-shop-filter-backdrop {
     opacity: 1;
@@ -7698,11 +7740,19 @@ body.cb-market-pro .bi {
     border: 0;
     box-shadow: 8px 0 28px rgba(26, 46, 34, 0.18);
     transform: translateX(-100%);
-    transition: transform 0.28s ease;
+    transition: transform 0.5s ease-in-out;
     z-index: 1;
+    will-change: transform;
   }
   .cb-market-pro .mk-shop-filter-col.is-open .mk-shop-filters {
     transform: translateX(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cb-market-pro .mk-shop-filter-col,
+    .cb-market-pro .mk-shop-filter-col .mk-shop-filters,
+    .cb-market-pro .mk-shop-filter-backdrop {
+      transition: none;
+    }
   }
 }
 
@@ -8060,6 +8110,105 @@ body.cb-market-pro .bi {
   margin-bottom: 0.35rem;
 }
 
+/* —— Homepage: Why us —— */
+.cb-market-pro .pro-why-us {
+  background: #f7f4ee;
+}
+.cb-market-pro .pro-why-us__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  align-items: center;
+}
+.cb-market-pro .pro-why-us__media {
+  margin: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 36px rgba(26, 46, 34, 0.12);
+  background: #fff;
+}
+.cb-market-pro .pro-why-us__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 4;
+  object-fit: cover;
+  object-position: center;
+}
+.cb-market-pro .pro-why-us__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-weight: 700;
+  color: var(--pro-ink);
+  line-height: 1.25;
+  margin: 0 0 0.75rem;
+}
+.cb-market-pro .pro-why-us__lead {
+  color: var(--pro-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin: 0 0 1.25rem;
+}
+.cb-market-pro .pro-why-us__list {
+  list-style: none;
+  margin: 0 0 1.35rem;
+  padding: 0;
+  display: grid;
+  gap: 0.95rem;
+}
+.cb-market-pro .pro-why-us__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+.cb-market-pro .pro-why-us__icon {
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8efe9;
+  color: var(--pro-primary);
+  font-size: 1.15rem;
+}
+.cb-market-pro .pro-why-us__item-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--pro-ink);
+  margin: 0 0 0.2rem;
+  line-height: 1.3;
+}
+.cb-market-pro .pro-why-us__item-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--pro-muted);
+}
+.cb-market-pro .pro-why-us__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  background: var(--pro-primary);
+  border-radius: 999px;
+  padding: 0.7rem 1.15rem;
+  text-decoration: none;
+}
+.cb-market-pro .pro-why-us__cta:hover {
+  background: var(--pro-primary-dark);
+  color: #fff;
+}
+@media (min-width: 768px) {
+  .cb-market-pro .pro-why-us__grid {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 2.5rem;
+  }
+}
+
 /* Home: promo tiles below hero slider */
 .pro-home-promo {
   padding: 2.5rem 0;
@@ -8252,14 +8401,48 @@ body.cb-market-pro .bi {
     padding-left: 0.9rem !important;
     padding-right: 0.9rem !important;
   }
+  .cb-market-pro .pro-pdp-purchase-row {
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.7rem 0.65rem;
+  }
+  .cb-market-pro .pro-pdp-purchase-row__qty {
+    flex: 0 0 4.5rem;
+  }
+  .cb-market-pro .pro-pdp-purchase-row__actions,
+  .cb-market-pro .pro-pdp-purchase-row__actions .js-default-pdp-ctas {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
   .cb-market-pro #productAddForm .pro-pdp-add-cart,
   .cb-market-pro #productAddForm .pro-pdp-buy-now {
     flex: 1 1 0;
     min-width: 0;
     max-width: none;
-    padding: 0.62rem 0.45rem !important;
-    font-size: 0.7rem !important;
-    min-height: 2.4rem !important;
+    padding: 0.7rem 0.8rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    min-height: 2.65rem !important;
+    border-radius: 999px;
+    background-image: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+    white-space: nowrap;
+  }
+  .cb-market-pro #productAddForm .pro-pdp-add-cart {
+    background: var(--pro-primary) !important;
+    border: 1.5px solid var(--pro-primary) !important;
+    color: #fff !important;
+  }
+  .cb-market-pro #productAddForm .pro-pdp-buy-now {
+    background: #fff !important;
+    border: 1.5px solid var(--pro-primary) !important;
+    color: var(--pro-primary) !important;
   }
   .cb-market-pro .pro-sticky-buy .pro-pdp-sticky-add.btn,
   .cb-market-pro .pro-sticky-buy .pro-pdp-sticky-buy.btn {
@@ -8302,7 +8485,7 @@ body.cb-market-pro .bi {
     font-size: 0.5625rem !important;
   }
   .cb-market-pro .cb-header--myntra .mk-myntra-search__input {
-    font-size: 16px !important;
+    font-size: 12px !important;
   }
 
   /* —— Mobile offcanvas menu —— */
@@ -8338,7 +8521,7 @@ body.cb-market-pro .bi {
   /* —— Bottom navigation —— */
   .pro-mobile-nav {
     min-height: var(--pro-mobile-nav-h);
-    padding: 0.2rem 0 calc(0.2rem + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0.3rem 0 calc(0.2rem + env(safe-area-inset-bottom, 0px)) !important;
   }
   .pro-mobile-nav a,
   .pro-mobile-nav button {
@@ -8952,7 +9135,7 @@ body.cb-market-pro .bi {
   color: var(--dn-ink);
   font-family: var(--font-ui, "Assistant", system-ui, sans-serif);
   font-weight: 500;
-  margin-top: 2.5rem;
+  margin-top: 0;
   overflow: hidden;
   flex-shrink: 0;
 }

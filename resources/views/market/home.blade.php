@@ -1,7 +1,7 @@
 @extends('layouts.market')
 
 @section('title', 'Devbhoomi Naturals | Pure Organic Himalayan Products')
-@section('meta_description', 'Shop pure organic Himalayan products — millets, pahadi pulses, spices & grains direct from Uttarakhand farmers. Free delivery above ₹499.')
+@section('meta_description', 'Shop pure organic Himalayan products — millets, pahadi pulses, spices & grains direct from Uttarakhand farmers. Free delivery on every prepaid order.')
 @section('meta_keywords', 'organic food, Himalayan products, Uttarakhand, millets, pahadi pulses, natural spices')
 @section('canonical', route('market.home'))
 
@@ -23,7 +23,10 @@
         $featTab = $featured->filter(fn ($product) => (bool) $product->is_featured);
         $bestTab = $trending->take(8);
         $fallbackHeroImg = 'https://picsum.photos/seed/prohero/1920/700';
+        // Homepage SEO H1 — one per page. Banner images are title-less, so this is the page heading.
+        $homeH1 = __('Pure Organic Himalayan Products from Uttarakhand');
     @endphp
+    <h1 class="visually-hidden">{{ $homeH1 }}</h1>
 
     {{-- Hero: full-bleed background image + overlay copy --}}
     @php $heroShopUrl = \App\Models\MenuItem::ourProductsUrl(); @endphp
@@ -85,11 +88,7 @@
                                                 <span class="pro-hero__eyebrow">{{ $b->eyebrow }}</span>
                                             @endif
                                             @if (filled($b->title))
-                                                @if($i === 0)
-                                                <h1 class="pro-hero__title">{{ $b->title }}</h1>
-                                                @else
                                                 <h2 class="pro-hero__title">{{ $b->title }}</h2>
-                                                @endif
                                             @endif
                                             @if (filled($b->subtitle))
                                                 <p class="pro-hero__text">{{ $b->subtitle }}</p>
@@ -125,7 +124,7 @@
                     <div class="cb-container">
                         <div class="mk-hero-copy">
                             <span class="pro-hero__eyebrow">{{ __('Marketplace') }}</span>
-                            <h1 class="pro-hero__title">{{ __('Everything you love, from stores you trust') }}</h1>
+                            <h2 class="pro-hero__title">{{ __('Everything you love, from stores you trust') }}</h2>
                             <p class="pro-hero__text">{{ __('Fashion, lifestyle & more — compare, save, and checkout in minutes.') }}</p>
                             <div class="pro-hero__actions">
                                 <a href="{{ route('shop.search') }}" class="pro-btn-white">{{ __('Shop now') }}</a>
@@ -272,7 +271,8 @@
         </section>
 
         @include('market.partials.home-promo-tiles')
-        
+        @include('market.partials.home-why-us')
+
         @push('head')
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" media="print" onload="this.media='all'">
             <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"></noscript>

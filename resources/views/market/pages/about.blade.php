@@ -11,7 +11,7 @@
 @endif
 
 @push('head')
-    <link href="{{ asset('css/pages-static.css') }}?v=2" rel="stylesheet">
+    <link href="{{ asset('css/pages-static.css') }}?v=3" rel="stylesheet">
 @endpush
 
 @push('schema')

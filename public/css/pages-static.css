@@ -55,6 +55,14 @@
   margin-bottom: 1.5rem;
 }
 
+.pro-about-page .btn,
+.pro-about-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  vertical-align: middle;
+}
 .pro-about-hero__cta {
   background: var(--pro-page-green);
   color: #fff;

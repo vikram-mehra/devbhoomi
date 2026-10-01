@@ -10,7 +10,7 @@ class BlogController extends Controller
     public function index(Request $request)
     {
         $posts = BlogPost::published()
-            ->orderByDesc('published_at')
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(12)
             ->withQueryString();
@@ -37,7 +37,8 @@ class BlogController extends Controller
     {
         return BlogPost::published()
             ->where('id', '!=', $post->id)
-            ->orderByDesc('published_at')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->limit(3)
             ->get();
     }

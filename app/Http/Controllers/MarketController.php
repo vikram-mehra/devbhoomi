@@ -45,7 +45,7 @@ class MarketController extends Controller
 
         $blogPosts = Cache::remember('home.blog_posts', 600, function () {
             return BlogPost::published()
-                ->orderByDesc('published_at')
+                ->orderByDesc('created_at')
                 ->orderByDesc('id')
                 ->take(4)
                 ->get();

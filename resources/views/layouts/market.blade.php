@@ -167,6 +167,8 @@
                     </div>
                     @if($navUser->role === 'admin')
                         <a class="pro-mnav-rowlink" href="{{ route('admin.dashboard') }}">{{ __('Admin') }}</a>
+                    @elseif($navUser->role === 'seo')
+                        <a class="pro-mnav-rowlink" href="{{ route('admin.seo.index') }}">{{ __('SEO workspace') }}</a>
                     @elseif($navUser->role === 'vendor')
                         <a class="pro-mnav-rowlink" href="{{ route('vendor.dashboard') }}">{{ __('Seller hub') }}</a>
                     @endif

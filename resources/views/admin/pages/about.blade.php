@@ -115,7 +115,9 @@
                                     <div class="border rounded p-2 text-center">
                                         <img src="{{ $item->imageUrl() }}" alt="" class="img-fluid rounded mb-2" style="max-height:80px;object-fit:cover;width:100%">
                                         @if($item->caption)<p class="small mb-2">{{ $item->caption }}</p>@endif
+                                        @if(auth()->user()->isAdmin())
                                         <button type="submit" form="del-gallery-{{ $item->id }}" class="btn btn-sm btn-outline-danger w-100">{{ __('Remove') }}</button>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -149,10 +151,12 @@
         </div>
     </div>
 
+    @if(auth()->user()->isAdmin())
     @foreach($page->galleryItems as $item)
         <form id="del-gallery-{{ $item->id }}" method="post" action="{{ route('admin.about-page.gallery.destroy', $item) }}" class="d-none">
             @csrf
             @method('DELETE')
         </form>
     @endforeach
+    @endif
 @endsection

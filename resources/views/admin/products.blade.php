@@ -35,12 +35,12 @@
 @endpush
 
 @section('content')
-    <div class="alert alert-warning py-2 small mb-3">
+    <!-- <div class="alert alert-warning py-2 small mb-3">
         <strong>{{ __('This store') }}:</strong>
         <code>{{ config('app.url') }}</code>
         · {{ __('Database') }}: <code>{{ config('database.connections.'.config('database.default').'.database') }}</code>
         — {{ __('Products appear only on this site when Active, vendor is approved, and you open the same URL on the storefront.') }}
-    </div>
+    </div> -->
     @php
         $hasFilters = request()->hasAny(['q', 'menu_item_id', 'brand', 'stock_filter', 'date_from', 'date_to', 'sort', 'per_page', 'page', 'low_stock']);
         $perPageCurrent = (int) request('per_page', 20);
@@ -143,11 +143,13 @@
                             <a href="{{ route('admin.products.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill">{{ __('Clear all') }}</a>
                         @endif
                     </div>
+                    @if(auth()->user()->isAdmin())
                     <div class="col-12 col-lg-auto ms-lg-auto">
                         <a href="{{ route('admin.products.create') }}" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm w-100">
                             <i class="bi bi-plus-lg me-1"></i>{{ __('Add product') }}
                         </a>
                     </div>
+                    @endif
                 </div>
                 <p class="small text-muted mb-0 mt-3 pt-2 border-top border-light-subtle">
                     <i class="bi bi-image me-1 opacity-75"></i>{{ __('Gallery & variant images are uploaded when creating or editing a product.') }}

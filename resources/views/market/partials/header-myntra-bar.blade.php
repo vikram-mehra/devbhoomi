@@ -48,6 +48,9 @@
                     @if($headerUser->role === 'admin')
                         <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('admin.*')) active @endif" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2" aria-hidden="true"></i>{{ __('Admin') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
+                    @elseif($headerUser->role === 'seo')
+                        <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('admin.*')) active @endif" href="{{ route('admin.seo.index') }}"><i class="bi bi-search" aria-hidden="true"></i>{{ __('SEO workspace') }}</a></li>
+                        <li><hr class="dropdown-divider"></li>
                     @elseif($headerUser->role === 'vendor')
                         <li><a class="dropdown-item pro-header-account-menu__link @if(request()->routeIs('vendor.*')) active @endif" href="{{ route('vendor.dashboard') }}"><i class="bi bi-shop" aria-hidden="true"></i>{{ __('Seller hub') }}</a></li>
                         <li><hr class="dropdown-divider"></li>

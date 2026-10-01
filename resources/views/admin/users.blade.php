@@ -38,6 +38,8 @@
                                 <td>
                                     @if($u->role === 'admin')
                                         <span class="admin-chip admin-chip--danger">{{ $u->role }}</span>
+                                    @elseif($u->role === 'seo')
+                                        <span class="admin-chip admin-chip--success">{{ $u->role }}</span>
                                     @elseif($u->role === 'vendor')
                                         <span class="admin-chip admin-chip--warning">{{ $u->role }}</span>
                                     @else
@@ -50,6 +52,7 @@
                                         <select name="role" class="form-select form-select-sm" style="width: auto; min-width: 7rem;">
                                             <option value="user" @if($u->role==='user') selected @endif>user</option>
                                             <option value="vendor" @if($u->role==='vendor') selected @endif>vendor</option>
+                                            <option value="seo" @if($u->role==='seo') selected @endif>seo</option>
                                             <option value="admin" @if($u->role==='admin') selected @endif>admin</option>
                                         </select>
                                         <button type="submit" class="btn btn-sm btn-primary">{{ __('Update') }}</button>

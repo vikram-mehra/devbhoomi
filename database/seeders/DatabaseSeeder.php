@@ -221,5 +221,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(BlogPostSeeder::class);
         $this->call(OrderManagementSeeder::class);
+        $this->call(SeoExecutiveSeeder::class);
     }
 }

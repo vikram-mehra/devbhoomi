@@ -17,7 +17,7 @@ class UserAdminController extends Controller
 
     public function updateRole(Request $request, User $user)
     {
-        $request->validate(['role' => 'required|in:user,vendor,admin']);
+        $request->validate(['role' => 'required|in:user,vendor,admin,seo']);
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Cannot change your own role here.');
         }

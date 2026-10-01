@@ -33,7 +33,17 @@
 <meta property="og:site_name" content="{{ config('seo.organization.name', config('app.name')) }}">
 @if(filled($seo->ogImage))
 <meta property="og:image" content="{{ $seo->ogImage }}">
+<meta property="og:image:secure_url" content="{{ $seo->ogImage }}">
 <meta property="og:image:alt" content="{{ $seo->title }}">
+@if(!empty($seo->ogImageType))
+<meta property="og:image:type" content="{{ $seo->ogImageType }}">
+@endif
+@if(!empty($seo->ogImageWidth))
+<meta property="og:image:width" content="{{ $seo->ogImageWidth }}">
+@endif
+@if(!empty($seo->ogImageHeight))
+<meta property="og:image:height" content="{{ $seo->ogImageHeight }}">
+@endif
 @endif
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ $seo->title }}">

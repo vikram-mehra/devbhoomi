@@ -43,12 +43,8 @@ class SeoService
             $canonical = url()->current();
         }
 
-        $ogImage = trim((string) ($data['og_image'] ?? ''));
-        if ($ogImage === '') {
-            $ogImage = $this->absoluteUrl($this->global('default_og_image'));
-        } elseif (! preg_match('#^https?://#i', $ogImage)) {
-            $ogImage = $this->absoluteUrl($ogImage);
-        }
+        $ogResolved = $this->resolveOgImage((string) ($data['og_image'] ?? ''));
+        $ogImage = $ogResolved['url'];
 
         $robots = trim((string) ($data['robots'] ?? ''));
         $robots = $robots !== '' ? $robots : $this->robotsDirective();
@@ -59,6 +55,9 @@ class SeoService
             'keywords' => filled($data['keywords'] ?? null) ? (string) $data['keywords'] : null,
             'canonical' => $canonical,
             'og_image' => $ogImage,
+            'og_image_width' => $ogResolved['width'],
+            'og_image_height' => $ogResolved['height'],
+            'og_image_type' => $ogResolved['type'],
             'robots' => $robots,
             'og_type' => (string) ($data['og_type'] ?? 'website'),
             'schema_extra' => $data['schema_extra'] ?? null,
@@ -148,6 +147,99 @@ class SeoService
         }
 
         return url('/'.ltrim($path, '/'));
+    }
+
+    /**
+     * WhatsApp/Facebook need a JPG/PNG around 1200x630. Wide header logos get cropped.
+     *
+     * @return array{url: string, width: int|null, height: int|null, type: string|null}
+     */
+    public function resolveOgImage(string $ogImage): array
+    {
+        $fallback = '/images/og-share.png';
+        $ogImage = trim($ogImage);
+        if ($ogImage === '') {
+            $ogImage = trim((string) $this->global('default_og_image'));
+        }
+        if ($ogImage === '' || $this->isLocalUnusableOgImage($ogImage)) {
+            $ogImage = $fallback;
+        }
+
+        $url = preg_match('#^https?://#i', $ogImage) ? $ogImage : $this->absoluteUrl($ogImage);
+        $meta = $this->localOgImageMeta($ogImage) ?? $this->localOgImageMeta($fallback);
+
+        return [
+            'url' => $url,
+            'width' => $meta['width'] ?? 1200,
+            'height' => $meta['height'] ?? 630,
+            'type' => $meta['type'] ?? 'image/png',
+        ];
+    }
+
+    /**
+     * @return array{width: int, height: int, type: string}|null
+     */
+    private function localOgImageMeta(string $ogImage): ?array
+    {
+        $full = $this->localPublicPath($ogImage);
+        if (! $full) {
+            return null;
+        }
+        $info = @getimagesize($full);
+        if (! $info || ($info[0] ?? 0) < 1 || ($info[1] ?? 0) < 1) {
+            return null;
+        }
+
+        return [
+            'width' => (int) $info[0],
+            'height' => (int) $info[1],
+            'type' => (string) ($info['mime'] ?? 'image/png'),
+        ];
+    }
+
+    private function isLocalUnusableOgImage(string $ogImage): bool
+    {
+        if (preg_match('#^https?://#i', $ogImage)) {
+            $host = parse_url($ogImage, PHP_URL_HOST);
+            $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+            if ($host && $appHost && strcasecmp((string) $host, (string) $appHost) !== 0) {
+                return false;
+            }
+        }
+
+        $full = $this->localPublicPath($ogImage);
+        if (! $full) {
+            return true;
+        }
+        if (strtolower((string) pathinfo($full, PATHINFO_EXTENSION)) === 'svg') {
+            return true;
+        }
+        $info = @getimagesize($full);
+        if (! $info || ($info[0] ?? 0) < 200 || ($info[1] ?? 0) < 200) {
+            return true;
+        }
+        $ratio = $info[0] / max($info[1], 1);
+
+        return $ratio > 3.2 || $ratio < 0.4;
+    }
+
+    private function localPublicPath(string $ogImage): ?string
+    {
+        $path = $ogImage;
+        if (preg_match('#^https?://#i', $ogImage)) {
+            $path = (string) (parse_url($ogImage, PHP_URL_PATH) ?? '');
+        }
+        $base = \App\Support\AppUrl::basePath();
+        if ($base !== '' && str_starts_with($path, $base.'/')) {
+            $path = substr($path, strlen($base));
+        }
+        $path = ltrim($path, '/');
+        if ($path === '') {
+            return null;
+        }
+        $full = public_path($path);
+
+        return is_file($full) ? $full : null;
     }
 
     public function organizationSchema(): array

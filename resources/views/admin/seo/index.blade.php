@@ -38,7 +38,8 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="seo-og-image">{{ __('Default OG image URL') }}</label>
-                        <input type="text" name="default_og_image" id="seo-og-image" class="form-control" value="{{ old('default_og_image', $settings['default_og_image']) }}" maxlength="2048" placeholder="/images/logo.png">
+                        <input type="text" name="default_og_image" id="seo-og-image" class="form-control" value="{{ old('default_og_image', $settings['default_og_image']) }}" maxlength="2048" placeholder="/images/og-share.png">
+                        <div class="form-text">{{ __('Use a JPG or PNG about 1200×630. Wide header logos are cropped in WhatsApp.') }}</div>
                     </div>
 
                     <div class="mb-3">

@@ -71,6 +71,11 @@ class GoogleAuthController extends Controller
                 ->with('status', __('Signed in with Google.'));
         }
 
+        if ($user->isSeo()) {
+            return AppUrl::redirectIntended(route('admin.seo.index'))
+                ->with('status', __('Signed in with Google.'));
+        }
+
         if ($user->isVendor()) {
             return AppUrl::redirectIntended(route('vendor.dashboard'))
                 ->with('status', __('Signed in with Google.'));

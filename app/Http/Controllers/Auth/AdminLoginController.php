@@ -16,6 +16,9 @@ class AdminLoginController extends Controller
             if (auth()->user()->isAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
+            if (auth()->user()->isSeo()) {
+                return redirect()->route('admin.seo.index');
+            }
 
             return redirect()->route('market.home');
         }
@@ -38,7 +41,7 @@ class AdminLoginController extends Controller
 
         $request->session()->regenerate();
 
-        if (! $request->user()->isAdmin()) {
+        if (! $request->user()->canAccessAdmin()) {
             auth()->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -48,6 +51,10 @@ class AdminLoginController extends Controller
             ])->onlyInput('email');
         }
 
-        return AppUrl::redirectIntended(route('admin.dashboard'));
+        $home = $request->user()->isSeo() && ! $request->user()->isAdmin()
+            ? route('admin.seo.index')
+            : route('admin.dashboard');
+
+        return AppUrl::redirectIntended($home);
     }
 }

@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    @if($inquiries->isNotEmpty())
+    @if(auth()->user()->isAdmin() && $inquiries->isNotEmpty())
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white">
                 <h2 class="h6 mb-0">{{ __('Recent messages') }}</h2>
@@ -108,10 +108,12 @@
                                 <td class="small">{{ Str::limit($inq->message, 80) }}</td>
                                 <td class="text-end">
                                     @unless($inq->read_at)
+                                        @if(auth()->user()->isAdmin())
                                         <form method="post" action="{{ route('admin.contact-inquiries.read', $inq) }}" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-secondary">{{ __('Mark read') }}</button>
                                         </form>
+                                        @endif
                                     @endunless
                                 </td>
                             </tr>

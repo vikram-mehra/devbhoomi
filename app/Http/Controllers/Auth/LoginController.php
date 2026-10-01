@@ -68,6 +68,9 @@ class LoginController extends Controller
         if ($user->role === User::ROLE_ADMIN) {
             return AppUrl::redirectIntended(route('admin.dashboard'));
         }
+        if ($user->role === User::ROLE_SEO) {
+            return AppUrl::redirectIntended(route('admin.seo.index'));
+        }
         if ($user->role === User::ROLE_VENDOR) {
             return AppUrl::redirectIntended(route('vendor.dashboard'));
         }

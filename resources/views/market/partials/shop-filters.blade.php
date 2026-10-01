@@ -273,10 +273,32 @@
 
     function setFilterOpen(open) {
         if (!col) return;
-        col.classList.toggle('is-open', open);
-        document.body.classList.toggle('mk-filter-open', open);
+        if (open) {
+            col.classList.remove('is-closing');
+            if (backdrop) backdrop.hidden = false;
+            col.offsetWidth;
+            col.classList.add('is-open');
+            document.body.classList.add('mk-filter-open');
+        } else if (col.classList.contains('is-open')) {
+            col.classList.remove('is-open');
+            col.classList.add('is-closing');
+            document.body.classList.remove('mk-filter-open');
+            var panel = col.querySelector('.mk-shop-filters');
+            var finish = function () {
+                col.classList.remove('is-closing');
+                if (backdrop) backdrop.hidden = true;
+            };
+            if (panel) {
+                panel.addEventListener('transitionend', function onEnd(e) {
+                    if (e.propertyName !== 'transform') return;
+                    panel.removeEventListener('transitionend', onEnd);
+                    finish();
+                });
+            } else {
+                finish();
+            }
+        }
         if (openBtn) openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-        if (backdrop) backdrop.hidden = !open;
     }
 
     if (openBtn) {

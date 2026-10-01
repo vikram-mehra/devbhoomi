@@ -1,19 +1,5 @@
 @php
-    $faqJson = app(\App\Services\SeoService::class)->global('faq_schema_json');
-    $faqItems = [];
-    if (filled($faqJson)) {
-        $decoded = json_decode($faqJson, true);
-        if (is_array($decoded)) {
-            $faqItems = array_values(array_filter($decoded, fn ($row) => filled($row['question'] ?? null) && filled($row['answer'] ?? null)));
-        }
-    }
-    if (empty($faqItems)) {
-        $faqItems = [
-            ['question' => __('Are Devbhoomi products 100% organic?'), 'answer' => __('We source pure Himalayan organic millets, pulses and spices directly from verified Uttarakhand farmers.')],
-            ['question' => __('Do you deliver across India?'), 'answer' => __('Yes — we ship pan-India. Free delivery on prepaid orders above ₹499.')],
-            ['question' => __('How can I track my order?'), 'answer' => __('Log in to your account, open Track order, and enter your order number plus the email or mobile used at checkout.')],
-        ];
-    }
+    $faqItems = app(\App\Services\SeoService::class)->homepageFaqItems();
 @endphp
 @if(!empty($faqItems))
 <section class="mk-home-band mk-section cb-reveal" aria-labelledby="faq-heading">
@@ -33,7 +19,7 @@
                 <div id="faq-c-{{ $i }}" class="accordion-collapse collapse {{ $i === 0 ? 'show' : '' }}" aria-labelledby="faq-h-{{ $i }}" data-bs-parent="#homeFaq">
                     <div class="accordion-body text-secondary">
                         {{ $faq['answer'] }}
-                        @if($i === 2)
+                        @if(!empty($faq['track_link']))
                             @auth
                                 <a href="{{ route('orders.track') }}" class="d-inline-block mt-2">{{ __('Track order') }}</a>
                             @else

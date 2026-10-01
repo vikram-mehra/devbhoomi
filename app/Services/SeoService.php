@@ -261,18 +261,80 @@ class SeoService
         ];
     }
 
+    /**
+     * Homepage FAQ rows for the accordion and FAQPage schema.
+     *
+     * @return array<int, array{question: string, answer: string, track_link?: bool}>
+     */
+    public function homepageFaqItems(): array
+    {
+        $fromAdmin = [];
+        $json = $this->global('faq_schema_json');
+        if (filled($json)) {
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                $fromAdmin = array_values(array_filter($decoded, fn ($row) => filled($row['question'] ?? null) && filled($row['answer'] ?? null)));
+            }
+        }
+
+        if (count($fromAdmin) >= 5) {
+            return $fromAdmin;
+        }
+
+        return [
+            [
+                'question' => __('What is Devbhoomi Naturals?'),
+                'answer' => __('Devbhoomi Naturals is an online store for pure Himalayan foods from Uttarakhand — millets, pahadi pulses, red rice, and spices sourced from hill farmers and packed for pan-India delivery.'),
+            ],
+            [
+                'question' => __('Are Devbhoomi products organic and authentic?'),
+                'answer' => __('Yes. We source traditional Uttarakhand staples such as Jhangora millet, Gahat dal, Kala Bhatt, Pahadi rajma, and Himalayan red rice from verified growers so you get clean, chemical-free pantry foods.'),
+            ],
+            [
+                'question' => __('Which Himalayan products can I buy online?'),
+                'answer' => __('Shop millets (Jhangora, Mandua/Ragi), pahadi pulses (Gahat, Bhatt, Rajma), Himalayan red rice, and spices. Browse Our Products to see the full Devbhoomi Naturals catalog.'),
+            ],
+            [
+                'question' => __('Do you deliver across India?'),
+                'answer' => __('Yes — we ship pan-India. Free delivery on every prepaid order.'),
+            ],
+            [
+                'question' => __('Is delivery free on prepaid orders?'),
+                'answer' => __('Yes. Free delivery on every prepaid order, anywhere in India. Extra prepaid discounts may also apply at checkout.'),
+            ],
+            [
+                'question' => __('How can I track my Devbhoomi order?'),
+                'answer' => __('Use Track order on the website with your order number and the email or mobile used at checkout. You can also follow updates from My orders after you sign in.'),
+                'track_link' => true,
+            ],
+            [
+                'question' => __('How should I store millets, pulses, and red rice?'),
+                'answer' => __('Keep them in a cool, dry place in an airtight jar, away from sunlight. Himalayan grains and pulses stay fresh longer when transferred from the pack after opening.'),
+            ],
+            [
+                'question' => __('How do I contact Devbhoomi Naturals for bulk or support?'),
+                'answer' => __('Use the Contact us page or call +91 9217732670 for product questions, bulk orders, and delivery help. We are happy to guide you on pahadi staples and order status.'),
+            ],
+        ];
+    }
+
     public function faqSchemaFromJson(?string $json): ?array
     {
         if (! filled($json)) {
-            return null;
+            return $this->faqSchemaFromItems($this->homepageFaqItems());
         }
         $decoded = json_decode($json, true);
         if (! is_array($decoded) || empty($decoded)) {
-            return null;
+            return $this->faqSchemaFromItems($this->homepageFaqItems());
         }
 
+        return $this->faqSchemaFromItems($decoded);
+    }
+
+    public function faqSchemaFromItems(array $items): ?array
+    {
         $entities = [];
-        foreach ($decoded as $row) {
+        foreach ($items as $row) {
             $q = trim((string) ($row['question'] ?? ''));
             $a = trim(strip_tags((string) ($row['answer'] ?? '')));
             if ($q === '' || $a === '') {

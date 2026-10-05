@@ -22,4 +22,24 @@ class Review extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function createdOnLabel(): string
+    {
+        $date = $this->created_at;
+        if (! $date) {
+            return '';
+        }
+
+        $day = (int) $date->format('j');
+        $mod100 = $day % 100;
+        $suffix = match (true) {
+            $mod100 >= 11 && $mod100 <= 13 => 'th',
+            $day % 10 === 1 => 'st',
+            $day % 10 === 2 => 'nd',
+            $day % 10 === 3 => 'rd',
+            default => 'th',
+        };
+
+        return $date->format('d').$suffix.' '.$date->format('M Y');
+    }
 }

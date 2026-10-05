@@ -135,7 +135,10 @@
                                 </strong>
                             </div>
                         </div>
-                        <a href="{{ route('orders.track') }}" class="small">{{ __('Open Track order') }}</a>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            @include('market.partials.delhivery-track-button', ['url' => $shipment['courier_track_url'] ?? $order->publicCourierTrackUrl()])
+                            <a href="{{ route('orders.track') }}" class="small">{{ __('Open Track order') }}</a>
+                        </div>
                     </div>
                 @endif
             </div>

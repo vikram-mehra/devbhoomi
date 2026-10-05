@@ -15,7 +15,7 @@ class OrderController extends Controller
 
     public function index()
     {
-        $orders = Order::with('items')
+        $orders = Order::with(['items', 'latestShipment'])
             ->where('user_id', auth()->id())
             ->visibleInAccount()
             ->latest()

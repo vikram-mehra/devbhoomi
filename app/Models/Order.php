@@ -127,8 +127,40 @@ class Order extends Model
     public function awb(): ?string
     {
         $awb = trim((string) $this->tracking_id);
+        if ($awb !== '') {
+            return $awb;
+        }
 
-        return $awb !== '' ? $awb : null;
+        $shipmentAwb = $this->relationLoaded('latestShipment')
+            ? $this->latestShipment?->trackingNumber()
+            : $this->latestShipment()->first()?->trackingNumber();
+
+        return $shipmentAwb ?: null;
+    }
+
+    public function usesDelhiveryCourier(): bool
+    {
+        $latest = $this->relationLoaded('latestShipment')
+            ? $this->latestShipment
+            : $this->latestShipment()->first();
+        $partner = strtolower((string) ($latest?->courier_partner ?? ''));
+        $name = strtolower(trim((string) $this->courier_name));
+
+        if (str_contains($partner, 'delhivery') || str_contains($name, 'delhivery')) {
+            return true;
+        }
+
+        return $this->awb() !== null && $name === '' && $partner === '';
+    }
+
+    public function publicCourierTrackUrl(): ?string
+    {
+        $awb = $this->awb();
+        if (! $awb || ! $this->usesDelhiveryCourier()) {
+            return null;
+        }
+
+        return 'https://www.delhivery.com/track/package/'.rawurlencode($awb);
     }
 
     public function needsDelhiveryPoll(): bool

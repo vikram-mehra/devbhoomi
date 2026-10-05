@@ -4041,12 +4041,32 @@ a.mk-banner-overlay:hover .mk-banner-overlay__cta {
 /* Header is z-index 2000 — keep the full-height drawer above it */
 .cb-market-pro #cartDrawer.pro-cart-drawer {
   z-index: 2100;
+  display: flex !important;
+  visibility: hidden;
+  transform: translateX(100%);
+  --bs-offcanvas-transition: transform 0.5s ease-in-out;
+  transition: transform 0.5s ease-in-out, visibility 0.5s ease-in-out;
+}
+.cb-market-pro #cartDrawer.pro-cart-drawer.showing,
+.cb-market-pro #cartDrawer.pro-cart-drawer.show:not(.hiding) {
+  visibility: visible;
+  transform: translateX(0);
+}
+.cb-market-pro #cartDrawer.pro-cart-drawer.hiding {
+  visibility: hidden;
+  transform: translateX(100%);
 }
 body.cb-market-pro:has(#cartDrawer.show) > .offcanvas-backdrop,
 body.cb-market-pro:has(#cartDrawer.showing) > .offcanvas-backdrop,
+body.cb-market-pro:has(#cartDrawer.hiding) > .offcanvas-backdrop,
 body.cb-market-pro:has(#marketNav.show) > .offcanvas-backdrop,
 body.cb-market-pro:has(#marketNav.showing) > .offcanvas-backdrop {
   z-index: 2090;
+}
+body.cb-market-pro:has(#cartDrawer.show) > .offcanvas-backdrop,
+body.cb-market-pro:has(#cartDrawer.showing) > .offcanvas-backdrop,
+body.cb-market-pro:has(#cartDrawer.hiding) > .offcanvas-backdrop {
+  transition: opacity 0.5s ease-in-out;
 }
 body.cb-market-pro:has(#marketNav.show) > .offcanvas-backdrop,
 body.cb-market-pro:has(#marketNav.showing) > .offcanvas-backdrop,
@@ -4072,7 +4092,9 @@ body.cb-market-pro:has(#marketNav.hiding) > .offcanvas-backdrop {
 }
 @media (prefers-reduced-motion: reduce) {
   .cb-market-pro #marketNav.pro-nav-offcanvas,
-  #marketNav.offcanvas {
+  #marketNav.offcanvas,
+  .cb-market-pro #cartDrawer.pro-cart-drawer,
+  #cartDrawer.offcanvas {
     transition: none;
   }
 }
@@ -7568,12 +7590,24 @@ body.cb-market-pro .bi {
   flex-shrink: 0;
   text-transform: uppercase;
 }
+.cb-market-pro .pro-pdp-review-card__who-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.05rem;
+}
 .cb-market-pro .pro-pdp-review-card__who strong {
   font-size: 0.875rem;
   color: #0f172a;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.cb-market-pro .pro-pdp-review-card__date {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  line-height: 1.2;
 }
 .cb-market-pro .pro-pdp-review-card__rating {
   display: inline-flex;

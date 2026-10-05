@@ -3,74 +3,12 @@
 @section('title', __('Pincode serviceability'))
 
 @section('content')
-    <div class="mb-4">
-        <h1 class="h4 mb-1">{{ __('Pincode serviceability') }}</h1>
-        <p class="text-muted mb-0">{{ __('Map pincode to city and state, then enable or disable delivery.') }}</p>
-    </div>
-
-    <form method="post" action="{{ route('admin.pincodes.store') }}" class="card border-0 shadow-sm p-3 p-md-4 mb-4">@csrf
-        <h2 class="h6 fw-bold mb-3">{{ __('Add pincode') }}</h2>
-        <div class="row g-2">
-            <div class="col-md-2">
-                <label class="form-label small">{{ __('Pincode') }} *</label>
-                <input name="pincode" class="form-control" inputmode="numeric" maxlength="6" required value="{{ old('pincode') }}" placeholder="263645">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small">{{ __('City') }} *</label>
-                <input name="city" class="form-control" required value="{{ old('city') }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small">{{ __('State') }} *</label>
-                <input name="state" class="form-control" required value="{{ old('state') }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small">{{ __('Day offset') }} *</label>
-                <input name="day_offset" type="number" min="0" max="30" class="form-control" required value="{{ old('day_offset', 3) }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small">{{ __('Courier name') }}</label>
-                <input name="courier_name" class="form-control" value="{{ old('courier_name') }}" placeholder="Delhivery">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label small">{{ __('Status') }} *</label>
-                <select name="status" class="form-select">
-                    <option value="1" @selected((string) old('status', '1') === '1')>{{ __('Enabled') }}</option>
-                    <option value="0" @selected((string) old('status') === '0')>{{ __('Disabled') }}</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-primary w-100">{{ __('Add') }}</button>
-            </div>
-        </div>
-        <p class="small text-muted mt-2 mb-0">{{ __('Day offset is added to today to show the estimated delivery date on the storefront.') }}</p>
-    </form>
-
-    <form method="post" action="{{ route('admin.pincodes.import') }}" enctype="multipart/form-data" class="card border-0 shadow-sm p-3 p-md-4 mb-4">@csrf
-        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
-            <div>
-                <h2 class="h6 fw-bold mb-1">{{ __('Upload CSV') }}</h2>
-                <p class="small text-muted mb-0">{{ __('Bulk add or update pincodes. Existing pincodes are updated.') }}</p>
-            </div>
-            <a href="{{ route('admin.pincodes.template') }}" class="btn btn-sm btn-outline-secondary">{{ __('Download sample CSV') }}</a>
-        </div>
-        <div class="row g-2 align-items-end">
-            <div class="col-md-8">
-                <label class="form-label small">{{ __('CSV file') }} *</label>
-                <input type="file" name="file" class="form-control" accept=".csv,text/csv,text/plain" required>
-            </div>
-            <div class="col-md-4">
-                <button class="btn btn-primary w-100">{{ __('Upload CSV') }}</button>
-            </div>
-        </div>
-        <p class="small text-muted mt-2 mb-0">{{ __('Columns: pincode, city, state, day_offset, courier_name, status (1 or 0).') }}</p>
-        @if(session('pincode_import_errors'))
-            <ul class="small text-danger mt-2 mb-0">
-                @foreach(session('pincode_import_errors') as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        @endif
-    </form>
+    @php
+        $openModal = old('_form');
+        if ($openModal !== 'add' && $openModal !== 'import' && session('pincode_import_errors')) {
+            $openModal = 'import';
+        }
+    @endphp
 
     <div class="card border-0 shadow-sm admin-data-card mb-4">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -78,9 +16,32 @@
                 <span class="admin-data-card__title d-block">{{ __('Mapped pincodes') }}</span>
                 <span class="admin-data-card__meta">{{ __('Search, edit, toggle, or delete.') }}</span>
             </div>
-            <form method="get" class="d-flex gap-2">
-                <input type="search" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="{{ __('Search pincode, city, courier') }}" style="min-width: 14rem;">
-                <button class="btn btn-sm btn-outline-secondary">{{ __('Search') }}</button>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addPincodeModal">{{ __('Add pincode') }}</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadPincodeModal">{{ __('Upload CSV') }}</button>
+                <a href="{{ route('admin.pincodes.export', request()->only(['q', 'status'])) }}" class="btn btn-sm btn-outline-secondary">{{ __('Export CSV') }}</a>
+            </div>
+        </div>
+        <div class="card-body border-bottom py-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small mb-1" for="pincodeSearch">{{ __('Search') }}</label>
+                    <input type="search" name="q" id="pincodeSearch" value="{{ $q }}" class="form-control form-control-sm" placeholder="{{ __('Pincode, city, state, courier') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1" for="pincodeStatus">{{ __('Status') }}</label>
+                    <select name="status" id="pincodeStatus" class="form-select form-select-sm">
+                        <option value="">{{ __('All statuses') }}</option>
+                        <option value="1" @selected($status === '1')>{{ __('Enabled') }}</option>
+                        <option value="0" @selected($status === '0')>{{ __('Disabled') }}</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-outline-secondary">{{ __('Apply') }}</button>
+                    @if($q !== '' || $status !== '')
+                        <a href="{{ route('admin.pincodes.index') }}" class="btn btn-sm btn-outline-secondary">{{ __('Clear') }}</a>
+                    @endif
+                </div>
             </form>
         </div>
         <div class="card-body p-0">
@@ -183,8 +144,124 @@
                 </table>
             </div>
         </div>
-        @if($rows->hasPages())
-            <div class="card-footer">{{ $rows->links() }}</div>
+        @if($rows->total() > 0)
+            <div class="card-footer bg-white border-top py-3">
+                <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
+                    <div class="small text-muted text-center text-lg-start">
+                        {{ __('Showing :from–:to of :total results', [
+                            'from' => $rows->firstItem(),
+                            'to' => $rows->lastItem(),
+                            'total' => $rows->total(),
+                        ]) }}
+                    </div>
+                    @if($rows->hasPages())
+                        <div class="admin-pagination-wrap mt-0 pt-0 pb-0">
+                            {{ $rows->links('admin.components.pagination-advanced') }}
+                        </div>
+                    @endif
+                </div>
+            </div>
         @endif
     </div>
+
+    <div class="modal fade" id="addPincodeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="post" action="{{ route('admin.pincodes.store') }}">
+                    @csrf
+                    <input type="hidden" name="_form" value="add">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ __('Add pincode') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label class="form-label small">{{ __('Pincode') }} *</label>
+                                <input name="pincode" class="form-control @error('pincode') is-invalid @enderror" inputmode="numeric" maxlength="6" required value="{{ old('_form') === 'add' ? old('pincode') : '' }}" placeholder="263645">
+                                @error('pincode')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">{{ __('City') }} *</label>
+                                <input name="city" class="form-control @error('city') is-invalid @enderror" required value="{{ old('_form') === 'add' ? old('city') : '' }}">
+                                @error('city')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">{{ __('State') }} *</label>
+                                <input name="state" class="form-control @error('state') is-invalid @enderror" required value="{{ old('_form') === 'add' ? old('state') : '' }}">
+                                @error('state')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">{{ __('Day offset') }} *</label>
+                                <input name="day_offset" type="number" min="0" max="30" class="form-control" required value="{{ old('_form') === 'add' ? old('day_offset', 3) : 3 }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">{{ __('Courier name') }}</label>
+                                <input name="courier_name" class="form-control" value="{{ old('_form') === 'add' ? old('courier_name') : '' }}" placeholder="Delhivery">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">{{ __('Status') }} *</label>
+                                <select name="status" class="form-select">
+                                    <option value="1" @selected(old('_form') !== 'add' || (string) old('status', '1') === '1')>{{ __('Enabled') }}</option>
+                                    <option value="0" @selected(old('_form') === 'add' && (string) old('status') === '0')>{{ __('Disabled') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="small text-muted mt-3 mb-0">{{ __('Day offset is added to today to show the estimated delivery date on the storefront.') }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button class="btn btn-primary">{{ __('Add') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="uploadPincodeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{{ route('admin.pincodes.import') }}" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="_form" value="import">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ __('Upload CSV') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-muted">{{ __('Existing pincodes are updated. New pincodes are inserted. Use the same columns as Export CSV.') }}</p>
+                        <label class="form-label small">{{ __('CSV file') }} *</label>
+                        <input type="file" name="file" class="form-control @error('file') is-invalid @enderror" accept=".csv,text/csv,text/plain" required>
+                        @error('file')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <p class="small text-muted mt-2 mb-0">{{ __('Columns: pincode, city, state, day_offset, courier_name, status (1 or 0).') }}</p>
+                        @if(session('pincode_import_errors'))
+                            <ul class="small text-danger mt-2 mb-0">
+                                @foreach(session('pincode_import_errors') as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{{ route('admin.pincodes.template') }}" class="btn btn-outline-secondary me-auto">{{ __('Download sample CSV') }}</a>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                        <button class="btn btn-primary">{{ __('Upload CSV') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@if($openModal === 'add' || $openModal === 'import')
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var el = document.getElementById(@json($openModal === 'import' ? 'uploadPincodeModal' : 'addPincodeModal'));
+                if (el && window.bootstrap) {
+                    window.bootstrap.Modal.getOrCreateInstance(el).show();
+                }
+            });
+        </script>
+    @endpush
+@endif

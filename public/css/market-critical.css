@@ -26,7 +26,7 @@ body.cb-market-pro {
 }
 .cb-container { width: 100%; max-width: 1200px; margin: 0 auto; padding-left: .75rem; padding-right: .75rem; }
 .modal:not(.show),
-.offcanvas:not(#marketNav):not(.show):not(.showing),
+.offcanvas:not(#marketNav):not(#cartDrawer):not(.show):not(.showing),
 .dropdown-menu:not(.show) { display: none !important; }
 .modal.show {
   display: block !important;
@@ -61,10 +61,29 @@ body.cb-market-pro {
   visibility: hidden;
   transform: translateX(-100%);
 }
+#cartDrawer.offcanvas {
+  display: flex !important;
+  visibility: hidden;
+  transform: translateX(100%);
+  transition: transform .5s ease-in-out, visibility .5s ease-in-out;
+}
+#cartDrawer.offcanvas.showing,
+#cartDrawer.offcanvas.show:not(.hiding) {
+  visibility: visible;
+  transform: translateX(0);
+}
+#cartDrawer.offcanvas.hiding {
+  visibility: hidden;
+  transform: translateX(100%);
+}
 .dropdown-menu.show { display: block !important; }
 .carousel-inner { position: relative; overflow: hidden; }
 .carousel-item { display: none; }
 .carousel-item.active, .carousel-item-next, .carousel-item-prev { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  #marketNav.offcanvas,
+  #cartDrawer.offcanvas { transition: none; }
+}
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .d-none { display: none !important; }
 .d-flex { display: flex !important; }

@@ -394,7 +394,12 @@
                                     <div class="pro-pdp-review-card__top">
                                         <div class="pro-pdp-review-card__who">
                                             <span class="pro-pdp-review-card__avatar" aria-hidden="true">{{ mb_substr(trim((string) ($r->user->name ?? __('C'))), 0, 1) }}</span>
-                                            <strong>{{ $r->user->name }}</strong>
+                                            <div class="pro-pdp-review-card__who-text min-w-0">
+                                                <strong>{{ $r->user->name }}</strong>
+                                                @if($r->createdOnLabel())
+                                                    <time class="pro-pdp-review-card__date" datetime="{{ $r->created_at->toDateString() }}">{{ $r->createdOnLabel() }}</time>
+                                                @endif
+                                            </div>
                                         </div>
                                         <span class="pro-pdp-review-card__rating"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ $r->rating }}</span>
                                     </div>

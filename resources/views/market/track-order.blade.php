@@ -99,6 +99,11 @@
                     </div>
                 @endif
             </div>
+            @if(!empty($shipment['courier_track_url']))
+                <div class="mt-3">
+                    @include('market.partials.delhivery-track-button', ['url' => $shipment['courier_track_url']])
+                </div>
+            @endif
 
             @if(!empty($shipment['items']))
                 <p class="pro-track__items">

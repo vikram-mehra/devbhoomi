@@ -72,9 +72,16 @@
                                     {{ $payLabel }}
                                 </td>
                                 <td class="account-orders__td-option" data-label="{{ __('Option') }}">
-                                    <a href="{{ route('orders.show', $o) }}" class="account-orders__view-btn" title="{{ __('View order') }}" aria-label="{{ __('View order') }}">
-                                        <i class="bi bi-eye" aria-hidden="true"></i>
-                                    </a>
+                                    <div class="d-inline-flex align-items-center gap-2">
+                                        @if($o->publicCourierTrackUrl())
+                                            <a href="{{ $o->publicCourierTrackUrl() }}" class="account-orders__view-btn" title="{{ __('Track on Delhivery') }}" aria-label="{{ __('Track on Delhivery') }}" target="_blank" rel="noopener noreferrer">
+                                                <i class="bi bi-truck" aria-hidden="true"></i>
+                                            </a>
+                                        @endif
+                                        <a href="{{ route('orders.show', $o) }}" class="account-orders__view-btn" title="{{ __('View order') }}" aria-label="{{ __('View order') }}">
+                                            <i class="bi bi-eye" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

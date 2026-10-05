@@ -169,12 +169,16 @@
                         @foreach($activeVariants as $vx)
                             @php
                                 $optBuyable = $vx->isBuyable();
-                                $optCompare = $vx->unitPrice() > $vx->effectivePrice() ? $vx->unitPrice() : null;
+                                $optPrice = (float) $vx->effectivePrice();
+                                $optCompare = $vx->unitPrice() > $optPrice ? (float) $vx->unitPrice() : $compare;
+                                if ($optCompare && $optCompare <= $optPrice) {
+                                    $optCompare = null;
+                                }
                             @endphp
                             <button type="button"
                                 class="zm-pro-card__opt js-card-variant-pill {{ $vx->id === $v->id ? 'is-active' : '' }} {{ $optBuyable ? '' : 'is-disabled' }}"
                                 data-id="{{ $vx->id }}"
-                                data-price="{{ $vx->effectivePrice() }}"
+                                data-price="{{ $optPrice }}"
                                 data-compare="{{ $optCompare ?: '' }}"
                                 data-buyable="{{ $optBuyable ? '1' : '0' }}"
                                 data-image="{{ $vx->variantImageUrl() }}"

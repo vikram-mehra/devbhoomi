@@ -14,20 +14,13 @@ class PincodeServiceabilityAdminController extends Controller
     public function index(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
-        $rows = PincodeServiceability::query()
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($inner) use ($q) {
-                    $inner->where('pincode', 'like', '%'.$q.'%')
-                        ->orWhere('city', 'like', '%'.$q.'%')
-                        ->orWhere('state', 'like', '%'.$q.'%')
-                        ->orWhere('courier_name', 'like', '%'.$q.'%');
-                });
-            })
+        $status = (string) $request->get('status', '');
+        $rows = $this->filteredQuery($request)
             ->orderBy('pincode')
             ->paginate(30)
             ->withQueryString();
 
-        return view('admin.pincode-serviceability', compact('rows', 'q'));
+        return view('admin.pincode-serviceability', compact('rows', 'q', 'status'));
     }
 
     public function store(Request $request)
@@ -56,6 +49,30 @@ class PincodeServiceabilityAdminController extends Controller
         $pincode->update(['status' => ! $pincode->status]);
 
         return back()->with('status', __('Serviceability status updated.'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $filename = 'pincode-serviceability-'.now()->format('Ymd-His').'.csv';
+        $rows = $this->filteredQuery($request)->orderBy('pincode')->get();
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['pincode', 'city', 'state', 'day_offset', 'courier_name', 'status']);
+            foreach ($rows as $row) {
+                fputcsv($out, [
+                    $row->pincode,
+                    $row->city,
+                    $row->state,
+                    $row->day_offset,
+                    $row->courier_name,
+                    $row->status ? 1 : 0,
+                ]);
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function template(): StreamedResponse
@@ -91,6 +108,25 @@ class PincodeServiceabilityAdminController extends Controller
         return back()
             ->with('status', $message)
             ->with('pincode_import_errors', array_slice($result['errors'], 0, 20));
+    }
+
+    protected function filteredQuery(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+        $status = (string) $request->get('status', '');
+
+        return PincodeServiceability::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner->where('pincode', 'like', '%'.$q.'%')
+                        ->orWhere('city', 'like', '%'.$q.'%')
+                        ->orWhere('state', 'like', '%'.$q.'%')
+                        ->orWhere('courier_name', 'like', '%'.$q.'%');
+                });
+            })
+            ->when(in_array($status, ['0', '1'], true), function ($query) use ($status) {
+                $query->where('status', $status === '1');
+            });
     }
 
     /**

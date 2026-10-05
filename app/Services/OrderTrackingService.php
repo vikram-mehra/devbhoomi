@@ -117,6 +117,7 @@ class OrderTrackingService
             return $this->formatShipment([
                 'source' => 'database',
                 'courier_env' => $this->delhivery->environment(),
+                'courier_track_url' => $order->publicCourierTrackUrl(),
                 'order_number' => $order->order_number,
                 'status' => $order->status,
                 'status_label' => $order->delhivery_status ?: Order::statusLabel($order->status),
@@ -195,6 +196,7 @@ class OrderTrackingService
 
         return $this->formatShipment([
             'source' => 'order',
+            'courier_track_url' => $order->publicCourierTrackUrl(),
             'order_number' => $order->order_number,
             'status' => $order->status,
             'courier' => $order->courier_name ?: __('Standard delivery'),
@@ -256,6 +258,7 @@ class OrderTrackingService
             'status_label' => $raw['status_label'] ?? Order::statusLabel($raw['status']),
             'courier' => $raw['courier'],
             'tracking_id' => $raw['tracking_id'],
+            'courier_track_url' => $raw['courier_track_url'] ?? null,
             'expected_delivery' => $expected instanceof CarbonInterface ? $expected : ($expected ? Carbon::parse($expected) : null),
             'origin' => $raw['origin'],
             'destination' => $raw['destination'],

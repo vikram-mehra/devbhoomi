@@ -19,9 +19,10 @@
                     <h2 class="h6 fw-bold mb-3">{{ __('Global SEO settings') }}</h2>
 
                     <div class="mb-3">
-                        <label class="form-label" for="seo-title-suffix">{{ __('Title suffix') }}</label>
-                        <input type="text" name="site_title_suffix" id="seo-title-suffix" class="form-control @error('site_title_suffix') is-invalid @enderror" value="{{ old('site_title_suffix', $settings['site_title_suffix']) }}" maxlength="120" required>
-                        @error('site_title_suffix')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <label class="form-label" for="seo-default-title">{{ __('Homepage title') }}</label>
+                        <input type="text" name="default_title" id="seo-default-title" class="form-control @error('default_title') is-invalid @enderror" value="{{ old('default_title', $settings['default_title']) }}" maxlength="180" required data-seo-preview="title">
+                        <div class="form-text">{{ __('Used on the homepage. Other pages keep their own title — nothing is appended.') }}</div>
+                        @error('default_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="mb-3">
@@ -108,6 +109,13 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var title = document.getElementById('seo-default-title');
+    var titlePreview = document.querySelector('[data-seo-preview="title"]');
+    if (title && titlePreview) {
+        title.addEventListener('input', function () {
+            titlePreview.textContent = title.value || {{ json_encode(__('Homepage title')) }};
+        });
+    }
     var desc = document.getElementById('seo-default-desc');
     var counter = document.querySelector('[data-seo-count="description"]');
     if (desc && counter) {

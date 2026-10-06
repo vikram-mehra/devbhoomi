@@ -7,6 +7,8 @@ return [
     'description_min' => 150,
     'description_max' => 160,
 
+    'default_title' => 'Devbhoomi Naturals | Pure Organic Himalayan Products',
+
     'default_title_suffix' => 'Devbhoomi Naturals',
 
     'default_description' => 'Shop pure Himalayan organic products — millets, pahadi pulses, spices & grains. Direct from Uttarakhand farmers. Free delivery on every prepaid order.',

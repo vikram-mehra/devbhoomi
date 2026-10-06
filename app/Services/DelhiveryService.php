@@ -9,12 +9,22 @@ class DelhiveryService
 {
     public function token(): string
     {
-        return trim((string) config('tracking.delhivery.token'));
+        return trim((string) (
+            config('tracking.delhivery.token')
+            ?: config('couriers.partners.delhivery.api_token')
+            ?: ''
+        ));
     }
 
     public function baseUrl(): string
     {
-        return rtrim((string) config('tracking.delhivery.base_url', 'https://staging-express.delhivery.com'), '/');
+        $url = trim((string) (
+            config('tracking.delhivery.base_url')
+            ?: config('couriers.partners.delhivery.api_url')
+            ?: 'https://staging-express.delhivery.com'
+        ));
+
+        return rtrim($url, '/');
     }
 
     public function enabled(): bool
@@ -67,8 +77,15 @@ class DelhiveryService
         }
 
         $nested = $payload['ShipmentData'][0]['Shipment'] ?? null;
+        if (is_array($nested)) {
+            return $nested;
+        }
 
-        return is_array($nested) ? $nested : null;
+        if (isset($payload['AWB']) && (isset($payload['Status']) || isset($payload['Scans']))) {
+            return $payload;
+        }
+
+        return null;
     }
 
     public function mapStatus(string $statusType, string $statusName): string
@@ -133,6 +150,7 @@ class DelhiveryService
                 Log::warning('Delhivery tracking request failed.', [
                     'http_status' => $response->status(),
                     'env' => $this->environment(),
+                    'body' => mb_substr($response->body(), 0, 400),
                 ]);
 
                 return $this->failure(
@@ -147,7 +165,9 @@ class DelhiveryService
             }
 
             if (! empty($json['Error'])) {
-                return $this->failure('invalid_awb', $response->status());
+                $apiError = is_string($json['Error']) ? trim($json['Error']) : 'invalid_awb';
+
+                return $this->failure($apiError !== '' ? $apiError : 'invalid_awb', $response->status());
             }
 
             $shipment = $this->extractShipment($json);

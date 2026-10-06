@@ -11,6 +11,7 @@ class SeoService
     public function global(string $key, $default = null)
     {
         $map = [
+            'default_title' => config('seo.default_title'),
             'site_title_suffix' => config('seo.default_title_suffix'),
             'default_description' => config('seo.default_description'),
             'default_keywords' => config('seo.default_keywords'),
@@ -28,9 +29,11 @@ class SeoService
 
     public function build(array $data): SeoMeta
     {
-        $suffix = $this->global('site_title_suffix');
         $rawTitle = trim(strip_tags((string) ($data['title'] ?? '')));
-        $title = $this->normalizeTitle($rawTitle, $suffix);
+        if ($rawTitle === '') {
+            $rawTitle = (string) $this->global('default_title');
+        }
+        $title = $this->normalizeTitle($rawTitle);
 
         $rawDesc = trim(strip_tags((string) ($data['description'] ?? '')));
         if ($rawDesc === '') {
@@ -66,23 +69,9 @@ class SeoService
 
     public function normalizeTitle(string $title, ?string $suffix = null): string
     {
-        $suffix = $suffix ?: $this->global('site_title_suffix');
-        $title = preg_replace('/\s+/u', ' ', trim(strip_tags($title))) ?: $suffix;
-        $min = (int) config('seo.title_min', 50);
-        $max = (int) config('seo.title_max', 60);
+        $title = preg_replace('/\s+/u', ' ', trim(strip_tags($title)));
 
-        if (mb_strlen($title) > $max) {
-            return Str::limit($title, $max, '');
-        }
-
-        if (mb_strlen($title) < $min && $suffix && ! Str::contains($title, $suffix)) {
-            $candidate = $title.' | '.$suffix;
-            if (mb_strlen($candidate) <= $max) {
-                return $candidate;
-            }
-        }
-
-        return $title;
+        return $title !== '' ? $title : (string) $this->global('default_title');
     }
 
     public function normalizeDescription(string $description): string

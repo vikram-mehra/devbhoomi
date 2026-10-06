@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', ($post->meta_title ?: $post->title).' — Devbhoomi Blog')
+@section('title', ($post->meta_title ?: $post->title))
 @section('meta_description')
     {{ $post->meta_description ?: ($post->excerpt ?: Str::limit(strip_tags($post->body), 155)) }}
 @endsection

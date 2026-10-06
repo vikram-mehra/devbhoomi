@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', __('Organic Food Blog').' | Devbhoomi Naturals')
+@section('title', __('Organic Food Blog'))
 @section('meta_description')
     {{ __('Tips on pure Himalayan spices, organic millets, traditional ingredients and healthy living from Devbhoomi Naturals, Uttarakhand.') }}
 @endsection

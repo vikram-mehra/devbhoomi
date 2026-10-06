@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', __('Offers & Coupons').' | Devbhoomi Naturals')
+@section('title', __('Offers & Coupons'))
 @section('meta_description')
     {{ __('Active promo codes on organic Himalayan products. Extra 5% off prepaid orders & free delivery above ₹499 at Devbhoomi Naturals.') }}
 @endsection

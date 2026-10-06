@@ -25,7 +25,7 @@ class SeoAdminController extends Controller
     public function index()
     {
         $settings = [
-            'site_title_suffix' => $this->seo->global('site_title_suffix'),
+            'default_title' => $this->seo->global('default_title'),
             'default_description' => $this->seo->global('default_description'),
             'default_keywords' => $this->seo->global('default_keywords'),
             'default_og_image' => $this->seo->global('default_og_image'),
@@ -35,7 +35,7 @@ class SeoAdminController extends Controller
         ];
 
         $preview = $this->seo->build([
-            'title' => 'Pure Himalayan Organic Products',
+            'title' => $settings['default_title'],
             'description' => $settings['default_description'],
             'keywords' => $settings['default_keywords'],
             'og_image' => $settings['default_og_image'],
@@ -59,7 +59,7 @@ class SeoAdminController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'site_title_suffix' => 'required|string|max:120',
+            'default_title' => 'required|string|max:180',
             'default_description' => 'required|string|max:500',
             'default_keywords' => 'nullable|string|max:500',
             'default_og_image' => 'nullable|string|max:2048',

@@ -36,8 +36,12 @@ class SyncDelhiveryTrackingCommand extends Command
                 return self::SUCCESS;
             }
 
-            $ok = $sync->pollOrder($order, true);
-            $this->info($ok ? 'Tracking refreshed from Delhivery.' : 'Delhivery did not return a shipment. AWB was kept.');
+            $result = $sync->pollOrder($order, true);
+            if ($result['ok']) {
+                $this->info('Tracking refreshed from Delhivery'.($result['status'] ? ': '.$result['status'] : '.'));
+            } else {
+                $this->warn($sync->pollErrorMessage($result['error']));
+            }
 
             return self::SUCCESS;
         }
@@ -53,7 +57,7 @@ class SyncDelhiveryTrackingCommand extends Command
 
         $updated = 0;
         foreach ($orders as $order) {
-            if ($sync->pollOrder($order, (bool) $this->option('force'))) {
+            if ($sync->pollOrder($order, (bool) $this->option('force'))['ok']) {
                 $updated++;
             }
         }

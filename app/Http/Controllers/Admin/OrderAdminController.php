@@ -140,17 +140,43 @@ class OrderAdminController extends Controller
             ]);
         }
 
-        if ($awb !== '') {
-            try {
-                $sync->pollOrder($order->fresh() ?: $order, true);
-            } catch (\Throwable $e) {
-                report($e);
-            }
+        if ($awb === '') {
+            return back()->with('status', 'Shipping details updated.');
         }
 
-        return back()->with('status', $awb !== ''
-            ? 'Delhivery AWB saved. Tracking will update from webhook and the scheduled poll.'
-            : 'Shipping details updated.');
+        return $this->respondWithTrackingPoll(
+            $sync,
+            $order->fresh() ?: $order,
+            'Delhivery AWB saved.'
+        );
+    }
+
+    public function refreshTracking(Order $order, DelhiveryTrackingSyncService $sync)
+    {
+        if (! $order->awb()) {
+            return back()->with('error', __('Save an AWB first, then refresh tracking.'));
+        }
+
+        return $this->respondWithTrackingPoll($sync, $order, __('Tracking refresh requested.'));
+    }
+
+    protected function respondWithTrackingPoll(DelhiveryTrackingSyncService $sync, Order $order, string $prefix)
+    {
+        try {
+            $result = $sync->pollOrder($order, true);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', $prefix.' '.__('Delhivery request failed: :message', ['message' => $e->getMessage()]));
+        }
+
+        if ($result['ok']) {
+            $status = $result['status'] ? ' '.$result['status'].'.' : '.';
+
+            return back()->with('status', $prefix.' '.__('Delhivery tracking updated:').$status);
+        }
+
+        return back()->with('error', $prefix.' '.$sync->pollErrorMessage($result['error']));
     }
 
     public function bulkUpdateStatus(Request $request)

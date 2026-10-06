@@ -102,10 +102,16 @@
                         <label class="form-label small mb-1" for="adminAwb">AWB / Waybill</label>
                         <input id="adminAwb" type="text" name="tracking_id" value="{{ old('tracking_id', $order->tracking_id) }}" class="form-control form-control-sm" placeholder="Delhivery AWB">
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-primary">Save AWB</button>
                     </div>
                 </form>
+                @if($order->tracking_id)
+                    <form method="post" action="{{ route('admin.orders.tracking.refresh', $order) }}" class="mb-3">
+                        @csrf
+                        <button class="btn btn-sm btn-outline-primary">{{ __('Refresh tracking now') }}</button>
+                    </form>
+                @endif
                 <p class="mb-1"><strong>Current status:</strong> {{ $order->delhivery_status ?: 'Awaiting scans' }}</p>
                 <p class="mb-1"><strong>Location:</strong> {{ $order->delhivery_location ?: 'N/A' }}</p>
                 <p class="mb-1"><strong>Last synced:</strong> {{ $order->delhivery_last_synced_at?->tz('Asia/Kolkata')->format('d M Y, h:i A') ?: 'Not yet' }}</p>

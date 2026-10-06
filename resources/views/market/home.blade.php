@@ -1,8 +1,11 @@
 @extends('layouts.market')
 
-@section('title', 'Devbhoomi Naturals | Pure Organic Himalayan Products')
-@section('meta_description', 'Shop pure organic Himalayan products — millets, pahadi pulses, spices & grains direct from Uttarakhand farmers. Free delivery on every prepaid order.')
-@section('meta_keywords', 'organic food, Himalayan products, Uttarakhand, millets, pahadi pulses, natural spices')
+@php
+    $homeSeo = app(\App\Services\SeoService::class);
+@endphp
+@section('title', $homeSeo->global('default_title'))
+@section('meta_description', $homeSeo->global('default_description'))
+@section('meta_keywords', $homeSeo->global('default_keywords'))
 @section('canonical', route('market.home'))
 
 @if($banners->isNotEmpty())

@@ -291,6 +291,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/orders/{order}/status', [OrderAdminController::class, 'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/payment', [OrderAdminController::class, 'updatePayment'])->name('orders.payment');
     Route::post('/orders/{order}/shipping', [OrderAdminController::class, 'updateShipping'])->name('orders.shipping');
+    Route::post('/orders/{order}/tracking/refresh', [OrderAdminController::class, 'refreshTracking'])->name('orders.tracking.refresh');
 
     Route::get('/returns', [ReturnAdminController::class, 'index'])->name('returns.index');
     Route::patch('/returns/{refund}', [ReturnAdminController::class, 'update'])->name('returns.update');

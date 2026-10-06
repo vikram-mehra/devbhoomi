@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', __('Sitemap').' | '.config('seo.organization.name', config('app.name')))
+@section('title', __('Sitemap'))
 @section('meta_description', __('Browse all pages, categories, products, blog posts, and seller shops on Devbhoomi Naturals.'))
 @section('canonical', route('pages.sitemap'))
 

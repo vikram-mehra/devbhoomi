@@ -1,12 +1,12 @@
 @extends('layouts.market')
 
-@section('title', 'Privacy Policy | Devbhoomi Naturals')
+@section('title', 'Privacy Policy')
 @section('meta_description', 'Learn how Devbhoomi Naturals collects, uses and protects your personal data when you shop organic Himalayan products online. Cookie and data rights explained.')
 @section('canonical', route('legal.privacy'))
 
 @push('schema')
 <script type="application/ld+json">
-{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Privacy Policy | Devbhoomi Naturals', route('legal.privacy'), 'How Devbhoomi Naturals collects, uses and protects your personal data.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Privacy Policy', route('legal.privacy'), 'How Devbhoomi Naturals collects, uses and protects your personal data.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
 

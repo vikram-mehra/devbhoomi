@@ -70,6 +70,8 @@ class SeoService
     public function normalizeTitle(string $title, ?string $suffix = null): string
     {
         $title = preg_replace('/\s+/u', ' ', trim(strip_tags($title)));
+        $title = preg_replace('/\s*[\|—–-]\s*Devbhoomi(?:\s+Naturals|\s+Blog|\s+Seller)?\s*$/iu', '', (string) $title);
+        $title = trim((string) $title);
 
         return $title !== '' ? $title : (string) $this->global('default_title');
     }

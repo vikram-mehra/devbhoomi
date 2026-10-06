@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', ($page->meta_title ?: $page->hero_title).' | Devbhoomi Naturals')
+@section('title', $page->meta_title ?: $page->hero_title)
 @section('meta_description', $page->meta_description ?: Str::limit(strip_tags($page->hero_subtitle), 155))
 @if(filled($page->meta_keywords))
 @section('meta_keywords', $page->meta_keywords)
@@ -16,7 +16,7 @@
 
 @push('schema')
 <script type="application/ld+json">
-{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema(($page->meta_title ?: $page->hero_title).' | Devbhoomi Naturals', $page->canonical_url ?: route('pages.about'), $page->meta_description ?: Str::limit(strip_tags($page->hero_subtitle), 155)), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema($page->meta_title ?: $page->hero_title, $page->canonical_url ?: route('pages.about'), $page->meta_description ?: Str::limit(strip_tags($page->hero_subtitle), 155)), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
 

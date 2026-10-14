@@ -877,8 +877,8 @@
         if (typeof Swiper === 'undefined') return;
         function swiperOptions(el) {
             return {
-                slidesPerView: 1.5,
-                spaceBetween: 10,
+                slidesPerView: 'auto',
+                spaceBetween: 12,
                 watchOverflow: true,
                 observer: true,
                 observeParents: true,

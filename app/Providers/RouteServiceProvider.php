@@ -79,5 +79,20 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('registration', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });
+
+        RateLimiter::for('otp-send', function (Request $request) {
+            $phone = preg_replace('/\D+/', '', (string) $request->input('phone', '')) ?: 'unknown';
+
+            return [
+                Limit::perMinute(3)->by($request->ip().'|'.$phone),
+                Limit::perHour(8)->by($request->ip()),
+            ];
+        });
+
+        RateLimiter::for('otp-verify', function (Request $request) {
+            $phone = preg_replace('/\D+/', '', (string) $request->input('phone', '')) ?: 'unknown';
+
+            return Limit::perMinute(8)->by($request->ip().'|'.$phone);
+        });
     }
 }

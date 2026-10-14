@@ -150,11 +150,19 @@
         border: none;
         transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
-    .auth-login-submit:hover {
+    .auth-login-submit:hover:not(:disabled) {
         background: #d67840;
         transform: translateY(-1px);
         box-shadow: 0 8px 20px rgba(236, 137, 81, 0.35);
         color: #fff;
+    }
+    .auth-login-submit:disabled {
+        background: #c4c8ce;
+        color: #5f6368;
+        box-shadow: none;
+        transform: none;
+        opacity: 1;
+        cursor: not-allowed;
     }
     .auth-login-links a { color: #ec8951; text-decoration: none; font-weight: 500; font-size: 0.875rem; }
     .auth-login-links a:hover { text-decoration: underline; }
@@ -219,6 +227,30 @@
         padding: 0.35rem 0.5rem;
         border-radius: 6px;
     }
+    .auth-login-methods {
+        display: flex;
+        gap: 0.4rem;
+        margin-bottom: 1.25rem;
+        padding: 0.25rem;
+        background: #f7f7f8;
+        border-radius: 10px;
+    }
+    .auth-login-methods__btn {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        border-radius: 8px;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #6b7280;
+    }
+    .auth-login-methods__btn.is-active {
+        background: #fff;
+        color: #222;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .auth-login-pane[hidden] { display: none !important; }
 </style>
 @endpush
 
@@ -245,7 +277,22 @@
                 <p class="auth-login-sub">{{ __('Enter your details to continue shopping.') }}</p>
 
                 @include('auth.partials.google-signin')
-                
+
+                @php
+                    // Temporarily hide Mobile OTP login. Set true to show the tab again.
+                    $showMobileOtpLogin = false;
+                    $otpTab = $showMobileOtpLogin && (old('phone') || $errors->has('phone') || $errors->has('code') || request('method') === 'otp');
+                @endphp
+                <div class="auth-login-methods" role="tablist" aria-label="{{ __('Sign-in method') }}" @unless($showMobileOtpLogin) hidden @endunless>
+                    <button type="button" class="auth-login-methods__btn {{ $otpTab ? '' : 'is-active' }}" id="loginTabEmail" data-login-tab="email" role="tab" aria-selected="{{ $otpTab ? 'false' : 'true' }}">{{ __('Email') }}</button>
+                    <button type="button" class="auth-login-methods__btn {{ $otpTab ? 'is-active' : '' }}" id="loginTabOtp" data-login-tab="otp" role="tab" aria-selected="{{ $otpTab ? 'true' : 'false' }}">{{ __('Mobile OTP') }}</button>
+                </div>
+
+                <div class="auth-login-pane" id="loginPaneOtp" role="tabpanel" @unless($showMobileOtpLogin && $otpTab) hidden @endunless>
+                    @include('auth.partials.otp-login')
+                </div>
+
+                <div class="auth-login-pane" id="loginPaneEmail" role="tabpanel" @if($showMobileOtpLogin && $otpTab) hidden @endif>
                 <form method="POST" action="{{ route('login') }}" class="auth-login-form">
                     @csrf
                     <div class="mb-3">
@@ -276,6 +323,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary auth-login-submit w-100 text-white">{{ __('Sign in') }}</button>
                 </form>
+                </div>
 
                 @if (Route::has('register'))
                     <p class="text-center text-muted small mt-4 mb-0 auth-login-links">
@@ -288,3 +336,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    var tabs = document.querySelectorAll('[data-login-tab]');
+    var emailPane = document.getElementById('loginPaneEmail');
+    var otpPane = document.getElementById('loginPaneOtp');
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            var isOtp = tab.getAttribute('data-login-tab') === 'otp';
+            tabs.forEach(function (t) {
+                var active = t === tab;
+                t.classList.toggle('is-active', active);
+                t.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            if (emailPane) emailPane.hidden = isOtp;
+            if (otpPane) otpPane.hidden = !isOtp;
+        });
+    });
+})();
+</script>
+@endpush

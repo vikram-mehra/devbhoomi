@@ -110,9 +110,12 @@ Route::delete('/cart/{item}', [CartController::class, 'destroy'])->name('cart.de
 Route::get('/vendor/join', [VendorRegisterController::class, 'create'])->name('vendor.register');
 Route::post('/vendor/join', [VendorRegisterController::class, 'store'])->name('vendor.register.store');
 
-Route::get('/login/phone', [OtpController::class, 'showPhoneForm'])->name('login.phone');
-Route::post('/login/phone/send', [OtpController::class, 'sendOtp'])->name('login.phone.send');
-Route::post('/login/phone/verify', [OtpController::class, 'verifyOtp'])->name('login.phone.verify');
+Route::middleware('guest')->group(function () {
+    Route::get('/login/phone', [OtpController::class, 'showPhoneForm'])->name('login.phone');
+    Route::post('/login/phone/send', [OtpController::class, 'sendOtp'])->name('login.phone.send');
+    Route::post('/login/phone/resend', [OtpController::class, 'resendOtp'])->name('login.phone.resend');
+    Route::post('/login/phone/verify', [OtpController::class, 'verifyOtp'])->name('login.phone.verify');
+});
 
 Auth::routes();
 
@@ -313,6 +316,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/coupons', [CouponAdminController::class, 'index'])->name('coupons.index');
     Route::post('/coupons', [CouponAdminController::class, 'store'])->name('coupons.store');
     Route::post('/coupons/validate', [CouponAdminController::class, 'validateForOrder'])->name('coupons.validate');
+    Route::get('/coupons/{coupon}', [CouponAdminController::class, 'show'])->name('coupons.show');
     Route::patch('/coupons/{coupon}', [CouponAdminController::class, 'update'])->name('coupons.update');
     Route::delete('/coupons/{coupon}', [CouponAdminController::class, 'destroy'])->name('coupons.destroy');
     Route::post('/coupons/{coupon}/toggle', [CouponAdminController::class, 'toggle'])->name('coupons.toggle');

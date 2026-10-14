@@ -10,6 +10,9 @@
     if (session('status') && ! $omitStatus) {
         $flashStack[] = ['type' => 'success', 'body' => (string) session('status')];
     }
+    if (session('mk_cart_toast')) {
+        $flashStack[] = ['type' => 'success', 'body' => __('Item added to cart')];
+    }
     if (session('error')) {
         $flashStack[] = ['type' => 'danger', 'body' => (string) session('error')];
     }
@@ -29,8 +32,8 @@
 <style>
 .zm-flash-toast-container {
   position: fixed;
-  top: max(1rem, env(safe-area-inset-top, 0px));
-  right: max(1rem, env(safe-area-inset-right, 0px));
+  top: max(0.75rem, env(safe-area-inset-top, 0px));
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
   left: auto;
   bottom: auto;
   z-index: 10900;
@@ -40,49 +43,49 @@
   align-items: flex-end;
   gap: 0.5rem;
   pointer-events: none;
-  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+  padding: 0;
   box-sizing: border-box;
 }
 .zm-flash-toast {
   pointer-events: auto;
   width: 100%;
   max-width: min(22rem, calc(100vw - 2rem));
-  padding: 0.8rem 0.95rem;
+  padding: 0.85rem 1rem;
   border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
   animation: zmFlashToastIn 0.38s ease;
-  background: #fff;
-  border: 1px solid #e8e8ec;
+  border: 0;
+  color: #fff;
 }
-.zm-flash-toast--success { border-left: 4px solid #16a34a; }
-.zm-flash-toast--danger { border-left: 4px solid #dc2626; }
-.zm-flash-toast--warning { border-left: 4px solid #d97706; }
+.zm-flash-toast--success { background: #16a34a; }
+.zm-flash-toast--danger { background: #dc2626; }
+.zm-flash-toast--warning { background: #d97706; }
 .zm-flash-toast__body {
   flex: 1;
   font-size: 0.875rem;
   line-height: 1.45;
-  color: #1e293b;
-  font-weight: 400;
+  color: #fff;
+  font-weight: 600;
 }
 .zm-flash-toast__close {
   flex-shrink: 0;
   border: none;
   background: transparent;
-  opacity: 0.55;
+  opacity: 0.85;
   cursor: pointer;
   font-size: 1.35rem;
   line-height: 1;
   padding: 0 0.15rem;
   margin: -0.15rem 0 0;
-  color: #64748b;
+  color: #fff;
 }
 .zm-flash-toast__close:hover { opacity: 1; }
 @keyframes zmFlashToastIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .zm-flash-toast { animation: none; }

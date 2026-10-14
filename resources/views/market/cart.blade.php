@@ -65,6 +65,7 @@ input.js-cart-qty-input {
     border: none;
     background: transparent;
     font-weight: 600;
+    font-size: 16px;
     color: var(--pro-ink, #1a2e22);
 }
 

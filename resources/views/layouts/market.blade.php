@@ -39,7 +39,7 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link href="{{ asset('css/market-pro.css') }}?v=252" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=253" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -334,35 +334,6 @@
             </div>
         @endif
     </main>
-
-    @if(session('mk_cart_toast'))
-        <div id="mkCartToast" class="mk-cart-toast" role="status" aria-live="polite" aria-atomic="true">
-            <div class="mk-cart-toast__row">
-                <span class="mk-cart-toast__msg">{{ __('Item added to cart') }}</span>
-                <a href="{{ route('cart.index') }}" class="mk-cart-toast__action">{{ __('Go to cart') }}</a>
-            </div>
-            <button type="button" class="mk-cart-toast__close" aria-label="{{ __('Close') }}">&times;</button>
-        </div>
-        <script>
-            (function () {
-                var toast = document.getElementById('mkCartToast');
-                if (!toast) return;
-                if (document.querySelector('.pro-sticky-buy')) {
-                    toast.classList.add('mk-cart-toast--above-sticky');
-                }
-                requestAnimationFrame(function () {
-                    toast.classList.add('is-visible');
-                });
-                var hideTimer = setTimeout(function () { toast.classList.remove('is-visible'); }, 5200);
-                function removeToast() {
-                    clearTimeout(hideTimer);
-                    toast.classList.remove('is-visible');
-                    setTimeout(function () { toast.remove(); }, 320);
-                }
-                toast.querySelector('.mk-cart-toast__close')?.addEventListener('click', removeToast);
-            })();
-        </script>
-    @endif
 
     @include('market.partials.footer-v2')
     <div class="dn-ft-mobile-spacer d-lg-none" aria-hidden="true"></div>
@@ -1367,13 +1338,15 @@
                             }
                         }
 
-                        var drawerEl = document.getElementById('cartDrawer');
-                        if (drawerEl && window.bootstrap) {
-                            var offcanvas = bootstrap.Offcanvas.getInstance(drawerEl) || new bootstrap.Offcanvas(drawerEl);
-                            offcanvas.show();
+                        if (typeof window.zmShowFlashToast === 'function') {
+                            window.zmShowFlashToast(data.message || @json(__('Item added to cart')), 'success');
                         }
                     })
                     .catch(function (err) {
+                        if (typeof window.zmShowFlashToast === 'function') {
+                            window.zmShowFlashToast(err.message || @json(__('Error adding to cart')), 'danger');
+                            return;
+                        }
                         alert(err.message || 'Error adding to cart');
                     });
             });

@@ -331,8 +331,8 @@
 
                 function swiperOptions(el) {
                     return {
-                        slidesPerView: 1.5,
-                        spaceBetween: 10,
+                        slidesPerView: 'auto',
+                        spaceBetween: 12,
                         watchOverflow: true,
                         observer: true,
                         observeParents: true,
@@ -345,7 +345,7 @@
                             nextEl: el.querySelector('.swiper-button-next'),
                             prevEl: el.querySelector('.swiper-button-prev'),
                         },
-                        /* Below 620px: 1 full card + half of the next. 620+: CSS 2/3/4 columns. */
+                        /* Mobile: 1 card + peek of next (CSS width). 620+: 2/3/4 columns. */
                         breakpoints: {
                             620: { slidesPerView: 'auto', spaceBetween: 16 },
                             768: { slidesPerView: 'auto', spaceBetween: 16 },

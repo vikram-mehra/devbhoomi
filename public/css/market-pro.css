@@ -2627,6 +2627,9 @@ body.cb-market-pro.cb-body {
     --swiper-navigation-size: 36px;
     --swiper-navigation-sides-offset: 4px;
   }
+  .cb-market-pro .pro-product-swiper .swiper-slide {
+    width: calc(100% - 3.75rem);
+  }
 }
 .cb-market-pro .pro-product-swiper .swiper-slide {
   height: auto;
@@ -4158,6 +4161,42 @@ body.modal-open.cb-market-pro .cb-header--myntra {
     padding-right: 0.65rem;
   }
 }
+.cb-market-pro #quickViewModal .qv-details-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pro-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  line-height: 1.2;
+  box-shadow: none;
+  border-radius: 0;
+  transition: color 0.2s ease;
+}
+.cb-market-pro #quickViewModal .qv-details-link i {
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.cb-market-pro #quickViewModal .qv-details-link:hover,
+.cb-market-pro #quickViewModal .qv-details-link:focus-visible {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  color: var(--pro-primary-dark);
+  text-decoration: underline;
+}
+.cb-market-pro #quickViewModal .qv-details-link:hover i,
+.cb-market-pro #quickViewModal .qv-details-link:focus-visible i {
+  transform: translateX(3px);
+}
 .pro-cart-item {
   display: flex;
   gap: 0.75rem;
@@ -4914,6 +4953,14 @@ body.modal-open.cb-market-pro .cb-header--myntra {
 
 .cb-market-pro .cb-scroll-row > * {
   flex: 0 0 260px;
+}
+@media (max-width: 767.98px) {
+  .cb-market-pro .cb-scroll-row > *,
+  .cb-market-pro .cb-product-slider .cb-scroll-row > * {
+    flex: 0 0 calc(100% - 2.75rem);
+    width: calc(100% - 2.75rem);
+    max-width: calc(100% - 2.75rem);
+  }
 }
 
 .cb-market-pro .dropdown-menu.cb-mega {

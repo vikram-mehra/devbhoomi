@@ -38,8 +38,8 @@
         @keyframes mk-page-preloader-spin { to { transform: rotate(360deg); } }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ asset('css/market.css') }}?v=13" rel="stylesheet">
-    <link href="{{ asset('css/market-pro.css') }}?v=253" rel="stylesheet">
+    <link href="{{ asset('css/market.css') }}?v=14" rel="stylesheet">
+    <link href="{{ asset('css/market-pro.css') }}?v=257" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -293,8 +293,10 @@
                                 </form>
                             </div>
 
-                            <a href="#"
-                                class="btn btn-link text-decoration-none p-0 small js-qv-link">{{ __('View full details') }} &gt;</a>
+                            <a href="#" class="qv-details-link js-qv-link">
+                                <span>{{ __('View full details') }}</span>
+                                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                            </a>
                         </div>
                     </div>
                 </div>

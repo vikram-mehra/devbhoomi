@@ -137,6 +137,9 @@ class AppUrl
             '/email/',
             '/admin/login',
             '/login/phone',
+            '/login/phone/send',
+            '/login/phone/resend',
+            '/login/phone/verify',
         ] as $prefix) {
             if ($relative === $prefix || strpos($relative, $prefix) === 0) {
                 return;

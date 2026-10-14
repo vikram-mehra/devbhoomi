@@ -8690,6 +8690,22 @@ body.cb-market-pro .bi {
     font-size: var(--pro-mobile-fs-sm) !important;
   }
 
+  /* iPhone Safari zooms focused fields under 16px — keep inputs readable without zoom */
+  .cb-market-pro input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="image"]),
+  .cb-market-pro select,
+  .cb-market-pro textarea,
+  .cb-market-pro .form-control,
+  .cb-market-pro .form-select,
+  .cb-market-pro .form-control-sm,
+  .cb-market-pro .form-select-sm,
+  .cb-market-pro .js-cart-qty-input,
+  .cb-market-pro .qty-selector input,
+  .cb-market-pro .pro-pincode-check__input,
+  .cb-market-pro .mk-myntra-search__input,
+  .cb-market-pro .pro-checkout-input {
+    font-size: 16px !important;
+  }
+
   /* —— Home sections —— */
   .cb-market-pro .pro-section-title,
   .cb-market-pro .mk-deal-hero__inner h2 {
@@ -8706,6 +8722,18 @@ body.cb-market-pro .bi {
 
 /* iOS Safari: pin bottom nav to visual viewport (JS sets --pro-mobile-nav-offset) */
 @supports (-webkit-touch-callout: none) {
+  .cb-market-pro input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):not([type="image"]),
+  .cb-market-pro select,
+  .cb-market-pro textarea,
+  .cb-market-pro .form-control,
+  .cb-market-pro .form-select,
+  .cb-market-pro .form-control-sm,
+  .cb-market-pro .form-select-sm,
+  .cb-market-pro .js-cart-qty-input,
+  .cb-market-pro .qty-selector input {
+    font-size: 16px !important;
+  }
+
   @media (max-width: 991.98px) {
     body.cb-market-pro > .pro-mobile-nav {
       bottom: 0 !important;

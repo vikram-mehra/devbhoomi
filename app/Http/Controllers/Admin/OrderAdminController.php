@@ -7,6 +7,7 @@ use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Services\Courier\CourierManager;
+use App\Services\CouponService;
 use App\Services\DelhiveryTrackingSyncService;
 use App\Services\StockLedgerService;
 use Illuminate\Http\Response;
@@ -100,6 +101,8 @@ class OrderAdminController extends Controller
             app(StockLedgerService::class)->restoreOrderCancellation($order->fresh(), optional($request->user())->id);
         }
 
+        app(CouponService::class)->syncUsageWithOrder($order->fresh());
+
         $this->sendOrderStatusEmail($order, $previous);
 
         return back()->with('status', 'Order status updated.');
@@ -109,6 +112,7 @@ class OrderAdminController extends Controller
     {
         $request->validate(['payment_status' => ['required', 'string', Rule::in(array_keys(Order::paymentStatusOptions()))]]);
         $order->update(['payment_status' => $request->payment_status]);
+        app(CouponService::class)->syncUsageWithOrder($order->fresh());
 
         return back()->with('status', 'Payment status updated.');
     }
@@ -208,6 +212,8 @@ class OrderAdminController extends Controller
             if ($validated['status'] === 'cancelled' && $previous !== 'cancelled') {
                 app(StockLedgerService::class)->restoreOrderCancellation($order->fresh(), optional($request->user())->id);
             }
+
+            app(CouponService::class)->syncUsageWithOrder($order->fresh());
 
             $this->sendOrderStatusEmail($order, $previous);
         }

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Coupon extends Model
 {
@@ -13,7 +15,7 @@ class Coupon extends Model
 
     protected $fillable = [
         'code', 'coupon_type', 'type', 'value', 'min_cart', 'max_discount', 'starts_at', 'ends_at',
-        'usage_limit', 'used_count', 'is_active',
+        'usage_limit', 'per_user_limit', 'used_count', 'is_active', 'first_order_only',
     ];
 
     protected $casts = [
@@ -23,7 +25,26 @@ class Coupon extends Model
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
         'is_active' => 'boolean',
+        'first_order_only' => 'boolean',
+        'usage_limit' => 'integer',
+        'per_user_limit' => 'integer',
+        'used_count' => 'integer',
     ];
+
+    public function usages(): HasMany
+    {
+        return $this->hasMany(CouponUsage::class);
+    }
+
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'coupon_product');
+    }
+
+    public function menuItems(): BelongsToMany
+    {
+        return $this->belongsToMany(MenuItem::class, 'coupon_menu_item');
+    }
 
     public function scopePublic(Builder $query): Builder
     {
@@ -66,5 +87,58 @@ class Coupon extends Model
         }
 
         return '₹'.number_format((float) $this->value, 2).' off';
+    }
+
+    public function adminStatusKey(): string
+    {
+        if (! $this->is_active) {
+            return 'inactive';
+        }
+        if ($this->ends_at && $this->ends_at->isPast()) {
+            return 'expired';
+        }
+        if ($this->starts_at && $this->starts_at->isFuture()) {
+            return 'scheduled';
+        }
+        if ($this->usage_limit !== null && (int) $this->used_count >= (int) $this->usage_limit) {
+            return 'exhausted';
+        }
+
+        return 'active';
+    }
+
+    public function adminStatusLabel(): string
+    {
+        return match ($this->adminStatusKey()) {
+            'inactive' => __('Inactive'),
+            'expired' => __('Expired'),
+            'scheduled' => __('Scheduled'),
+            'exhausted' => __('Limit reached'),
+            default => __('Active'),
+        };
+    }
+
+    public function remainingUses(): ?int
+    {
+        if ($this->usage_limit === null) {
+            return null;
+        }
+
+        $held = (int) $this->used_count + (int) ($this->reserved_count ?? 0);
+
+        return max(0, (int) $this->usage_limit - $held);
+    }
+
+    public function hasProductRestrictions(): bool
+    {
+        if ($this->relationLoaded('products') && $this->relationLoaded('menuItems')) {
+            return $this->products->isNotEmpty() || $this->menuItems->isNotEmpty();
+        }
+
+        if (! $this->exists) {
+            return false;
+        }
+
+        return $this->products()->exists() || $this->menuItems()->exists();
     }
 }

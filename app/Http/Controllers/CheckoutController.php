@@ -18,6 +18,7 @@ use App\Services\PincodeServiceabilityService;
 use App\Services\ShippingService;
 use App\Services\StockLedgerService;
 use App\Services\GoogleAnalyticsService;
+use App\Services\OrderConfirmationMailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -61,7 +62,11 @@ class CheckoutController extends Controller
         $couponInput = old('coupon_code', session('checkout_coupon_code'));
         if ($couponInput) {
             try {
-                $resolved = app(CouponService::class)->resolveForCart($couponInput, $subtotal);
+                $resolved = app(CouponService::class)->resolveForCart($couponInput, $subtotal, [
+                    'user' => auth()->user(),
+                    'items' => $items,
+                    'guest_key' => app(CouponService::class)->guestKey(auth()->user()),
+                ]);
                 $couponDiscount = $resolved['discount'];
                 $appliedCouponCode = $resolved['coupon']->code;
             } catch (ValidationException $e) {
@@ -95,7 +100,11 @@ class CheckoutController extends Controller
         $shippingCharge = $shipping->chargeForSubtotal($subtotal);
 
         try {
-            $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal);
+            $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal, [
+                'user' => $request->user(),
+                'items' => $items,
+                'guest_key' => $coupons->guestKey($request->user()),
+            ]);
         } catch (ValidationException $e) {
             session()->forget('checkout_coupon_code');
 
@@ -208,12 +217,20 @@ class CheckoutController extends Controller
         $shipping = $shipping->chargeForSubtotal($subtotal);
         $discount = 0.0;
         $couponCode = null;
+        $resolvedCoupon = null;
+        $couponContext = [
+            'user' => $user,
+            'items' => $items,
+            'guest_key' => $coupons->guestKey($user),
+            'cart_subtotal' => $subtotal,
+        ];
 
         if ($coupons->normalizeCode($request->input('coupon_code')) !== '') {
             try {
-                $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal);
+                $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal, $couponContext);
                 $discount = $resolved['discount'];
                 $couponCode = $resolved['coupon']->code;
+                $resolvedCoupon = $resolved['coupon'];
             } catch (ValidationException $e) {
                 return back()->withInput()->withErrors($e->errors());
             }
@@ -253,14 +270,13 @@ class CheckoutController extends Controller
         }
 
         $defaultCommission = (float) Setting::getValue('default_commission_percent', '12');
-        $countCouponNow = $couponCode && ($payable <= 0);
 
         $order = null;
         $ledger = app(StockLedgerService::class);
 
         DB::transaction(function () use (
             $items, $user, $addressId, $request, $subtotalExclusive, $shipping, $taxAmount, $discount, $grand,
-            $walletUse, $payable, $couponCode, $defaultCommission, &$order, $ledger
+            $walletUse, $payable, $couponCode, $defaultCommission, &$order, $ledger, $coupons, $resolvedCoupon, $couponContext
         ) {
             $adminCommission = 0.0;
 
@@ -331,11 +347,14 @@ class CheckoutController extends Controller
 
             $order->update(['admin_commission' => $adminCommission]);
             CartItem::whereIn('id', $items->pluck('id'))->delete();
-        });
 
-        if ($countCouponNow) {
-            $coupons->markUsed($couponCode);
-        }
+            if ($resolvedCoupon && $couponCode) {
+                $coupons->reserveForOrder($resolvedCoupon, $order, $discount, $couponContext);
+                if ($payable <= 0) {
+                    $coupons->redeemForOrder($order);
+                }
+            }
+        });
 
         GoogleAnalyticsService::flashPlaceOrder($order);
 

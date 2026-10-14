@@ -8,6 +8,7 @@ use App\Services\OrderConfirmationMailService;
 use App\Services\StockLedgerService;
 use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -220,35 +221,45 @@ class PaymentController extends Controller
 
     protected function failUnpaidOrder(Order $order): void
     {
-        if ($order->payment_status === 'paid') {
-            return;
-        }
+        DB::transaction(function () use ($order) {
+            $locked = Order::query()->where('id', $order->id)->lockForUpdate()->first();
+            if (! $locked || $locked->payment_status === 'paid') {
+                return;
+            }
 
-        $order->update([
-            'payment_status' => 'failed',
-            'status' => 'cancelled',
-        ]);
+            $locked->update([
+                'payment_status' => 'failed',
+                'status' => 'cancelled',
+            ]);
+
+            app(CouponService::class)->releaseForOrder($locked->fresh(), true);
+        });
 
         app(StockLedgerService::class)->restoreUnpaidOrderStock($order->fresh(), 'Payment failed or abandoned');
     }
 
     protected function markOrderPaid(Order $order, string $paymentRef): void
     {
-        $wasPaid = $order->payment_status === 'paid';
-        $couponCode = $order->coupon_code;
+        $sendMail = false;
 
-        $order->update([
-            'status' => 'confirmed',
-            'payment_status' => 'paid',
-            'payment_ref' => $paymentRef,
-            'razorpay_payment_id' => Str::startsWith($paymentRef, 'pay_') ? $paymentRef : $order->razorpay_payment_id,
-        ]);
+        DB::transaction(function () use ($order, $paymentRef, &$sendMail) {
+            $locked = Order::query()->where('id', $order->id)->lockForUpdate()->firstOrFail();
+            $wasPaid = $locked->payment_status === 'paid';
 
-        if (! $wasPaid && $couponCode) {
-            app(CouponService::class)->markUsed($couponCode);
-        }
+            $locked->update([
+                'status' => 'confirmed',
+                'payment_status' => 'paid',
+                'payment_ref' => $paymentRef,
+                'razorpay_payment_id' => Str::startsWith($paymentRef, 'pay_') ? $paymentRef : $locked->razorpay_payment_id,
+            ]);
 
-        if (! $wasPaid) {
+            if (! $wasPaid) {
+                app(CouponService::class)->redeemForOrder($locked->fresh());
+                $sendMail = true;
+            }
+        });
+
+        if ($sendMail) {
             app(OrderConfirmationMailService::class)->dispatchForOrder($order->fresh());
         }
     }

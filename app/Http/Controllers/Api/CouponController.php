@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
+use App\Services\CartService;
 use App\Services\CheckoutPricingService;
 use App\Services\CouponService;
 use Illuminate\Http\Request;
@@ -36,8 +37,20 @@ class CouponController extends Controller
         $shipping = (float) ($data['shipping'] ?? 0);
         $tax = (float) ($data['tax'] ?? 0);
 
+        $items = collect();
         try {
-            $resolved = $coupons->resolveForCart($data['coupon_code'], $subtotal);
+            $items = app(CartService::class)->query()->get();
+            $items->loadMissing('variant.product');
+        } catch (\Throwable $e) {
+            $items = collect();
+        }
+
+        try {
+            $resolved = $coupons->resolveForCart($data['coupon_code'], $subtotal, [
+                'user' => $request->user(),
+                'items' => $items->isEmpty() ? null : $items,
+                'guest_key' => $coupons->guestKey($request->user()),
+            ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => collect($e->errors())->flatten()->first() ?? __('Invalid coupon.'),

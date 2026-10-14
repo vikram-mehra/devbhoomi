@@ -191,6 +191,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function couponUsages(): HasMany
+    {
+        return $this->hasMany(CouponUsage::class);
+    }
+
     public function shipments(): HasMany
     {
         return $this->hasMany(Shipment::class)->latest('id');

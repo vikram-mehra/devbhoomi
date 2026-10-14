@@ -47,6 +47,10 @@ class LoginController extends Controller
         AppUrl::rememberIntendedFromPrevious();
         app(CartService::class)->rememberGuestSession();
 
+        if (! session()->hasOldInput('phone') && ! session()->hasOldInput('code')) {
+            session()->forget('otp_login_phone');
+        }
+
         return view('auth.login');
     }
 

@@ -17,6 +17,10 @@
         @endif
     </a>
 
+    <button type="button" class="mk-myntra-search-toggle d-lg-none" data-mk-open-search aria-label="{{ __('Search') }}">
+        <i class="bi bi-search" aria-hidden="true"></i>
+    </button>
+
     <nav class="mk-myntra-nav d-none d-lg-flex align-items-stretch flex-shrink-0" aria-label="{{ __('Primary navigation') }}">
         @include('market.partials.menu-nav-myntra')
     </nav>
@@ -93,53 +97,150 @@
     </div>
 </div>
 
+<div id="mkSearchScreen" class="mk-search-screen" hidden>
+    <div class="mk-search-screen__backdrop" data-mk-close-search></div>
+    <div class="mk-search-screen__panel" role="dialog" aria-modal="true" aria-labelledby="mkSearchScreenTitle">
+        <div class="mk-search-screen__top">
+            <h2 id="mkSearchScreenTitle" class="mk-search-screen__title font-anc-serif">{{ __('Search') }}</h2>
+            <button type="button" class="mk-search-screen__close" data-mk-close-search aria-label="{{ __('Close') }}">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+        <form action="{{ route('shop.search') }}" method="get" role="search" class="mk-search-screen__form">
+            <label class="visually-hidden" for="mkMobileSearchInput">{{ __('Search') }}</label>
+            <input type="search" id="mkMobileSearchInput" name="q" class="mk-search-screen__input" placeholder="{{ __('Search') }}" autocomplete="off" aria-autocomplete="list" aria-controls="mkMobileSearchSuggest" aria-expanded="false">
+            <button type="submit" class="visually-hidden">{{ __('Search') }}</button>
+        </form>
+        <div id="mkMobileSearchSuggest" class="mk-search-suggest mk-search-suggest--sheet" hidden role="listbox" aria-label="{{ __('Search suggestions') }}"></div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 (function () {
     var wrap = document.querySelector('.mk-myntra-search-wrap[data-suggest-url]');
-    if (!wrap) return;
-    var suggestUrl = wrap.getAttribute('data-suggest-url');
-    var input = document.getElementById('mkMyntraSearchInput');
-    var panel = document.getElementById('mkSearchSuggest');
-    if (!input || !panel || !suggestUrl) return;
-
+    var suggestUrl = wrap ? wrap.getAttribute('data-suggest-url') : @json(route('shop.search.suggest'));
+    var desktopInput = document.getElementById('mkMyntraSearchInput');
+    var desktopPanel = document.getElementById('mkSearchSuggest');
+    var mobileInput = document.getElementById('mkMobileSearchInput');
+    var mobilePanel = document.getElementById('mkMobileSearchSuggest');
+    var screenEl = document.getElementById('mkSearchScreen');
+    var recentKey = 'dn_recent_searches';
     var labels = {
         viewAll: @json(__('View all results')),
         empty: @json(__('No matches — press Enter to search')),
+        recent: @json(__('Recent searches')),
+        noRecent: @json(__('No recent searches')),
+        off: @json(__('off')),
+        remove: @json(__('Remove')),
     };
-
     var debounceMs = 260;
     var minLen = 2;
     var debounceTimer = null;
     var abortCtrl = null;
+    var activePanel = desktopPanel;
+    var activeInput = desktopInput;
+    var searchLockY = 0;
 
-    function hidePanel() {
-        panel.hidden = true;
-        panel.innerHTML = '';
-        input.setAttribute('aria-expanded', 'false');
+    function isMobileSearch() {
+        return window.matchMedia('(max-width: 991.98px)').matches;
     }
 
-    function render(data) {
+    function loadRecents() {
+        try {
+            var raw = localStorage.getItem(recentKey);
+            var list = raw ? JSON.parse(raw) : [];
+            return Array.isArray(list) ? list.filter(function (q) { return typeof q === 'string' && q.trim(); }).slice(0, 8) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveRecents(list) {
+        try { localStorage.setItem(recentKey, JSON.stringify(list.slice(0, 8))); } catch (e) {}
+    }
+
+    function rememberQuery(q) {
+        q = (q || '').trim();
+        if (q.length < 2) return;
+        var list = loadRecents().filter(function (item) {
+            return item.toLowerCase() !== q.toLowerCase();
+        });
+        list.unshift(q);
+        saveRecents(list);
+    }
+
+    function removeRecent(q) {
+        saveRecents(loadRecents().filter(function (item) { return item !== q; }));
+    }
+
+    function hidePanel(panel, input) {
+        if (!panel) return;
+        panel.hidden = true;
+        panel.innerHTML = '';
+        if (input) input.setAttribute('aria-expanded', 'false');
+    }
+
+    function showPanel(panel, input) {
+        if (!panel) return;
+        panel.hidden = false;
+        if (input) input.setAttribute('aria-expanded', 'true');
+    }
+
+    function productRow(row, input) {
+        var a = document.createElement('a');
+        a.className = 'mk-search-suggest__product';
+        a.href = row.url;
+        a.setAttribute('role', 'option');
+        a.addEventListener('click', function () { rememberQuery(input && input.value); });
+
+        var img = document.createElement('img');
+        img.className = 'mk-search-suggest__thumb';
+        img.src = row.image || '';
+        img.alt = '';
+        img.width = 52;
+        img.height = 52;
+        img.loading = 'lazy';
+
+        var meta = document.createElement('div');
+        meta.className = 'mk-search-suggest__meta';
+
+        var name = document.createElement('div');
+        name.className = 'mk-search-suggest__name';
+        name.textContent = row.name || '';
+
+        var price = document.createElement('div');
+        price.className = 'mk-search-suggest__price';
+        var now = document.createElement('span');
+        now.className = 'mk-search-suggest__now';
+        now.textContent = row.price_text || '';
+        price.appendChild(now);
+        if (row.compare_text && Number(row.percent_off) > 0) {
+            var was = document.createElement('span');
+            was.className = 'mk-search-suggest__compare';
+            was.textContent = row.compare_text;
+            var off = document.createElement('span');
+            off.className = 'mk-search-suggest__off';
+            off.textContent = row.percent_off + '% ' + labels.off;
+            price.appendChild(was);
+            price.appendChild(off);
+        }
+        meta.appendChild(name);
+        meta.appendChild(price);
+        a.appendChild(img);
+        a.appendChild(meta);
+        return a;
+    }
+
+    function renderProducts(panel, input, data) {
+        if (!panel) return;
         panel.innerHTML = '';
         var frag = document.createDocumentFragment();
-        var items = data.suggestions || [];
-        var hasItems = items.length > 0;
-
-        if (hasItems) {
-            var head = document.createElement('div');
-            head.className = 'mk-search-suggest__grouphead';
-            head.textContent = data.group_title || 'All Others';
-            frag.appendChild(head);
+        var items = data.products || [];
+        if (items.length) {
             var list = document.createElement('div');
             list.className = 'mk-search-suggest__list';
-            items.forEach(function (row) {
-                var a = document.createElement('a');
-                a.className = 'mk-search-suggest__row';
-                a.href = row.url;
-                a.setAttribute('role', 'option');
-                a.textContent = row.text;
-                list.appendChild(a);
-            });
+            items.forEach(function (row) { list.appendChild(productRow(row, input)); });
             frag.appendChild(list);
         } else {
             var empty = document.createElement('p');
@@ -147,67 +248,219 @@
             empty.textContent = labels.empty;
             frag.appendChild(empty);
         }
-
         if (data.view_all_url) {
             var foot = document.createElement('div');
             foot.className = 'mk-search-suggest__footer';
             var va = document.createElement('a');
             va.href = data.view_all_url;
             va.textContent = labels.viewAll;
+            va.addEventListener('click', function () { rememberQuery(input && input.value); });
             foot.appendChild(va);
             frag.appendChild(foot);
         }
-
         panel.appendChild(frag);
-        panel.hidden = false;
-        input.setAttribute('aria-expanded', 'true');
+        showPanel(panel, input);
     }
 
-    function fetchSuggest(q) {
+    function renderRecents(panel, input) {
+        if (!panel) return;
+        var items = loadRecents();
+        panel.innerHTML = '';
+        if (!items.length) {
+            if (panel === mobilePanel) {
+                var empty = document.createElement('p');
+                empty.className = 'mk-search-suggest__empty';
+                empty.textContent = labels.noRecent;
+                panel.appendChild(empty);
+                showPanel(panel, input);
+            } else {
+                hidePanel(panel, input);
+            }
+            return;
+        }
+        var head = document.createElement('div');
+        head.className = 'mk-search-suggest__grouphead';
+        head.textContent = labels.recent;
+        panel.appendChild(head);
+        var list = document.createElement('div');
+        list.className = 'mk-search-suggest__list';
+        items.forEach(function (q) {
+            var row = document.createElement('div');
+            row.className = 'mk-search-suggest__recent';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'mk-search-suggest__recent-q';
+            var icon = document.createElement('i');
+            icon.className = 'bi bi-clock-history';
+            icon.setAttribute('aria-hidden', 'true');
+            var text = document.createElement('span');
+            text.textContent = q;
+            btn.appendChild(icon);
+            btn.appendChild(text);
+            btn.addEventListener('click', function () {
+                if (input) {
+                    input.value = q;
+                    input.focus();
+                }
+                rememberQuery(q);
+                fetchSuggest(q, panel, input);
+            });
+            var del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'mk-search-suggest__recent-del';
+            del.setAttribute('aria-label', labels.remove);
+            var x = document.createElement('i');
+            x.className = 'bi bi-x';
+            x.setAttribute('aria-hidden', 'true');
+            del.appendChild(x);
+            del.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                removeRecent(q);
+                renderRecents(panel, input);
+            });
+            row.appendChild(btn);
+            row.appendChild(del);
+            list.appendChild(row);
+        });
+        panel.appendChild(list);
+        showPanel(panel, input);
+    }
+
+    function fetchSuggest(q, panel, input) {
+        if (!suggestUrl) return;
         if (abortCtrl) abortCtrl.abort();
         abortCtrl = new AbortController();
+        var ctrl = abortCtrl;
         var sep = suggestUrl.indexOf('?') >= 0 ? '&' : '?';
-        var u = suggestUrl + sep + 'q=' + encodeURIComponent(q);
-        fetch(u, {
-            signal: abortCtrl.signal,
+        fetch(suggestUrl + sep + 'q=' + encodeURIComponent(q), {
+            signal: ctrl.signal,
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin',
         })
             .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('bad status')); })
-            .then(render)
+            .then(function (data) { renderProducts(panel, input, data); })
             .catch(function () {
-                if (abortCtrl && abortCtrl.signal.aborted) return;
-                hidePanel();
+                if (ctrl.signal.aborted) return;
+                hidePanel(panel, input);
             });
     }
 
-    function scheduleFetch() {
+    function onQueryChange(input, panel) {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(function () {
-            var q = input.value.trim();
+            var q = (input.value || '').trim();
             if (q.length < minLen) {
-                hidePanel();
+                renderRecents(panel, input);
                 return;
             }
-            fetchSuggest(q);
+            fetchSuggest(q, panel, input);
         }, debounceMs);
     }
 
-    input.addEventListener('input', scheduleFetch);
-    input.addEventListener('focus', function () {
-        if (input.value.trim().length >= minLen) scheduleFetch();
-    });
-    input.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            hidePanel();
-            input.blur();
+    function bindField(input, panel) {
+        if (!input || !panel) return;
+        input.addEventListener('input', function () { onQueryChange(input, panel); });
+        input.addEventListener('focus', function () {
+            activeInput = input;
+            activePanel = panel;
+            var q = (input.value || '').trim();
+            if (q.length >= minLen) fetchSuggest(q, panel, input);
+            else renderRecents(panel, input);
+        });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                if (screenEl && !screenEl.hidden) closeSearchScreen();
+                else hidePanel(panel, input);
+            }
+        });
+        var form = input.closest('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                rememberQuery(input.value);
+                hidePanel(panel, input);
+            });
+        }
+    }
+
+    function mountSearchScreen() {
+        if (screenEl && screenEl.parentElement !== document.body) {
+            document.body.appendChild(screenEl);
+        }
+    }
+
+    function positionSearchScreen() {
+        if (!screenEl) return;
+        var header = document.querySelector('.cb-header--myntra');
+        var top = 56;
+        if (header) {
+            var rect = header.getBoundingClientRect();
+            top = Math.max(0, Math.round(rect.bottom));
+        }
+        screenEl.style.setProperty('--mk-search-screen-top', top + 'px');
+    }
+
+    function lockPageScroll() {
+        searchLockY = window.scrollY || window.pageYOffset || 0;
+        document.body.classList.add('is-search-open');
+        document.body.style.top = '-' + searchLockY + 'px';
+    }
+
+    function unlockPageScroll() {
+        document.body.classList.remove('is-search-open');
+        document.body.style.top = '';
+        window.scrollTo(0, searchLockY);
+    }
+
+    function openSearchScreen(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (!screenEl || !isMobileSearch()) return;
+        if (screenEl.classList.contains('is-open')) return;
+        mountSearchScreen();
+        positionSearchScreen();
+        lockPageScroll();
+        screenEl.hidden = false;
+        screenEl.classList.add('is-open');
+        if (mobileInput) {
+            if (!mobileInput.value) renderRecents(mobilePanel, mobileInput);
+            window.setTimeout(function () {
+                try { mobileInput.focus(); } catch (err) {}
+            }, 50);
+        }
+    }
+
+    function closeSearchScreen() {
+        if (!screenEl || !screenEl.classList.contains('is-open')) return;
+        screenEl.hidden = true;
+        screenEl.classList.remove('is-open');
+        unlockPageScroll();
+        hidePanel(mobilePanel, mobileInput);
+    }
+
+    mountSearchScreen();
+    bindField(desktopInput, desktopPanel);
+    bindField(mobileInput, mobilePanel);
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('[data-mk-open-search]')) {
+            openSearchScreen(e);
+            return;
+        }
+        if (e.target.closest('[data-mk-close-search]')) {
+            closeSearchScreen();
+            return;
+        }
+        if (desktopInput && desktopPanel && wrap && !wrap.contains(e.target)) {
+            hidePanel(desktopPanel, desktopInput);
         }
     });
-    document.addEventListener('click', function (e) {
-        if (!wrap.contains(e.target)) hidePanel();
-    });
-    wrap.querySelector('form')?.addEventListener('submit', function () {
-        hidePanel();
+
+    window.addEventListener('resize', function () {
+        if (!isMobileSearch()) closeSearchScreen();
+        else if (screenEl && screenEl.classList.contains('is-open')) positionSearchScreen();
     });
 })();
 </script>

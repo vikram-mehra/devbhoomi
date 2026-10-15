@@ -41,9 +41,9 @@
     <div class="row justify-content-center">
         <div class="col-md-5">
             <div class="auth-login-form-wrap p-4 bg-white rounded-3 shadow-sm">
-                @php $showMobileOtpLogin = false; @endphp
-                <h1 class="h4 fw-bold mb-2">{{ __('Sign in') }}</h1>
-                <p class="text-muted small mb-4">{{ __('Please use email or Google sign-in.') }}</p>
+                @php $showMobileOtpLogin = true; @endphp
+                <h1 class="h4 fw-bold mb-2">{{ __('Login with Mobile OTP') }}</h1>
+                <p class="text-muted small mb-4">{{ __('We will send a one-time code to your mobile number.') }}</p>
                 <div @unless($showMobileOtpLogin) hidden @endunless>
                     @include('auth.partials.otp-login')
                 </div>

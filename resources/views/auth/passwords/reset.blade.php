@@ -39,7 +39,7 @@
 
         <div class="mb-3">
             <label class="form-label" for="reset-email">{{ __('Email') }}</label>
-            <input id="reset-email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autofocus autocomplete="email" placeholder="name@example.com">
+            <input id="reset-email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required readonly autocomplete="email">
             @error('email')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Vendor;
 use App\Support\MenuItemTree;
+use App\Support\OptimizedImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
@@ -156,10 +157,10 @@ class ShopController extends Controller
     public function searchSuggest(Request $request)
     {
         $term = trim((string) $request->input('q', ''));
-        $empty = fn () => response()->json([
-            'group_title' => __('All Others'),
+        $empty = fn (?string $q = null) => response()->json([
+            'products' => [],
             'suggestions' => [],
-            'view_all_url' => route('shop.search'),
+            'view_all_url' => $q ? route('shop.search', ['q' => $q]) : route('shop.search'),
         ]);
 
         if (mb_strlen($term) < 2) {
@@ -169,93 +170,53 @@ class ShopController extends Controller
             $term = mb_substr($term, 0, 80);
         }
 
-        $termLower = mb_strtolower($term);
         $escaped = addcslashes($term, '%_\\');
         $pattern = '%'.$escaped.'%';
+        $prefix = $escaped.'%';
 
         $products = Product::query()
-            ->with([
-                'vendor' => fn ($q) => $q->select('id', 'shop_name', 'slug'),
-                'menuItem' => fn ($q) => $q->select('id', 'title'),
-            ])
-            ->where('is_active', true)
+            ->storefront()
+            ->with(['images', 'flashSale'])
             ->where(function ($q) use ($pattern) {
                 $q->where('name', 'like', $pattern)
                     ->orWhere('description', 'like', $pattern)
-                    ->orWhereHas('vendor', function ($vq) use ($pattern) {
-                        $vq->where('status', 'approved')
-                            ->where('shop_name', 'like', $pattern);
-                    });
+                    ->orWhere('brand', 'like', $pattern);
             })
+            ->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$prefix])
             ->orderByDesc('sales_count')
-            ->limit(20)
-            ->get(['id', 'name', 'slug', 'menu_item_id', 'vendor_id']);
+            ->limit(10)
+            ->get();
 
-        $menuItems = MenuItem::query()
-            ->where('is_active', true)
-            ->where('title', 'like', $pattern)
-            ->whereNotNull('slug')
-            ->orderBy('sort_order')
-            ->limit(8)
-            ->get(['title', 'slug']);
-
-        $brands = Vendor::query()
-            ->where('status', 'approved')
-            ->where('shop_name', 'like', $pattern)
-            ->orderBy('shop_name')
-            ->limit(6)
-            ->get(['shop_name', 'slug']);
-
-        $rows = [];
-
-        $push = function (string $text, string $url) use (&$rows, $termLower): void {
-            $text = trim($text);
-            if ($text === '') {
-                return;
+        $payload = $products->map(function (Product $p) {
+            $price = $p->effectivePrice();
+            $compare = $p->compare_price ? (float) $p->compare_price : 0;
+            if ($compare <= $price) {
+                $base = (float) $p->base_price;
+                $compare = $base > $price ? $base : 0;
             }
-            $key = mb_strtolower($text);
-            foreach ($rows as $existing) {
-                if (mb_strtolower($existing['text']) === $key) {
-                    return;
-                }
-            }
-            $rows[] = [
-                'text' => $text,
-                'url' => $url,
-                '_prefix' => str_starts_with($key, $termLower) ? 0 : 1,
+            $pctOff = ($compare > $price)
+                ? (int) round(100 - ($price / $compare) * 100)
+                : 0;
+            $image = $p->cardImageUrls()[0] ?? '';
+
+            return [
+                'name' => $p->name,
+                'url' => route('product.show', $p),
+                'image' => OptimizedImage::url($image, 96),
+                'price' => $price,
+                'price_text' => '₹'.number_format($price, 2),
+                'compare_price' => $pctOff > 0 ? $compare : null,
+                'compare_text' => $pctOff > 0 ? '₹'.number_format($compare, 2) : null,
+                'percent_off' => $pctOff,
             ];
-        };
-
-        foreach ($products as $p) {
-            $push($p->name, route('product.show', $p));
-            if ($p->menuItem && $p->menuItem->title) {
-                $phrase = $p->menuItem->title.' '.$p->name;
-                if (mb_strlen($phrase) <= 96) {
-                    $push($phrase, route('shop.search', ['q' => $phrase]));
-                }
-            }
-        }
-
-        foreach ($menuItems as $m) {
-            $push($m->title, $m->resolvedUrl());
-        }
-
-        foreach ($brands as $v) {
-            $push($v->shop_name, route('vendor.shop', $v->slug));
-        }
-
-        $suggestions = collect($rows)
-            ->sortBy([
-                ['_prefix', 'asc'],
-            ])
-            ->take(12)
-            ->map(fn (array $r) => ['text' => $r['text'], 'url' => $r['url']])
-            ->values()
-            ->all();
+        })->values()->all();
 
         return response()->json([
-            'group_title' => __('All Others'),
-            'suggestions' => $suggestions,
+            'products' => $payload,
+            'suggestions' => array_map(static fn (array $row) => [
+                'text' => $row['name'],
+                'url' => $row['url'],
+            ], $payload),
             'view_all_url' => route('shop.search', ['q' => $term]),
         ]);
     }

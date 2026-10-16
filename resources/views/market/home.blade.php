@@ -144,6 +144,12 @@
 
     <div class="mk-home-bands">
         {{-- Trending tabs: New · Featured · Best selling (Swiper slider) --}}
+        <style>
+            .cb-market-pro .pro-trend-tab-content .tab-pane .pro-trend-skel { display: none; }
+            .cb-market-pro .pro-trend-tab-content .tab-pane.is-pending .pro-trend-skel { display: block !important; }
+            .cb-market-pro .pro-trend-tab-content .tab-pane.is-pending .pro-product-swiper,
+            .cb-market-pro .pro-trend-tab-content .tab-pane.is-pending > p { display: none !important; }
+        </style>
         <section class="mk-home-band mk-section" aria-labelledby="trend-heading">
             <div class="cb-container">
             <div class="pro-section-head">
@@ -170,7 +176,8 @@
             </ul>
             </div>
             <div class="tab-content pro-trend-tab-content">
-                <div class="tab-pane fade show active" id="pane-new" role="tabpanel" aria-labelledby="tab-new">
+                <div class="tab-pane show active" id="pane-new" role="tabpanel" aria-labelledby="tab-new">
+                    @include('market.partials.product-card-skel-row')
                     @if($newTab->isNotEmpty())
                         <div class="swiper pro-product-swiper">
                             <div class="swiper-wrapper">
@@ -187,7 +194,8 @@
                         <p class="text-center text-muted py-4 mb-0">{{ __('No products in this tab yet.') }}</p>
                     @endif
                 </div>
-                <div class="tab-pane fade" id="pane-feat" role="tabpanel" aria-labelledby="tab-feat">
+                <div class="tab-pane" id="pane-feat" role="tabpanel" aria-labelledby="tab-feat">
+                    @include('market.partials.product-card-skel-row')
                     @if($featTab->isNotEmpty())
                         <div class="swiper pro-product-swiper">
                             <div class="swiper-wrapper">
@@ -204,7 +212,8 @@
                         <p class="text-center text-muted py-4 mb-0">{{ __('No products in this tab yet.') }}</p>
                     @endif
                 </div>
-                <div class="tab-pane fade" id="pane-best" role="tabpanel" aria-labelledby="tab-best">
+                <div class="tab-pane" id="pane-best" role="tabpanel" aria-labelledby="tab-best">
+                    @include('market.partials.product-card-skel-row')
                     @if($bestTab->isNotEmpty())
                         <div class="swiper pro-product-swiper">
                             <div class="swiper-wrapper">
@@ -376,6 +385,7 @@
                     if (!pane) return;
                     mountProProductSwiper(pane.querySelector('.pro-product-swiper'));
                 }
+                window.mountTrendSwiper = mountTrendSwiper;
 
                 function mountTestimonialSwiper() {
                     var el = document.getElementById('proTestimonialSwiper');
@@ -416,21 +426,121 @@
                     mountProProductSwiper(document.getElementById('proFeaturedProductSwiper'));
                     mountTrendSwiper(document.getElementById('pane-new'));
                     mountTestimonialSwiper();
-                    document.querySelectorAll('#proTrendTabs [data-bs-toggle="pill"]').forEach(function (btn) {
-                        btn.addEventListener('shown.bs.tab', function () {
-                            var sel = btn.getAttribute('data-bs-target');
-                            if (!sel) return;
-                            requestAnimationFrame(function () {
-                                mountTrendSwiper(document.querySelector(sel));
-                            });
-                        });
-                    });
                 }
 
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', onReady);
                 } else {
                     onReady();
+                }
+            })();
+            </script>
+            <script>
+            (function () {
+                var MIN_MS = 550;
+                var hideTimer = 0;
+                var shownAt = 0;
+                var pendingPaneEl = null;
+
+                function paneFromBtn(btn) {
+                    var sel = btn && btn.getAttribute('data-bs-target');
+                    return sel ? document.querySelector(sel) : null;
+                }
+
+                function setPending(pane) {
+                    if (!pane || pane.classList.contains('is-pending')) {
+                        if (pane) {
+                            shownAt = Date.now();
+                            pendingPaneEl = pane;
+                        }
+                        return;
+                    }
+                    document.querySelectorAll('.pro-trend-tab-content .tab-pane.is-pending').forEach(function (el) {
+                        if (el !== pane) el.classList.remove('is-pending');
+                    });
+                    pane.classList.add('is-pending');
+                    shownAt = Date.now();
+                    pendingPaneEl = pane;
+                    if (hideTimer) {
+                        window.clearTimeout(hideTimer);
+                        hideTimer = 0;
+                    }
+                }
+
+                function finishPane(pane) {
+                    if (!pane) return;
+                    var wait = Math.max(0, MIN_MS - (Date.now() - shownAt));
+                    if (hideTimer) window.clearTimeout(hideTimer);
+                    hideTimer = window.setTimeout(function () {
+                        pane.classList.remove('is-pending');
+                        if (pendingPaneEl === pane) pendingPaneEl = null;
+                        requestAnimationFrame(function () {
+                            if (typeof window.mountTrendSwiper === 'function') {
+                                window.mountTrendSwiper(pane);
+                            }
+                            if (typeof window.bindProductCardSkeletons === 'function') {
+                                window.bindProductCardSkeletons(pane);
+                            }
+                        });
+                    }, wait);
+                }
+
+                function revealWhenReady(pane) {
+                    if (!pane) return;
+                    if (typeof window.bindProductCardSkeletons === 'function') {
+                        window.bindProductCardSkeletons(pane);
+                    }
+                    var cards = pane.querySelectorAll('.swiper-slide .zm-pro-card.is-loading');
+                    var waitCards = Array.prototype.slice.call(cards, 0, 4);
+                    if (!pane.querySelector('.pro-product-swiper') || waitCards.length === 0) {
+                        finishPane(pane);
+                        return;
+                    }
+                    var left = waitCards.length;
+                    var done = false;
+                    function oneDone() {
+                        if (done) return;
+                        left -= 1;
+                        if (left <= 0) {
+                            done = true;
+                            finishPane(pane);
+                        }
+                    }
+                    waitCards.forEach(function (card) {
+                        var img = card.querySelector('.zm-pro-card__img--primary');
+                        if (!img || (img.complete && img.naturalWidth > 0)) {
+                            oneDone();
+                            return;
+                        }
+                        img.addEventListener('load', oneDone, { once: true });
+                        img.addEventListener('error', oneDone, { once: true });
+                    });
+                    window.setTimeout(function () {
+                        if (done) return;
+                        done = true;
+                        finishPane(pane);
+                    }, 4000);
+                }
+
+                function bindTrendTabs() {
+                    document.querySelectorAll('#proTrendTabs [data-bs-toggle="pill"]').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            if (btn.classList.contains('active')) return;
+                            setPending(paneFromBtn(btn));
+                        });
+                        btn.addEventListener('show.bs.tab', function () {
+                            setPending(paneFromBtn(btn));
+                        });
+                        btn.addEventListener('shown.bs.tab', function () {
+                            revealWhenReady(paneFromBtn(btn));
+                        });
+                    });
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', bindTrendTabs);
+                } else {
+                    bindTrendTabs();
                 }
             })();
             </script>

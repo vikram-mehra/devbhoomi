@@ -1873,6 +1873,7 @@ body.cb-market-pro.is-search-open {
   box-shadow: var(--pro-shadow);
   overflow: hidden;
   height: 100%; */
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1882,6 +1883,62 @@ body.cb-market-pro.is-search-open {
   overflow: hidden;
   padding: calc(6px + (10 - 6) * ((100vw - 320px) / (1920 - 320)));
   margin-bottom: 1px;
+}
+.zm-pro-card__skel {
+  display: none;
+}
+.zm-pro-card.is-loading .zm-pro-card__skel {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: #fff;
+  padding: inherit;
+}
+.zm-pro-card.is-loading .zm-pro-card__media,
+.zm-pro-card.is-loading .zm-pro-card__body {
+  visibility: hidden;
+}
+.zm-pro-card__skel-media {
+  flex: 1 1 auto;
+  min-height: 11rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f3f2 20%, #e6e9e7 50%, #f1f3f2 80%);
+  background-size: 200% 100%;
+  animation: zm-pro-card-shimmer 1.15s ease-in-out infinite;
+}
+.zm-pro-card__skel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem 0.15rem 0.35rem;
+}
+.zm-pro-card__skel-line {
+  display: block;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f1f3f2 20%, #e6e9e7 50%, #f1f3f2 80%);
+  background-size: 200% 100%;
+  animation: zm-pro-card-shimmer 1.15s ease-in-out infinite;
+}
+.zm-pro-card__skel-line--sm {
+  width: 42%;
+  height: 0.55rem;
+}
+.zm-pro-card__skel-line--md {
+  width: 58%;
+}
+@keyframes zm-pro-card-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zm-pro-card__skel-media,
+  .zm-pro-card__skel-line {
+    animation: none;
+    background: #eef0ee;
+  }
 }
 .zm-pro-card:hover {
   /* box-shadow: var(--pro-shadow-lg);
@@ -2858,10 +2915,56 @@ body.cb-market-pro.is-search-open {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  min-height: 22rem;
 }
 .cb-market-pro .pro-trend-tab-content .tab-pane {
   max-width: 100%;
   overflow-x: hidden;
+}
+.cb-market-pro .pro-trend-tab-content .tab-pane .pro-trend-skel {
+  display: none;
+}
+.cb-market-pro .pro-trend-tab-content .tab-pane.is-pending .pro-trend-skel {
+  display: block !important;
+}
+.cb-market-pro .pro-trend-tab-content .tab-pane.is-pending .pro-product-swiper,
+.cb-market-pro .pro-trend-tab-content .tab-pane.is-pending > p {
+  display: none !important;
+}
+.cb-market-pro .pro-trend-skel__track {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  overflow: hidden;
+}
+.cb-market-pro .pro-trend-skel__card {
+  flex: 0 0 calc(100% - 3.75rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 20rem;
+  border: 1px solid #eee;
+  background: #fff;
+  overflow: hidden;
+  padding: calc(6px + (10 - 6) * ((100vw - 320px) / (1920 - 320)));
+}
+@media (min-width: 620px) {
+  .cb-market-pro .pro-trend-skel__track {
+    gap: 16px;
+  }
+  .cb-market-pro .pro-trend-skel__card {
+    flex-basis: calc((100% - 16px) / 2);
+  }
+}
+@media (min-width: 768px) {
+  .cb-market-pro .pro-trend-skel__card {
+    flex-basis: calc((100% - 32px) / 3);
+  }
+}
+@media (min-width: 992px) {
+  .cb-market-pro .pro-trend-skel__card {
+    flex-basis: calc((100% - 48px) / 4);
+  }
 }
 .cb-market-pro .pro-product-swiper {
   position: relative;

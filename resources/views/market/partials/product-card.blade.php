@@ -64,7 +64,15 @@
         ])->values()->all();
     }
 @endphp
-<article class="zm-pro-card h-100 {{ $listing ? 'zm-pro-card--listing' : '' }}">
+<article class="zm-pro-card h-100 is-loading {{ $listing ? 'zm-pro-card--listing' : '' }}">
+    <div class="zm-pro-card__skel" aria-hidden="true">
+        <div class="zm-pro-card__skel-media"></div>
+        <div class="zm-pro-card__skel-body">
+            <span class="zm-pro-card__skel-line zm-pro-card__skel-line--sm"></span>
+            <span class="zm-pro-card__skel-line"></span>
+            <span class="zm-pro-card__skel-line zm-pro-card__skel-line--md"></span>
+        </div>
+    </div>
     <div class="zm-pro-card__media">
         @if(!$hasStock)
             <span class="zm-pro-card__badge bg-danger @if($listing) zm-pro-card__badge--corner @endif">{{ __('Out of stock') }}</span>
@@ -204,4 +212,40 @@
         @endif
     </div>
 </article>
+@once('product-card-skeleton')
+@push('scripts')
+<script>
+(function () {
+    function revealCard(card) {
+        if (card) card.classList.remove('is-loading');
+    }
+    function bindCardSkeletons(root) {
+        (root || document).querySelectorAll('.zm-pro-card.is-loading').forEach(function (card) {
+            if (card.dataset.skelBound) return;
+            card.dataset.skelBound = '1';
+            var img = card.querySelector('.zm-pro-card__img--primary');
+            if (!img) {
+                revealCard(card);
+                return;
+            }
+            var done = function () { revealCard(card); };
+            if (img.complete && img.naturalWidth > 0) {
+                done();
+                return;
+            }
+            img.addEventListener('load', done, { once: true });
+            img.addEventListener('error', done, { once: true });
+            window.setTimeout(done, 8000);
+        });
+    }
+    window.bindProductCardSkeletons = bindCardSkeletons;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { bindCardSkeletons(); });
+    } else {
+        bindCardSkeletons();
+    }
+})();
+</script>
+@endpush
+@endonce
 @endif

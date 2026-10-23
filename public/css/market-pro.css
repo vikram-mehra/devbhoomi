@@ -8074,7 +8074,7 @@ body.cb-market-pro .bi {
   color: #64748b;
 }
 .cb-market-pro .pro-pdp-long-desc {
-  max-width: 52rem;
+  max-width: max-content;
 }
 .cb-market-pro .pro-pdp-long-desc strong,
 .cb-market-pro .pro-pdp-tab-content .tab-pane strong {

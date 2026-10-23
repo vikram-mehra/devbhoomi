@@ -16,7 +16,7 @@ class CartController extends Controller
     public function index(CartService $cart, CheckoutPricingService $pricing, ShippingService $shipping)
     {
         $items = $cart->query()->get();
-        $summary = $shipping->totalsForCart($items, $pricing);
+        $summary = $shipping->totalsForCart($items, $pricing, $this->estimatePincode());
 
         return view('market.cart', compact('items') + $summary);
     }
@@ -25,7 +25,7 @@ class CartController extends Controller
     {
         $items = $cart->query()->get();
 
-        return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items)));
+        return response()->json($shipping->apiResponse($pricing->inclusiveSubtotal($items), $this->estimatePincode(), $items));
     }
 
     public function add(
@@ -79,7 +79,7 @@ class CartController extends Controller
                 'cart_item_id' => $cartItem?->id,
                 'qty' => $cartItem?->qty ?? $qty,
                 'html' => $html,
-                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items)),
+                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items), $this->estimatePincode(), $items),
                 'items' => $items->map(fn ($it) => [
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
@@ -121,7 +121,7 @@ class CartController extends Controller
             return response()->json([
                 'success' => true,
                 'html' => $html,
-                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items)),
+                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items), $this->estimatePincode(), $items),
                 'items' => $items->map(fn ($it) => [
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
@@ -153,7 +153,7 @@ class CartController extends Controller
             return response()->json([
                 'success' => true,
                 'html' => $html,
-                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items)),
+                'totals' => $shipping->apiResponse($pricing->inclusiveSubtotal($items), $this->estimatePincode(), $items),
                 'items' => $items->map(fn ($it) => [
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
@@ -163,6 +163,15 @@ class CartController extends Controller
         }
 
         return back()->with('status', 'Removed');
+    }
+
+    protected function estimatePincode(): ?string
+    {
+        if (! auth()->check()) {
+            return null;
+        }
+
+        return optional(auth()->user()->addresses()->orderByDesc('is_default')->first())->pincode;
     }
 
     protected function authorizeItem(CartItem $item, CartService $cart): void

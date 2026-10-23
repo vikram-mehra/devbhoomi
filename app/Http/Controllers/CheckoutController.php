@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\PincodeServiceability;
 use App\Models\OrderItem;
 use App\Models\ShippingAddress;
 use App\Models\Setting;
@@ -43,9 +44,11 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForSubtotal($subtotal);
-        $isFreeShipping = $shippingCharge <= 0;
         $addresses = auth()->user()->addresses()->orderByDesc('is_default')->get();
+        $checkoutPincode = optional($addresses->firstWhere('is_default') ?? $addresses->first())->pincode;
+        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $checkoutPincode);
+        $isFreeShipping = $shippingCharge <= 0;
+        $cartWeightGrams = $shipping->cartWeightGrams($items);
         $states = State::enabled()->orderBy('name')->get();
 
         $promoCoupons = Coupon::query()
@@ -76,10 +79,11 @@ class CheckoutController extends Controller
 
         $validateCouponPath = parse_url(url('/checkout/validate-coupon'), PHP_URL_PATH) ?: '/checkout/validate-coupon';
         $removeCouponPath = parse_url(url('/checkout/remove-coupon'), PHP_URL_PATH) ?: '/checkout/remove-coupon';
+        $quoteShippingPath = parse_url(url('/checkout/quote-shipping'), PHP_URL_PATH) ?: '/checkout/quote-shipping';
 
         return view('market.checkout', compact(
             'items', 'subtotal', 'shippingCharge', 'isFreeShipping', 'taxAmount', 'addresses', 'promoCoupons', 'razorpayConfigured',
-            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath', 'states'
+            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath', 'quoteShippingPath', 'states', 'cartWeightGrams', 'checkoutPincode'
         ));
     }
 
@@ -97,7 +101,7 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForSubtotal($subtotal);
+        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $this->requestPincode($request));
 
         try {
             $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal, [
@@ -137,7 +141,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function removeCoupon(CartService $cart, ShippingService $shipping)
+    public function removeCoupon(Request $request, CartService $cart, ShippingService $shipping)
     {
         session()->forget('checkout_coupon_code');
 
@@ -151,7 +155,7 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForSubtotal($subtotal);
+        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $this->requestPincode($request));
         $total = $pricing->grandTotal($subtotalExclusive, $shippingCharge, $taxAmount, 0);
 
         return response()->json([
@@ -214,7 +218,20 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shipping = $shipping->chargeForSubtotal($subtotal);
+        $addressId = $request->address_id;
+        if (! $addressId) {
+            $pincodeToCheck = $request->pincode;
+        } else {
+            abort_unless($user->addresses()->where('id', $addressId)->exists(), 403);
+            $pincodeToCheck = optional($user->addresses()->find($addressId))->pincode;
+        }
+
+        $pinCheck = app(PincodeServiceabilityService::class)->check($pincodeToCheck);
+        if (! $pinCheck['serviceable']) {
+            return back()->withInput()->with('error', $pinCheck['message']);
+        }
+
+        $shipping = $shipping->chargeForCart($items, $subtotal, $pincodeToCheck);
         $discount = 0.0;
         $couponCode = null;
         $resolvedCoupon = null;
@@ -239,19 +256,6 @@ class CheckoutController extends Controller
         $grand = $pricing->grandTotal($subtotalExclusive, $shipping, $taxAmount, $discount);
         $walletUse = 0.0;
         $payable = round($grand - $walletUse, 2);
-
-        $addressId = $request->address_id;
-        if (! $addressId) {
-            $pincodeToCheck = $request->pincode;
-        } else {
-            abort_unless($user->addresses()->where('id', $addressId)->exists(), 403);
-            $pincodeToCheck = optional($user->addresses()->find($addressId))->pincode;
-        }
-
-        $pinCheck = app(PincodeServiceabilityService::class)->check($pincodeToCheck);
-        if (! $pinCheck['serviceable']) {
-            return back()->withInput()->with('error', $pinCheck['message']);
-        }
 
         if (! $addressId) {
             $addr = Address::create([
@@ -366,5 +370,73 @@ class CheckoutController extends Controller
         }
 
         return redirect()->route('pay.razorpay', $order);
+    }
+
+    public function quoteShipping(Request $request, CartService $cart, ShippingService $shipping)
+    {
+        $items = $cart->query()->get();
+        if ($items->isEmpty()) {
+            return response()->json(['message' => __('Your cart is empty.')], 422);
+        }
+
+        $items->loadMissing('variant.product');
+        $pricing = app(CheckoutPricingService::class);
+        $subtotalExclusive = $pricing->subtotal($items);
+        $taxAmount = $pricing->taxAmount($items);
+        $subtotal = $pricing->inclusiveSubtotal($items);
+        $pincode = $this->requestPincode($request);
+        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $pincode);
+        $discount = 0.0;
+
+        $couponInput = $request->input('coupon_code', session('checkout_coupon_code'));
+        if ($couponInput) {
+            try {
+                $resolved = app(CouponService::class)->resolveForCart($couponInput, $subtotal, [
+                    'user' => $request->user(),
+                    'items' => $items,
+                    'guest_key' => app(CouponService::class)->guestKey($request->user()),
+                ]);
+                $discount = $resolved['discount'];
+            } catch (ValidationException $e) {
+                $discount = 0.0;
+            }
+        }
+
+        $total = $pricing->grandTotal($subtotalExclusive, $shippingCharge, $taxAmount, $discount);
+
+        return response()->json([
+            'pincode' => PincodeServiceability::normalizePincode($pincode),
+            'subtotal' => $subtotal,
+            'shipping_charge' => $shippingCharge,
+            'tax' => $taxAmount,
+            'tax_formatted' => '₹'.number_format($taxAmount, 2),
+            'discount' => $discount,
+            'total' => $total,
+            'total_formatted' => '₹'.number_format($total, 2),
+            'is_free_shipping' => $shippingCharge <= 0,
+            'shipping_label' => $shippingCharge <= 0 ? 'FREE' : '₹'.number_format($shippingCharge, 2),
+            'weight_grams' => $shipping->cartWeightGrams($items),
+        ]);
+    }
+
+    protected function requestPincode(Request $request): ?string
+    {
+        $user = $request->user();
+        if ($request->filled('address_id') && $user) {
+            $pin = optional($user->addresses()->find($request->input('address_id')))->pincode;
+            if ($pin) {
+                return $pin;
+            }
+        }
+
+        if ($request->filled('pincode')) {
+            return (string) $request->input('pincode');
+        }
+
+        if ($user) {
+            return optional($user->addresses()->orderByDesc('is_default')->first())->pincode;
+        }
+
+        return null;
     }
 }

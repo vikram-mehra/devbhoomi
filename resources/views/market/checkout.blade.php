@@ -339,7 +339,8 @@
                          data-shipping="{{ $shippingDisplay }}"
                          data-tax="{{ $taxDisplay }}"
                          data-validate-url="{{ $validateCouponPath ?? parse_url(url('/checkout/validate-coupon'), PHP_URL_PATH) }}"
-                         data-remove-url="{{ $removeCouponPath ?? parse_url(url('/checkout/remove-coupon'), PHP_URL_PATH) }}">
+                         data-remove-url="{{ $removeCouponPath ?? parse_url(url('/checkout/remove-coupon'), PHP_URL_PATH) }}"
+                         data-quote-url="{{ $quoteShippingPath ?? parse_url(url('/checkout/quote-shipping'), PHP_URL_PATH) }}">
                         <div class="pro-checkout-totals__row">
                             <span>{{ __('Sub total') }}</span>
                             <span class="pro-checkout-accent-text" id="checkoutSubtotal">₹{{ number_format($subtotal, 2) }}</span>
@@ -353,6 +354,9 @@
                                     ₹{{ number_format($shippingDisplay, 2) }}
                                 @endif
                             </span>
+                        </div>
+                        <div class="small text-muted mb-2" id="checkoutShippingHint" @if(($cartWeightGrams ?? 0) <= 0) hidden @endif>
+                            {{ __('Cart weight :grams g · charged per 500 g slab for your pincode.', ['grams' => (int) round($cartWeightGrams ?? 0)]) }}
                         </div>
                         <div class="pro-checkout-totals__row" id="checkoutDiscountRow" @if($couponDiscount <= 0) style="display:none;" @endif>
                             <span>{{ __('Coupon discount') }}</span>
@@ -424,6 +428,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var csrfToken = (csrfMeta && csrfMeta.getAttribute('content')) || (csrfInput && csrfInput.value) || '';
     var validateUrl = totalsEl ? totalsEl.getAttribute('data-validate-url') : '';
     var removeUrl = totalsEl ? totalsEl.getAttribute('data-remove-url') : '';
+    var quoteUrl = totalsEl ? totalsEl.getAttribute('data-quote-url') : '';
     var couponApplied = @json($hasAppliedCoupon);
 
     if (!applyBtn || !couponInput || !couponMsg || !totalsEl || !totalEl || !validateUrl || !csrfToken) {
@@ -498,6 +503,66 @@ document.addEventListener('DOMContentLoaded', function () {
         totalEl.textContent = formatMoney(total);
     }
 
+    function currentPincode() {
+        var selected = document.querySelector('#checkoutMainForm input[name="address_id"]:checked');
+        if (selected && selected.value) {
+            var pin = selected.getAttribute('data-pincode') || '';
+            if (pin) return pin;
+        }
+        var field = document.querySelector('.js-checkout-pincode-field');
+        if (field && field.value) return field.value;
+        var checkInput = document.querySelector('#checkoutMainForm .js-pincode-input');
+        return checkInput ? checkInput.value : '';
+    }
+
+    function appendPincodeFields(body) {
+        var pin = currentPincode();
+        if (pin) body.append('pincode', pin);
+        var selected = document.querySelector('#checkoutMainForm input[name="address_id"]:checked');
+        if (selected && selected.value) body.append('address_id', selected.value);
+    }
+
+    function refreshShippingQuote() {
+        if (!quoteUrl || !csrfToken) return;
+        var body = new FormData();
+        body.append('_token', csrfToken);
+        appendPincodeFields(body);
+        if (couponInput && couponInput.value) body.append('coupon_code', couponInput.value);
+        fetch(quoteUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: body,
+            credentials: 'same-origin'
+        })
+        .then(parseJsonResponse)
+        .then(function (res) {
+            if (!res.ok || !res.data) return;
+            updateTotals(res.data.discount, res.data.tax, res.data.shipping_charge, res.data.shipping_label);
+            var hint = document.getElementById('checkoutShippingHint');
+            if (hint && res.data.weight_grams > 0) {
+                hint.hidden = false;
+                hint.textContent = 'Cart weight ' + Math.round(res.data.weight_grams) + ' g · charged per 500 g slab for your pincode.';
+            }
+        })
+        .catch(function () {});
+    }
+
+    document.addEventListener('pincode:checked', function (e) {
+        if (e && e.detail && e.detail.serviceable) {
+            refreshShippingQuote();
+        }
+    });
+    document.querySelectorAll('#checkoutMainForm input[name="address_id"]').forEach(function (radio) {
+        radio.addEventListener('change', refreshShippingQuote);
+    });
+    var pinField = document.querySelector('.js-checkout-pincode-field');
+    if (pinField) {
+        pinField.addEventListener('change', refreshShippingQuote);
+    }
+
     function parseJsonResponse(r) {
         return r.text().then(function (text) {
             var data = {};
@@ -526,6 +591,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var body = new FormData();
         body.append('coupon_code', code);
         body.append('_token', csrfToken);
+        appendPincodeFields(body);
 
         return fetch(validateUrl, {
             method: 'POST',
@@ -578,6 +644,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var body = new FormData();
         body.append('_token', csrfToken);
+        appendPincodeFields(body);
 
         return fetch(removeUrl, {
             method: 'POST',

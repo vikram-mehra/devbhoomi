@@ -2146,7 +2146,7 @@ body.cb-market-pro.is-search-open {
 }
 .zm-pro-card__price {
   margin-top: auto;
-  padding-top: 0.35rem;
+  padding-top: 0;
   font-weight: 800;
   font-size: 1.05rem;
   color: var(--pro-ink);
@@ -2164,10 +2164,11 @@ body.cb-market-pro.is-search-open {
   margin-left: 0.35rem;
 }
 .zm-pro-card .js-cart-add-container {
-  margin-top: 0.5rem;
+  margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding-top: 0.5rem;
 }
 .zm-pro-card .zm-pro-add-form {
   margin-top: 0;
@@ -7345,17 +7346,16 @@ body.cb-market-pro .bi {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--pro-muted);
-  min-height: 0;
 }
 .cb-market-pro .zm-pro-card__price--listing {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 0.5rem;
   margin-top: auto;
-  padding-top: 0.35rem;
+  padding-top: 0;
 }
 .cb-market-pro .zm-pro-card__offer-strip {
-  margin-top: 0.65rem;
+  margin-top: 0;
   padding-top: 0.55rem;
   border-top: 1px solid var(--pro-border);
   font-size: 0.7rem;
@@ -9025,7 +9025,6 @@ body.cb-market-pro .bi {
   .cb-market-pro .zm-pro-card__title,
   .cb-market-pro .zm-pro-card__title--listing {
     font-size: var(--pro-mobile-fs-sm) !important;
-    min-height: 0 !important;
   }
   .cb-market-pro .zm-pro-card__brand-name {
     font-size: var(--pro-mobile-fs-xs) !important;

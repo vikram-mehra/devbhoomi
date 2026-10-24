@@ -49,13 +49,15 @@
         $qvImages[] = $url1;
     }
     $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE)->sortBy('id')->values();
-    $hasMultipleVariants = $activeVariants->count() > 1;
+    $hasVariantOptions = $activeVariants->count() > 1
+        || $activeVariants->contains(fn ($vx) => filled($vx->size) || filled($vx->color));
     $variantPayload = [];
-    if ($hasMultipleVariants) {
+    if ($hasVariantOptions) {
         $variantPayload = $activeVariants->map(fn ($vx) => [
             'id' => $vx->id,
             'color' => (string) ($vx->color ?? ''),
             'size' => (string) ($vx->size ?? ''),
+            'label' => $vx->size ?: ($vx->color ?: $vx->label()),
             'stock' => (int) $vx->stock_qty,
             'effectivePrice' => $vx->effectivePrice(),
             'unitPrice' => $vx->unitPrice(),
@@ -90,7 +92,7 @@
         <a href="{{ route('product.show', $product) }}" class="zm-pro-card__link">
             <img src="{{ \App\Support\OptimizedImage::url($url1, 420) }}" class="zm-pro-card__img zm-pro-card__img--primary" alt="{{ $product->name }}" title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560" decoding="async" onerror="this.onerror=null;this.src='{{ $product->namedPlaceholderUrl(false) }}';">
             @if($url2 && $url2 !== $url1)
-            <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-hover-src="{{ \App\Support\OptimizedImage::url($url2, 420) }}" class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view" title="{{ $product->name }}" width="420" height="560" decoding="async" onerror="this.onerror=null;this.style.display='none';">
+            <img src="{{ \App\Support\OptimizedImage::url($url2, 420) }}" class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view" title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560" decoding="async" onload="this.classList.add('is-loaded')" onerror="this.onerror=null;this.classList.remove('is-loaded');this.style.display='none';">
             @endif
         </a>
         @if($listing)
@@ -122,7 +124,7 @@
                     data-qv-url="{{ route('product.show', $product) }}"
                     data-qv-variant="{{ $v?->id }}"
                     data-qv-variants='@json($variantPayload)'
-                    data-qv-label="{{ $product->variant_label ?: __('Size') }}">
+                    data-qv-label="{{ $product->variant_label ?: __('Weight') }}">
                     <i class="bi bi-eye"></i>
                 </button>
             </div>
@@ -170,9 +172,9 @@
         @if($v)
             <div class="js-cart-add-container" data-variant-id="{{ $v->id }}" data-buyable="{{ $v->isBuyable() ? '1' : '0' }}">
                 @php
-                    $optionLabel = $product->variant_label ?: __('pack');
+                    $optionLabel = $product->variant_label ?: __('Weight');
                 @endphp
-                @if($hasMultipleVariants)
+                @if($hasVariantOptions)
                     <div class="zm-pro-card__options" role="group" aria-label="{{ __('Select :label', ['label' => $optionLabel]) }}">
                         @foreach($activeVariants as $vx)
                             @php
@@ -224,6 +226,14 @@
             if (card.dataset.skelBound) return;
             card.dataset.skelBound = '1';
             var img = card.querySelector('.zm-pro-card__img--primary');
+            var secImg = card.querySelector('.zm-pro-card__img--secondary');
+            if (secImg) {
+                if (secImg.complete && secImg.naturalWidth > 0) {
+                    secImg.classList.add('is-loaded');
+                } else {
+                    secImg.addEventListener('load', function () { secImg.classList.add('is-loaded'); }, { once: true });
+                }
+            }
             if (!img) {
                 revealCard(card);
                 return;

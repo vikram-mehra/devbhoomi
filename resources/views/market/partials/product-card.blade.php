@@ -154,21 +154,6 @@
             @endif
         </div>
         <a href="{{ route('product.show', $product) }}" class="zm-pro-card__title {{ $listing ? 'zm-pro-card__title--listing' : '' }}">{{ $product->name }}</a>
-        <div class="zm-pro-card__price {{ $listing ? 'zm-pro-card__price--listing' : '' }}">
-            <span class="zm-pro-card__price-now js-card-price-now">₹{{ number_format($price, 0) }}</span>
-            <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
-            <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}% {{ __('Off') }}</span>
-        </div>
-        @if($listing && ($flash || ($pctOff && $pctOff > 0)))
-            <div class="zm-pro-card__offer-strip">
-                <i class="bi bi-clock-history" aria-hidden="true"></i>
-                @if($flash)
-                    <span>{{ __('Limited time offer') }}: ₹{{ number_format((float) $flash->sale_price, 0) }}</span>
-                @else
-                    <span>{{ __('Limited time offer') }}: {{ $pctOff }}% {{ __('off') }}</span>
-                @endif
-            </div>
-        @endif
         @if($v)
             <div class="js-cart-add-container" data-variant-id="{{ $v->id }}" data-buyable="{{ $v->isBuyable() ? '1' : '0' }}">
                 @php
@@ -198,6 +183,21 @@
                         @endforeach
                     </div>
                 @endif
+                <div class="zm-pro-card__price {{ $listing ? 'zm-pro-card__price--listing' : '' }}">
+                    <span class="zm-pro-card__price-now js-card-price-now">₹{{ number_format($price, 0) }}</span>
+                    <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
+                    <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}% {{ __('Off') }}</span>
+                </div>
+                @if($listing && ($flash || ($pctOff && $pctOff > 0)))
+                    <div class="zm-pro-card__offer-strip">
+                        <i class="bi bi-clock-history" aria-hidden="true"></i>
+                        @if($flash)
+                            <span>{{ __('Limited time offer') }}: ₹{{ number_format((float) $flash->sale_price, 0) }}</span>
+                        @else
+                            <span>{{ __('Limited time offer') }}: {{ $pctOff }}% {{ __('off') }}</span>
+                        @endif
+                    </div>
+                @endif
                 <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if(!$v->isBuyable()) d-none @endif">
                     @csrf
                     <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
@@ -211,6 +211,22 @@
                     </div>
                 @endif
             </div>
+        @else
+            <div class="zm-pro-card__price {{ $listing ? 'zm-pro-card__price--listing' : '' }}">
+                <span class="zm-pro-card__price-now js-card-price-now">₹{{ number_format($price, 0) }}</span>
+                <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
+                <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}% {{ __('Off') }}</span>
+            </div>
+            @if($listing && ($flash || ($pctOff && $pctOff > 0)))
+                <div class="zm-pro-card__offer-strip">
+                    <i class="bi bi-clock-history" aria-hidden="true"></i>
+                    @if($flash)
+                        <span>{{ __('Limited time offer') }}: ₹{{ number_format((float) $flash->sale_price, 0) }}</span>
+                    @else
+                        <span>{{ __('Limited time offer') }}: {{ $pctOff }}% {{ __('off') }}</span>
+                    @endif
+                </div>
+            @endif
         @endif
     </div>
 </article>

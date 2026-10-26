@@ -37,6 +37,8 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'customer_confirmation_sent_at' => 'datetime',
         'admin_notification_sent_at' => 'datetime',
+        'abandoned_cart_reminder_claimed_at' => 'datetime',
+        'abandoned_cart_reminder_sent_at' => 'datetime',
         'delhivery_expected_delivery' => 'datetime',
         'delhivery_last_synced_at' => 'datetime',
         'delhivery_last_attempt_at' => 'datetime',

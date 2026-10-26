@@ -59,6 +59,67 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## Abandoned-cart email reminders
+
+Reminders use the existing `cart_items`, `orders`, and `order_items` tables; no replacement cart or customer-data table is introduced. This also covers an unpaid Razorpay checkout, whose order-item snapshot survives the existing checkout behavior that clears cart rows. Reminders are automatic for customers with eligible abandoned carts; no customer preference is required. The feature is disabled globally unless explicitly enabled.
+
+Set these environment variables after deploying:
+
+```dotenv
+ABANDONED_CART_REMINDERS_ENABLED=true
+ABANDONED_CART_REMINDER_DELAY_MINUTES=60
+ABANDONED_CART_REMINDER_CLAIM_TIMEOUT_MINUTES=120
+MAIL_SUPPORT_ADDRESS=support@example.com
+```
+
+Set the delay to `1440` for a 24-hour reminder. Configure `APP_URL`, `MAIL_MAILER`, and the appropriate mail transport credentials using the application's existing mail configuration. Do not commit real credentials.
+
+Apply the migration:
+
+```powershell
+php artisan migrate
+```
+
+Laravel 8 uses the console kernel scheduler. Add this cron entry on the server (replace the application path and PHP executable as appropriate):
+
+```cron
+* * * * * cd /path/to/application && php artisan schedule:run >> /dev/null 2>&1
+```
+
+For local development on Windows, run the scheduler in a terminal:
+
+```powershell
+php artisan schedule:work
+```
+
+You can also run the command once to check it manually:
+
+```powershell
+php artisan app:send-abandoned-cart-reminders
+```
+
+For queued delivery, set `QUEUE_CONNECTION=database` and generate/apply Laravel's queue-table migration if the project does not already have one. The current repository has no `jobs` table migration:
+
+```powershell
+php artisan queue:table
+php artisan migrate
+php artisan queue:work --tries=3
+```
+
+Or use an already configured Redis/SQS connection, then keep a worker running:
+
+```powershell
+php artisan queue:work --tries=3
+```
+
+The project currently defaults to `QUEUE_CONNECTION=sync`; this sends the queued job inline and does not require a worker. On production, use a supervised worker for a persistent queue. Verify mail delivery and scheduler/worker health before enabling reminders.
+
+Run the feature tests with:
+
+```powershell
+vendor\bin\phpunit tests\Feature\AbandonedCartReminderTest.php
+```
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

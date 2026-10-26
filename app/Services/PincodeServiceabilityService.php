@@ -44,9 +44,9 @@ class PincodeServiceabilityService
             $parts[] = __('Courier: :name.', ['name' => $row->courier_name]);
         }
         $parts[] = __('Estimated delivery by :date.', ['date' => $etaLabel]);
-        if ($row->delivery_charge !== null) {
-            $parts[] = __('Delivery ₹:amount for the first 500 g.', ['amount' => number_format((float) $row->delivery_charge, 2)]);
-        }
+        // if ($row->delivery_charge !== null) {
+        //     $parts[] = __('Delivery ₹:amount for the first 500 g.', ['amount' => number_format((float) $row->delivery_charge, 2)]);
+        // }
 
         return $this->payload(true, true, $pin, implode(' ', $parts), $row, $etaLabel);
     }

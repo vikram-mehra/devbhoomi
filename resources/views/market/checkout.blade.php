@@ -330,7 +330,7 @@
                         @elseif($appliedCouponCode)
                             {{ __('Coupon :code applied.', ['code' => $appliedCouponCode]) }}
                         @else
-                            {{ __('Click Apply to see your discount. You can enter the code with or without the # symbol.') }}
+                            {{ __('Click Apply to see your discount.') }}
                         @endif
                     </p>
 
@@ -355,9 +355,9 @@
                                 @endif
                             </span>
                         </div>
-                        <div class="small text-muted mb-2" id="checkoutShippingHint" @if(($cartWeightGrams ?? 0) <= 0) hidden @endif>
+                        <!-- <div class="small text-muted mb-2" id="checkoutShippingHint" @if(($cartWeightGrams ?? 0) <= 0) hidden @endif>
                             {{ __('Cart weight :grams g · charged per 500 g slab for your pincode.', ['grams' => (int) round($cartWeightGrams ?? 0)]) }}
-                        </div>
+                        </div> -->
                         <div class="pro-checkout-totals__row" id="checkoutDiscountRow" @if($couponDiscount <= 0) style="display:none;" @endif>
                             <span>{{ __('Coupon discount') }}</span>
                             <span class="pro-checkout-accent-text text-success" id="checkoutDiscount">-₹{{ number_format($couponDiscount, 2) }}</span>
@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var MSG_COPIED = @json(__('Copied!'));
     var MSG_FILLED = @json(__('Code filled'));
     var MSG_REMOVED = @json(__('Coupon removed.'));
-    var MSG_HELP = @json(__('Click Apply to see your discount. You can enter the code with or without the # symbol.'));
+    var MSG_HELP = @json(__('Click Apply to see your discount.'));
     var LABEL_FREE = @json(__('FREE'));
 
     function copyText(str) {

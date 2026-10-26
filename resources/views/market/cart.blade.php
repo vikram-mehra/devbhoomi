@@ -175,9 +175,6 @@ input.js-cart-qty-input {
                                         @if($v->label() !== 'Default')
                                             <span class="badge bg-light text-muted border mt-1">{{ $v->label() }}</span>
                                         @endif
-                                        @if($p->formattedWeightKg())
-                                            <span class="badge bg-light text-muted border mt-1"><i class="bi bi-tag-fill me-1 small text-primary"></i>{{ $p->formattedWeightKg() }}</span>
-                                        @endif
                                     </div>
                                     
                                     <!-- Desktop Delete Button -->

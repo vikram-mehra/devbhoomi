@@ -67,11 +67,26 @@ Set these environment variables after deploying:
 
 ```dotenv
 ABANDONED_CART_REMINDERS_ENABLED=true
+ABANDONED_CART_REMINDER_STAGE_1_MINUTES=60
+ABANDONED_CART_REMINDER_STAGE_2_MINUTES=1440
+ABANDONED_CART_REMINDER_STAGE_3_MINUTES=4320
 ABANDONED_CART_REMINDER_CLAIM_TIMEOUT_MINUTES=120
 MAIL_SUPPORT_ADDRESS=support@example.com
 ```
 
-The three reminder stages are fixed at 1 hour, 24 hours, and 3 days from the cart's latest activity (or unpaid checkout order creation). Their sent markers are stored per cart row/order. Configure `APP_URL`, `MAIL_MAILER`, and the appropriate mail transport credentials using the application's existing mail configuration. Do not commit real credentials.
+The three reminder stages default to 1 hour, 24 hours, and 3 days from the cart's latest activity (or unpaid checkout order creation). Set `ABANDONED_CART_REMINDER_STAGE_1_MINUTES`, `ABANDONED_CART_REMINDER_STAGE_2_MINUTES`, and `ABANDONED_CART_REMINDER_STAGE_3_MINUTES` to shorter intervals for local testing; each value must be at least one minute. Their sent markers are stored per cart row/order. Configure `APP_URL`, `MAIL_MAILER`, and the appropriate mail transport credentials using the application's existing mail configuration. Do not commit real credentials.
+
+For a quick local test, use short intervals and the existing synchronous queue:
+
+```dotenv
+ABANDONED_CART_REMINDERS_ENABLED=true
+ABANDONED_CART_REMINDER_STAGE_1_MINUTES=1
+ABANDONED_CART_REMINDER_STAGE_2_MINUTES=2
+ABANDONED_CART_REMINDER_STAGE_3_MINUTES=3
+QUEUE_CONNECTION=sync
+```
+
+After changing `.env`, clear cached configuration with `php artisan config:clear`. Add an item to a logged-in user's cart, then run `php artisan app:send-abandoned-cart-reminders` about once a minute for up to five minutes. The command dispatches only the next due reminder per cart on each run. These short intervals are for local testing only; keep the defaults in production. Make sure the configured mail transport is able to send messages.
 
 Apply the migration:
 

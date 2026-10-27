@@ -29,6 +29,24 @@ class PincodeCsvImporterTest extends TestCase
         $this->assertNotEmpty($parsed['errors']);
     }
 
+    public function test_parses_delivery_charge_columns(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'pin');
+        file_put_contents($path, implode("\n", [
+            'pincode,city,state,delivery_charge,additional_500g_charge,status',
+            '263645,Haldwani,Uttarakhand,60,40,1',
+            '201307,Noida,Uttar Pradesh,80,,1',
+        ]));
+
+        $parsed = (new PincodeCsvImporter())->parse($path);
+        unlink($path);
+
+        $this->assertSame(60.0, $parsed['rows'][0]['delivery_charge']);
+        $this->assertSame(40.0, $parsed['rows'][0]['additional_500g_charge']);
+        $this->assertSame(80.0, $parsed['rows'][1]['delivery_charge']);
+        $this->assertNull($parsed['rows'][1]['additional_500g_charge']);
+    }
+
     public function test_requires_core_columns(): void
     {
         $path = tempnam(sys_get_temp_dir(), 'pin');

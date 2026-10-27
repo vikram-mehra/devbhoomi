@@ -14,7 +14,7 @@
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div>
                 <span class="admin-data-card__title d-block">{{ __('Mapped pincodes') }}</span>
-                <span class="admin-data-card__meta">{{ __('Search, edit, toggle, or delete.') }}</span>
+                <span class="admin-data-card__meta">{{ __('Search, edit, toggle, or delete. Delivery charge is for the first 500 g (or the slab set in Shipping settings).') }}</span>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addPincodeModal">{{ __('Add pincode') }}</button>
@@ -54,6 +54,8 @@
                             <th>{{ __('State') }}</th>
                             <th>{{ __('Day offset') }}</th>
                             <th>{{ __('Courier') }}</th>
+                            <th>{{ __('₹ / first slab') }}</th>
+                            <th>{{ __('₹ / extra slab') }}</th>
                             <th>{{ __('Status') }}</th>
                             <th class="text-end">{{ __('Actions') }}</th>
                         </tr>
@@ -66,6 +68,8 @@
                                 <td>{{ $row->state }}</td>
                                 <td>{{ $row->day_offset }}</td>
                                 <td>{{ $row->courier_name ?: '—' }}</td>
+                                <td>{{ $row->delivery_charge !== null ? '₹'.number_format((float) $row->delivery_charge, 2) : '—' }}</td>
+                                <td>{{ $row->additional_500g_charge !== null ? '₹'.number_format((float) $row->additional_500g_charge, 2) : '—' }}</td>
                                 <td>
                                     @if($row->status)
                                         <span class="admin-chip admin-chip--success">{{ __('Enabled') }}</span>
@@ -119,6 +123,14 @@
                                                         <input name="courier_name" class="form-control" value="{{ $row->courier_name }}">
                                                     </div>
                                                     <div class="col-md-6">
+                                                        <label class="form-label small">{{ __('Delivery charge (₹ / first 500 g)') }}</label>
+                                                        <input name="delivery_charge" type="number" step="0.01" min="0" class="form-control" value="{{ $row->delivery_charge }}" placeholder="{{ __('Fallback if empty') }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small">{{ __('Extra slab charge (₹)') }}</label>
+                                                        <input name="additional_500g_charge" type="number" step="0.01" min="0" class="form-control" value="{{ $row->additional_500g_charge }}" placeholder="{{ __('Same as first slab if empty') }}">
+                                                    </div>
+                                                    <div class="col-md-6">
                                                         <label class="form-label small">{{ __('Status') }} *</label>
                                                         <select name="status" class="form-select">
                                                             <option value="1" @selected($row->status)>{{ __('Enabled') }}</option>
@@ -137,7 +149,7 @@
                             </div>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">{{ __('No pincode mappings yet.') }}</td>
+                                <td colspan="9" class="text-center text-muted py-4">{{ __('No pincode mappings yet.') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -200,6 +212,14 @@
                                 <input name="courier_name" class="form-control" value="{{ old('_form') === 'add' ? old('courier_name') : '' }}" placeholder="Delhivery">
                             </div>
                             <div class="col-md-4">
+                                <label class="form-label small">{{ __('Delivery charge (₹ / first 500 g)') }}</label>
+                                <input name="delivery_charge" type="number" step="0.01" min="0" class="form-control" value="{{ old('_form') === 'add' ? old('delivery_charge') : '' }}" placeholder="{{ __('e.g. 60') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">{{ __('Extra slab charge (₹)') }}</label>
+                                <input name="additional_500g_charge" type="number" step="0.01" min="0" class="form-control" value="{{ old('_form') === 'add' ? old('additional_500g_charge') : '' }}" placeholder="{{ __('Same as first slab if empty') }}">
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label small">{{ __('Status') }} *</label>
                                 <select name="status" class="form-select">
                                     <option value="1" @selected(old('_form') !== 'add' || (string) old('status', '1') === '1')>{{ __('Enabled') }}</option>
@@ -207,7 +227,7 @@
                                 </select>
                             </div>
                         </div>
-                        <p class="small text-muted mt-3 mb-0">{{ __('Day offset is added to today to show the estimated delivery date on the storefront.') }}</p>
+                        <p class="small text-muted mt-3 mb-0">{{ __('Day offset is added to today for the estimated delivery date. Delivery charge is for the first 500 g; extra cart weight is billed per extra 500 g slab.') }}</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
@@ -233,7 +253,7 @@
                         <label class="form-label small">{{ __('CSV file') }} *</label>
                         <input type="file" name="file" class="form-control @error('file') is-invalid @enderror" accept=".csv,text/csv,text/plain" required>
                         @error('file')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <p class="small text-muted mt-2 mb-0">{{ __('Columns: pincode, city, state, day_offset, courier_name, status (1 or 0).') }}</p>
+                        <p class="small text-muted mt-2 mb-0">{{ __('Columns: pincode, city, state, day_offset, courier_name, delivery_charge, additional_500g_charge, status (1 or 0).') }}</p>
                         @if(session('pincode_import_errors'))
                             <ul class="small text-danger mt-2 mb-0">
                                 @foreach(session('pincode_import_errors') as $error)

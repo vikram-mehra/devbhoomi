@@ -95,7 +95,10 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $shippingService = app(\App\Services\ShippingService::class);
-            $shippingTotals = $shippingService->totalsForSubtotal($subtotal);
+            $pincode = auth()->check()
+                ? optional(auth()->user()->addresses()->orderByDesc('is_default')->first())->pincode
+                : null;
+            $shippingTotals = $shippingService->totalsForSubtotal($subtotal, $pincode, $items);
 
             $menus = app(MenuItemService::class);
 

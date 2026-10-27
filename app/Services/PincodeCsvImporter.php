@@ -87,8 +87,7 @@ class PincodeCsvImporter
             $dayOffset = max(0, min(30, $dayOffset));
             $courier = isset($map['courier_name']) ? trim((string) ($raw[$map['courier_name']] ?? '')) : '';
             $status = isset($map['status']) ? $this->parseStatus($raw[$map['status']] ?? 1) : true;
-
-            $rows[$pincode] = [
+            $row = [
                 'pincode' => $pincode,
                 'city' => mb_substr($city, 0, 120),
                 'state' => mb_substr($state, 0, 120),
@@ -96,6 +95,14 @@ class PincodeCsvImporter
                 'courier_name' => $courier !== '' ? mb_substr($courier, 0, 120) : null,
                 'status' => $status,
             ];
+            if (isset($map['delivery_charge'])) {
+                $row['delivery_charge'] = $this->parseDecimal($raw[$map['delivery_charge']] ?? null);
+            }
+            if (isset($map['additional_500g_charge'])) {
+                $row['additional_500g_charge'] = $this->parseDecimal($raw[$map['additional_500g_charge']] ?? null);
+            }
+
+            $rows[$pincode] = $row;
         }
 
         fclose($fh);
@@ -115,6 +122,8 @@ class PincodeCsvImporter
             'state' => ['state'],
             'day_offset' => ['day_offset', 'days', 'eta_days', 'offset'],
             'courier_name' => ['courier_name', 'courier', 'partner'],
+            'delivery_charge' => ['delivery_charge', 'charge', 'rate', 'base_charge', 'shipping_charge'],
+            'additional_500g_charge' => ['additional_500g_charge', 'additional_charge', 'extra_charge', 'extra_500g'],
             'status' => ['status', 'enabled', 'active'],
         ];
 
@@ -153,5 +162,22 @@ class PincodeCsvImporter
         $raw = strtolower(trim((string) $value));
 
         return ! in_array($raw, ['0', 'false', 'no', 'disabled', 'inactive', 'off'], true);
+    }
+
+    /**
+     * @param  mixed  $value
+     */
+    protected function parseDecimal($value): ?float
+    {
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return null;
+        }
+        $raw = str_replace(',', '', $raw);
+        if (! is_numeric($raw) || (float) $raw < 0) {
+            return null;
+        }
+
+        return round((float) $raw, 2);
     }
 }

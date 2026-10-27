@@ -98,6 +98,8 @@ Route::post('/webhooks/couriers/{courier}', [CourierWebhookController::class, 'h
     ->name('webhooks.couriers');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/showcase/{slug}', [\App\Http\Controllers\ShowcaseController::class, 'show'])
+    ->name('showcase.show');
 Route::post('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
 Route::redirect('/store/{slug}', '/')->name('vendor.shop');
 

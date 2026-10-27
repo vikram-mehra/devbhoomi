@@ -105,6 +105,9 @@ class CartController extends Controller
         $oldQty = (int) $item->qty;
         $newQty = (int) $request->qty;
         $item->update(['qty' => $newQty]);
+        if (auth()->check()) {
+            $cart->recordUserActivity((int) auth()->id());
+        }
 
         if ($newQty > $oldQty) {
             $variant = $item->variant;
@@ -143,6 +146,9 @@ class CartController extends Controller
     ) {
         $this->authorizeItem($item, $cart);
         $item->delete();
+        if (auth()->check()) {
+            $cart->recordUserActivity((int) auth()->id());
+        }
 
         if ($request->wantsJson()) {
             $items = $cart->query()->get();

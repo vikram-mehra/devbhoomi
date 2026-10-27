@@ -59,6 +59,81 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## Abandoned-cart email reminders
+
+Reminders use the existing `cart_items`, `orders`, and `order_items` tables; no replacement cart or customer-data table is introduced. This also covers an unpaid Razorpay checkout, whose order-item snapshot survives the existing checkout behavior that clears cart rows. Reminders are automatic for customers with eligible abandoned carts. The feature is disabled globally unless explicitly enabled.
+
+Set these environment variables after deploying:
+
+```dotenv
+ABANDONED_CART_REMINDERS_ENABLED=true
+ABANDONED_CART_REMINDER_STAGE_1_MINUTES=60
+ABANDONED_CART_REMINDER_STAGE_2_MINUTES=1440
+ABANDONED_CART_REMINDER_STAGE_3_MINUTES=4320
+ABANDONED_CART_REMINDER_CLAIM_TIMEOUT_MINUTES=120
+MAIL_SUPPORT_ADDRESS=support@example.com
+```
+
+The three reminder stages default to 1 hour, 24 hours, and 3 days from the cart's latest activity (or unpaid checkout order creation). Set `ABANDONED_CART_REMINDER_STAGE_1_MINUTES`, `ABANDONED_CART_REMINDER_STAGE_2_MINUTES`, and `ABANDONED_CART_REMINDER_STAGE_3_MINUTES` to shorter intervals for local testing; each value must be at least one minute. Their sent markers are stored per cart row/order. Configure `APP_URL`, `MAIL_MAILER`, and the appropriate mail transport credentials using the application's existing mail configuration. Do not commit real credentials.
+
+For a quick local test, use short intervals and the existing synchronous queue:
+
+```dotenv
+ABANDONED_CART_REMINDERS_ENABLED=true
+ABANDONED_CART_REMINDER_STAGE_1_MINUTES=1
+ABANDONED_CART_REMINDER_STAGE_2_MINUTES=2
+ABANDONED_CART_REMINDER_STAGE_3_MINUTES=3
+QUEUE_CONNECTION=sync
+```
+
+After changing `.env`, clear cached configuration with `php artisan config:clear`. Add an item to a logged-in user's cart, then run `php artisan app:send-abandoned-cart-reminders` about once a minute for up to five minutes. The command dispatches only the next due reminder per cart on each run. These short intervals are for local testing only; keep the defaults in production. Make sure the configured mail transport is able to send messages.
+
+Apply the migration:
+
+```powershell
+php artisan migrate
+```
+
+Laravel 8 uses the console kernel scheduler. Add this cron entry on the server (replace the application path and PHP executable as appropriate):
+
+```cron
+* * * * * cd /path/to/application && php artisan schedule:run >> /dev/null 2>&1
+```
+
+For local development on Windows, run the scheduler in a terminal:
+
+```powershell
+php artisan schedule:work
+```
+
+You can also run the command once to check it manually:
+
+```powershell
+php artisan app:send-abandoned-cart-reminders
+```
+
+The project currently defaults to `QUEUE_CONNECTION=sync`, which sends each queued job inline and does not require a worker. For asynchronous queued delivery, set `QUEUE_CONNECTION=database` and generate/apply Laravel's queue-table migration if the project does not already have one. The current repository has no `jobs` table migration:
+
+```powershell
+php artisan queue:table
+php artisan migrate
+php artisan queue:work --tries=3
+```
+
+Or use an already configured Redis/SQS connection, then keep a worker running:
+
+```powershell
+php artisan queue:work --tries=3
+```
+
+On production, use a supervised worker for a persistent queue. The scheduler/worker records a stage as sent only after the configured mail transport accepts the message; transport acceptance does not guarantee inbox delivery. Verify mail delivery and scheduler/worker health before enabling reminders.
+
+Run the feature tests with:
+
+```powershell
+vendor\bin\phpunit tests\Feature\AbandonedCartReminderTest.php
+```
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

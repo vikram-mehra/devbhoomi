@@ -58,7 +58,7 @@ class PincodeServiceabilityAdminController extends Controller
 
         return response()->streamDownload(function () use ($rows) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['pincode', 'city', 'state', 'day_offset', 'courier_name', 'status']);
+            fputcsv($out, ['pincode', 'city', 'state', 'day_offset', 'courier_name', 'delivery_charge', 'additional_500g_charge', 'status']);
             foreach ($rows as $row) {
                 fputcsv($out, [
                     $row->pincode,
@@ -66,6 +66,8 @@ class PincodeServiceabilityAdminController extends Controller
                     $row->state,
                     $row->day_offset,
                     $row->courier_name,
+                    $row->delivery_charge,
+                    $row->additional_500g_charge,
                     $row->status ? 1 : 0,
                 ]);
             }
@@ -81,9 +83,9 @@ class PincodeServiceabilityAdminController extends Controller
 
         return response()->streamDownload(function () {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['pincode', 'city', 'state', 'day_offset', 'courier_name', 'status']);
-            fputcsv($out, ['263645', 'Haldwani', 'Uttarakhand', '3', 'Delhivery', '1']);
-            fputcsv($out, ['201307', 'Noida', 'Uttar Pradesh', '2', 'Delhivery', '1']);
+            fputcsv($out, ['pincode', 'city', 'state', 'day_offset', 'courier_name', 'delivery_charge', 'additional_500g_charge', 'status']);
+            fputcsv($out, ['263645', 'Haldwani', 'Uttarakhand', '3', 'Delhivery', '60', '60', '1']);
+            fputcsv($out, ['201307', 'Noida', 'Uttar Pradesh', '2', 'Delhivery', '80', '', '1']);
             fclose($out);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
@@ -145,11 +147,27 @@ class PincodeServiceabilityAdminController extends Controller
             'status' => 'required|boolean',
             'day_offset' => 'required|integer|min:0|max:30',
             'courier_name' => 'nullable|string|max:120',
+            'delivery_charge' => 'nullable|numeric|min:0',
+            'additional_500g_charge' => 'nullable|numeric|min:0',
         ]);
 
         $data['pincode'] = PincodeServiceability::normalizePincode($data['pincode']);
         $data['status'] = (bool) $data['status'];
+        $data['delivery_charge'] = $this->nullableDecimal($data['delivery_charge'] ?? null);
+        $data['additional_500g_charge'] = $this->nullableDecimal($data['additional_500g_charge'] ?? null);
 
         return $data;
+    }
+
+    /**
+     * @param  mixed  $value
+     */
+    protected function nullableDecimal($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return round((float) $value, 2);
     }
 }

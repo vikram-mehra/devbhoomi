@@ -98,6 +98,8 @@ Route::post('/webhooks/couriers/{courier}', [CourierWebhookController::class, 'h
     ->name('webhooks.couriers');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/showcase/{slug}', [\App\Http\Controllers\ShowcaseController::class, 'show'])
+    ->name('showcase.show');
 Route::post('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
 Route::redirect('/store/{slug}', '/')->name('vendor.shop');
 
@@ -135,6 +137,7 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.validate-coupon');
     Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.remove-coupon');
+    Route::post('/checkout/quote-shipping', [CheckoutController::class, 'quoteShipping'])->name('checkout.quote-shipping');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
     Route::post('/pay/razorpay/dummy/{order}', [PaymentController::class, 'razorpayDummyComplete'])->name('pay.razorpay.dummy');

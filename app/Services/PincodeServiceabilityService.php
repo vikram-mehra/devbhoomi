@@ -17,6 +17,8 @@ class PincodeServiceabilityService
      *     courier_name: ?string,
      *     day_offset: ?int,
      *     eta_date: ?string,
+     *     delivery_charge: ?float,
+     *     additional_500g_charge: ?float,
      *     message: string
      * }
      */
@@ -42,6 +44,9 @@ class PincodeServiceabilityService
             $parts[] = __('Courier: :name.', ['name' => $row->courier_name]);
         }
         $parts[] = __('Estimated delivery by :date.', ['date' => $etaLabel]);
+        // if ($row->delivery_charge !== null) {
+        //     $parts[] = __('Delivery ₹:amount for the first 500 g.', ['amount' => number_format((float) $row->delivery_charge, 2)]);
+        // }
 
         return $this->payload(true, true, $pin, implode(' ', $parts), $row, $etaLabel);
     }
@@ -66,6 +71,8 @@ class PincodeServiceabilityService
             'courier_name' => $row?->courier_name,
             'day_offset' => $row?->day_offset,
             'eta_date' => $etaDate,
+            'delivery_charge' => $row?->delivery_charge !== null ? (float) $row->delivery_charge : null,
+            'additional_500g_charge' => $row?->additional_500g_charge !== null ? (float) $row->additional_500g_charge : null,
             'message' => $message,
         ];
     }

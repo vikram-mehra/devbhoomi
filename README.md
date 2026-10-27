@@ -61,18 +61,17 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 ## Abandoned-cart email reminders
 
-Reminders use the existing `cart_items`, `orders`, and `order_items` tables; no replacement cart or customer-data table is introduced. This also covers an unpaid Razorpay checkout, whose order-item snapshot survives the existing checkout behavior that clears cart rows. Reminders are automatic for customers with eligible abandoned carts; no customer preference is required. The feature is disabled globally unless explicitly enabled.
+Reminders use the existing `cart_items`, `orders`, and `order_items` tables; no replacement cart or customer-data table is introduced. This also covers an unpaid Razorpay checkout, whose order-item snapshot survives the existing checkout behavior that clears cart rows. Reminders are automatic for customers with eligible abandoned carts. The feature is disabled globally unless explicitly enabled.
 
 Set these environment variables after deploying:
 
 ```dotenv
 ABANDONED_CART_REMINDERS_ENABLED=true
-ABANDONED_CART_REMINDER_DELAY_MINUTES=60
 ABANDONED_CART_REMINDER_CLAIM_TIMEOUT_MINUTES=120
 MAIL_SUPPORT_ADDRESS=support@example.com
 ```
 
-Set the delay to `1440` for a 24-hour reminder. Configure `APP_URL`, `MAIL_MAILER`, and the appropriate mail transport credentials using the application's existing mail configuration. Do not commit real credentials.
+The three reminder stages are fixed at 1 hour, 24 hours, and 3 days from the cart's latest activity (or unpaid checkout order creation). Their sent markers are stored per cart row/order. Configure `APP_URL`, `MAIL_MAILER`, and the appropriate mail transport credentials using the application's existing mail configuration. Do not commit real credentials.
 
 Apply the migration:
 
@@ -98,7 +97,7 @@ You can also run the command once to check it manually:
 php artisan app:send-abandoned-cart-reminders
 ```
 
-For queued delivery, set `QUEUE_CONNECTION=database` and generate/apply Laravel's queue-table migration if the project does not already have one. The current repository has no `jobs` table migration:
+The project currently defaults to `QUEUE_CONNECTION=sync`, which sends each queued job inline and does not require a worker. For asynchronous queued delivery, set `QUEUE_CONNECTION=database` and generate/apply Laravel's queue-table migration if the project does not already have one. The current repository has no `jobs` table migration:
 
 ```powershell
 php artisan queue:table
@@ -112,7 +111,7 @@ Or use an already configured Redis/SQS connection, then keep a worker running:
 php artisan queue:work --tries=3
 ```
 
-The project currently defaults to `QUEUE_CONNECTION=sync`; this sends the queued job inline and does not require a worker. On production, use a supervised worker for a persistent queue. Verify mail delivery and scheduler/worker health before enabling reminders.
+On production, use a supervised worker for a persistent queue. The scheduler/worker records a stage as sent only after the configured mail transport accepts the message; transport acceptance does not guarantee inbox delivery. Verify mail delivery and scheduler/worker health before enabling reminders.
 
 Run the feature tests with:
 

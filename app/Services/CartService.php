@@ -110,6 +110,8 @@ class CartService
                 'abandoned_cart_reminder_claim' => null,
                 'abandoned_cart_reminder_claimed_at' => null,
                 'abandoned_cart_reminder_sent_at' => null,
+                'abandoned_cart_reminder_2_sent_at' => null,
+                'abandoned_cart_reminder_3_sent_at' => null,
             ]);
     }
 

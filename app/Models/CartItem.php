@@ -20,6 +20,8 @@ class CartItem extends Model
         'qty' => 'integer',
         'abandoned_cart_reminder_claimed_at' => 'datetime',
         'abandoned_cart_reminder_sent_at' => 'datetime',
+        'abandoned_cart_reminder_2_sent_at' => 'datetime',
+        'abandoned_cart_reminder_3_sent_at' => 'datetime',
     ];
     
     public function user(): BelongsTo

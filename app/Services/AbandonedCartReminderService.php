@@ -6,6 +6,7 @@ use App\Mail\AbandonedCartReminderMail;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -14,13 +15,19 @@ use Illuminate\Support\Str;
 
 class AbandonedCartReminderService
 {
-    public function claim(int $userId, Carbon $cutoff, Carbon $claimExpiresBefore): ?string
-    {
+    public function claim(
+        int $userId,
+        Carbon $cutoff,
+        Carbon $claimExpiresBefore,
+        int $stage = 1
+    ): ?string {
         if (! config('abandoned_cart.enabled')) {
             return null;
         }
 
-        return DB::transaction(function () use ($userId, $cutoff, $claimExpiresBefore) {
+        $sentColumn = $this->sentColumn($stage);
+
+        return DB::transaction(function () use ($userId, $cutoff, $claimExpiresBefore, $sentColumn) {
             $user = User::query()->whereKey($userId)->lockForUpdate()->first();
             if (! $this->canReceive($user)) {
                 return null;
@@ -28,17 +35,25 @@ class AbandonedCartReminderService
 
             $items = CartItem::query()
                 ->where('user_id', $userId)
+                ->with('variant.product')
                 ->lockForUpdate()
                 ->get();
 
-            if ($items->isEmpty() || $items->contains(function (CartItem $item) use ($cutoff, $claimExpiresBefore) {
+            if ($items->isEmpty() || $items->contains(function (CartItem $item) use ($cutoff, $claimExpiresBefore, $sentColumn) {
                 return $item->updated_at === null
                     || $item->updated_at->gt($cutoff)
-                    || $item->abandoned_cart_reminder_sent_at !== null
+                    || $item->{$sentColumn} !== null
                     || ($item->abandoned_cart_reminder_claim !== null
                         && ($item->abandoned_cart_reminder_claimed_at === null
                             || $item->abandoned_cart_reminder_claimed_at->gt($claimExpiresBefore)));
             })) {
+                return null;
+            }
+
+            $validItems = $items->filter(function (CartItem $item) {
+                return $this->isEligibleProduct($item->variant, (int) $item->qty);
+            });
+            if ($validItems->isEmpty()) {
                 return null;
             }
 
@@ -59,9 +74,18 @@ class AbandonedCartReminderService
         });
     }
 
-    public function send(int $userId, string $claim): bool
+    public function send(int $userId, string $claim, int $stage = 1): bool
     {
-        $user = User::query()->find($userId);
+        $sentColumn = $this->sentColumn($stage);
+
+        return DB::transaction(function () use ($userId, $claim, $stage, $sentColumn) {
+            return $this->sendClaimedCart($userId, $claim, $stage, $sentColumn);
+        });
+    }
+
+    protected function sendClaimedCart(int $userId, string $claim, int $stage, string $sentColumn): bool
+    {
+        $user = User::query()->whereKey($userId)->lockForUpdate()->first();
         if (! $this->canReceive($user)) {
             $this->release($userId, $claim);
 
@@ -71,12 +95,13 @@ class AbandonedCartReminderService
         $items = CartItem::query()
             ->where('user_id', $userId)
             ->with(['variant.product.flashSale', 'variant.galleryImages'])
+            ->lockForUpdate()
             ->get();
 
         if ($items->isEmpty()
-            || $items->contains(function (CartItem $item) use ($claim) {
+            || $items->contains(function (CartItem $item) use ($claim, $sentColumn) {
                 return $item->abandoned_cart_reminder_claim !== $claim
-                    || $item->abandoned_cart_reminder_sent_at !== null;
+                    || $item->{$sentColumn} !== null;
             })) {
             $this->release($userId, $claim);
 
@@ -84,7 +109,7 @@ class AbandonedCartReminderService
         }
 
         $lastActivity = $items->max('updated_at');
-        $cutoff = now()->subMinutes((int) config('abandoned_cart.delay_minutes', 60));
+        $cutoff = now()->subMinutes($this->delayMinutes($stage));
         if ($lastActivity === null
             || $lastActivity->gt($cutoff)
             || $this->hasCompletedOrderSince($userId, $lastActivity)) {
@@ -94,7 +119,7 @@ class AbandonedCartReminderService
         }
 
         $validItems = $items->filter(function (CartItem $item) {
-            return $item->qty > 0 && $item->variant && $item->variant->product;
+            return $this->isEligibleProduct($item->variant, (int) $item->qty);
         })->values();
 
         if ($validItems->isEmpty()) {
@@ -118,44 +143,72 @@ class AbandonedCartReminderService
             ];
         });
 
+        if (! $this->canReceive($user)
+            || $this->hasCompletedOrderSince($userId, $lastActivity)
+            || CartItem::query()
+                ->where('user_id', $userId)
+                ->where('abandoned_cart_reminder_claim', $claim)
+                ->whereNull($sentColumn)
+                ->count() !== $items->count()) {
+            $this->release($userId, $claim);
+
+            return false;
+        }
+
         Mail::to($user->email)->send(new AbandonedCartReminderMail(
             $user,
             $emailItems,
             $subtotal,
-            route('cart.index')
+            route('cart.index'),
+            null,
+            $stage
         ));
 
         DB::table('cart_items')
             ->where('user_id', $userId)
             ->where('abandoned_cart_reminder_claim', $claim)
+            ->whereNull($sentColumn)
             ->update([
                 'abandoned_cart_reminder_claim' => null,
                 'abandoned_cart_reminder_claimed_at' => null,
-                'abandoned_cart_reminder_sent_at' => now(),
+                $sentColumn => now(),
             ]);
 
         return true;
     }
 
-    public function claimOrder(int $orderId, Carbon $cutoff, Carbon $claimExpiresBefore): ?string
-    {
+    public function claimOrder(
+        int $orderId,
+        Carbon $cutoff,
+        Carbon $claimExpiresBefore,
+        int $stage = 1
+    ): ?string {
         if (! config('abandoned_cart.enabled')) {
             return null;
         }
 
-        return DB::transaction(function () use ($orderId, $cutoff, $claimExpiresBefore) {
-            $order = Order::query()->whereKey($orderId)->lockForUpdate()->first();
+        $sentColumn = $this->sentColumn($stage);
+
+        return DB::transaction(function () use ($orderId, $cutoff, $claimExpiresBefore, $sentColumn) {
+            $order = Order::query()
+                ->with('items.variant.product')
+                ->whereKey($orderId)
+                ->lockForUpdate()
+                ->first();
             if (! $order || ! $this->isUnpaidOrderEligible($order) || $order->created_at->gt($cutoff)) {
                 return null;
             }
 
             $user = User::query()->whereKey($order->user_id)->lockForUpdate()->first();
             if (! $this->canReceive($user)
-                || $order->abandoned_cart_reminder_sent_at !== null
+                || $order->{$sentColumn} !== null
                 || ($order->abandoned_cart_reminder_claim !== null
                     && ($order->abandoned_cart_reminder_claimed_at === null
                         || $order->abandoned_cart_reminder_claimed_at->gt($claimExpiresBefore)))
-                || ! $order->items()->exists()) {
+                || $order->items->filter(function (OrderItem $item) {
+                    return $this->isEligibleProduct($item->variant, (int) $item->qty);
+                })->isEmpty()
+                || $this->hasCompletedOrderSince((int) $order->user_id, $order->created_at)) {
                 return null;
             }
 
@@ -171,22 +224,43 @@ class AbandonedCartReminderService
         });
     }
 
-    public function sendOrder(int $orderId, string $claim): bool
+    public function sendOrder(int $orderId, string $claim, int $stage = 1): bool
     {
-        $order = Order::query()->with(['user', 'items'])->find($orderId);
+        $sentColumn = $this->sentColumn($stage);
+
+        return DB::transaction(function () use ($orderId, $claim, $stage, $sentColumn) {
+            return $this->sendClaimedOrder($orderId, $claim, $stage, $sentColumn);
+        });
+    }
+
+    protected function sendClaimedOrder(int $orderId, string $claim, int $stage, string $sentColumn): bool
+    {
+        $order = Order::query()
+            ->with('items.variant.product')
+            ->whereKey($orderId)
+            ->lockForUpdate()
+            ->first();
+        $user = $order
+            ? User::query()->whereKey($order->user_id)->lockForUpdate()->first()
+            : null;
         if (! $order
-            || ! $this->canReceive($order->user)
+            || ! $this->canReceive($user)
             || ! $this->isUnpaidOrderEligible($order)
             || $order->abandoned_cart_reminder_claim !== $claim
-            || $order->abandoned_cart_reminder_sent_at !== null
-            || $order->created_at->gt(now()->subMinutes((int) config('abandoned_cart.delay_minutes', 60)))
-            || $order->items->isEmpty()) {
+            || $order->{$sentColumn} !== null
+            || $order->created_at->gt(now()->subMinutes($this->delayMinutes($stage)))
+            || $order->items->filter(function (OrderItem $item) {
+                return $this->isEligibleProduct($item->variant, (int) $item->qty);
+            })->isEmpty()
+            || $this->hasCompletedOrderSince((int) $order->user_id, $order->created_at)) {
             $this->releaseOrder($orderId, $claim);
 
             return false;
         }
 
-        $emailItems = $order->items->map(function (OrderItem $item) {
+        $emailItems = $order->items->filter(function (OrderItem $item) {
+            return $this->isEligibleProduct($item->variant, (int) $item->qty);
+        })->map(function (OrderItem $item) {
             return [
                 'name' => $item->product_name,
                 'image_url' => $item->product_image,
@@ -197,21 +271,33 @@ class AbandonedCartReminderService
         });
         $subtotal = round($emailItems->sum('line_total'), 2);
 
-        Mail::to($order->user->email)->send(new AbandonedCartReminderMail(
-            $order->user,
+        if (! $this->canReceive($user)
+            || ! $this->isUnpaidOrderEligible($order)
+            || $order->abandoned_cart_reminder_claim !== $claim
+            || $order->{$sentColumn} !== null
+            || $this->hasCompletedOrderSince((int) $order->user_id, $order->created_at)) {
+            $this->releaseOrder($orderId, $claim);
+
+            return false;
+        }
+
+        Mail::to($user->email)->send(new AbandonedCartReminderMail(
+            $user,
             $emailItems,
             $subtotal,
             route('pay.razorpay', $order),
-            (float) $order->total
+            (float) $order->total,
+            $stage
         ));
 
         DB::table('orders')
             ->where('id', $orderId)
             ->where('abandoned_cart_reminder_claim', $claim)
+            ->whereNull($sentColumn)
             ->update([
                 'abandoned_cart_reminder_claim' => null,
                 'abandoned_cart_reminder_claimed_at' => null,
-                'abandoned_cart_reminder_sent_at' => now(),
+                $sentColumn => now(),
             ]);
 
         return true;
@@ -252,6 +338,40 @@ class AbandonedCartReminderService
         return config('abandoned_cart.enabled')
             && $user !== null
             && filter_var(trim((string) $user->email), FILTER_VALIDATE_EMAIL) !== false;
+    }
+
+    protected function isEligibleProduct(?ProductVariant $variant, int $qty): bool
+    {
+        return $qty > 0
+            && $variant !== null
+            && $variant->product !== null
+            && $variant->product->is_active
+            && $variant->isBuyable()
+            && $qty <= (int) $variant->stock_qty;
+    }
+
+    protected function delayMinutes(int $stage): int
+    {
+        $delays = config('abandoned_cart.stages', []);
+        if (! isset($delays[$stage])) {
+            throw new \InvalidArgumentException("Unknown abandoned-cart reminder stage: {$stage}");
+        }
+
+        return (int) $delays[$stage];
+    }
+
+    protected function sentColumn(int $stage): string
+    {
+        $columns = [
+            1 => 'abandoned_cart_reminder_sent_at',
+            2 => 'abandoned_cart_reminder_2_sent_at',
+            3 => 'abandoned_cart_reminder_3_sent_at',
+        ];
+        if (! isset($columns[$stage])) {
+            throw new \InvalidArgumentException("Unknown abandoned-cart reminder stage: {$stage}");
+        }
+
+        return $columns[$stage];
     }
 
     protected function hasCompletedOrderSince(int $userId, ?Carbon $lastActivity): bool

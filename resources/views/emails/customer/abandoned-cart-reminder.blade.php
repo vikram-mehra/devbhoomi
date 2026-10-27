@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ __('You left something in your cart!') }}</title>
+    <title>{{ $reminderSubject }}</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f6f7;font-family:Arial,Helvetica,sans-serif;color:#252525;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f7;padding:24px 12px;">
@@ -17,7 +17,7 @@
                             @else
                                 <div style="font-size:22px;font-weight:700;color:#ec8951;margin-bottom:16px;">{{ config('app.name') }}</div>
                             @endif
-                            <h1 style="font-size:24px;line-height:1.3;margin:0 0 12px;color:#222;">{{ __('You left something in your cart!') }}</h1>
+                            <h1 style="font-size:24px;line-height:1.3;margin:0 0 12px;color:#222;">{{ $reminderSubject }}</h1>
                             <p style="font-size:15px;line-height:1.6;margin:0;color:#555;">
                                 {{ __('Hi :name, your items are waiting for you whenever you are ready.', ['name' => $customer->name ?: __('there')]) }}
                             </p>

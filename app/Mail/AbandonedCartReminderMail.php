@@ -29,13 +29,25 @@ class AbandonedCartReminderMail extends Mailable
 
     public string $supportEmail;
 
+    public string $reminderSubject;
+
     public function __construct(
         User $customer,
         Collection $items,
         float $subtotal,
         string $checkoutUrl,
-        ?float $total = null
+        ?float $total = null,
+        int $stage = 1
     ) {
+        $subjects = [
+            1 => __('You left something in your cart!'),
+            2 => __('Still thinking about your items?'),
+            3 => __('Complete your order — your cart is waiting!'),
+        ];
+        if (! isset($subjects[$stage])) {
+            throw new \InvalidArgumentException("Unknown abandoned-cart reminder stage: {$stage}");
+        }
+
         $this->customer = $customer;
         $this->items = $items;
         $this->subtotal = $subtotal;
@@ -43,11 +55,12 @@ class AbandonedCartReminderMail extends Mailable
         $this->checkoutUrl = $checkoutUrl;
         $this->total = $total;
         $this->supportEmail = (string) config('verification.support_email');
+        $this->reminderSubject = $subjects[$stage];
     }
 
     public function build()
     {
-        $mail = $this->subject(__('You left something in your cart!'))
+        $mail = $this->subject($this->reminderSubject)
             ->view('emails.customer.abandoned-cart-reminder');
 
         if ($this->supportEmail !== '') {

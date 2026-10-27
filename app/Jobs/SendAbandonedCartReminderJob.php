@@ -29,22 +29,25 @@ class SendAbandonedCartReminderJob implements ShouldQueue
 
     public ?int $orderId;
 
-    public function __construct(int $userId, string $claim, ?int $orderId = null)
+    public int $stage;
+
+    public function __construct(int $userId, string $claim, ?int $orderId = null, int $stage = 1)
     {
         $this->userId = $userId;
         $this->claim = $claim;
         $this->orderId = $orderId;
+        $this->stage = $stage;
     }
 
     public function handle(AbandonedCartReminderService $reminders): void
     {
         if ($this->orderId !== null) {
-            $reminders->sendOrder($this->orderId, $this->claim);
+            $reminders->sendOrder($this->orderId, $this->claim, $this->stage);
 
             return;
         }
 
-        $reminders->send($this->userId, $this->claim);
+        $reminders->send($this->userId, $this->claim, $this->stage);
     }
 
     public function failed(Throwable $exception): void
@@ -58,6 +61,7 @@ class SendAbandonedCartReminderJob implements ShouldQueue
 
         Log::error('Abandoned-cart reminder job permanently failed.', [
             'user_id' => $this->userId,
+            'stage' => $this->stage,
             'message' => $exception->getMessage(),
         ]);
     }

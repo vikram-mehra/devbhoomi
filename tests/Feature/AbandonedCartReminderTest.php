@@ -9,6 +9,7 @@ use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\AbandonedCartReminderService;
+use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Artisan;
@@ -32,7 +33,6 @@ class AbandonedCartReminderTest extends TestCase
         config()->set('app.url', 'http://localhost');
         config()->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
         config()->set('abandoned_cart.enabled', true);
-        config()->set('abandoned_cart.delay_minutes', 60);
         config()->set('abandoned_cart.claim_timeout_minutes', 120);
 
         DB::purge();
@@ -59,6 +59,7 @@ class AbandonedCartReminderTest extends TestCase
         $mail = Mail::sent(AbandonedCartReminderMail::class)->first();
         $html = view('emails.customer.abandoned-cart-reminder', get_object_vars($mail))->render();
         $this->assertSame('customer@example.com', $mail->to[0]['address']);
+        $this->assertSame('You left something in your cart!', $mail->reminderSubject);
         $this->assertNotFalse(strpos($html, 'Organic Tea'));
         $this->assertNotFalse(strpos($html, route('cart.index')));
         $this->assertNotFalse(strpos($html, '200.00'));
@@ -67,7 +68,7 @@ class AbandonedCartReminderTest extends TestCase
         Mail::assertSent(AbandonedCartReminderMail::class, 1);
     }
 
-    public function test_all_eligible_customers_receive_reminders_without_a_preference(): void
+    public function test_eligible_customer_receives_reminder_without_a_consent_preference(): void
     {
         $user = $this->makeUser();
         $this->makeCartItem($user);
@@ -81,6 +82,108 @@ class AbandonedCartReminderTest extends TestCase
             ->handle(app(AbandonedCartReminderService::class));
 
         Mail::assertSent(AbandonedCartReminderMail::class);
+    }
+
+    public function test_each_stage_uses_its_fixed_delay_from_cart_activity_and_exact_subject(): void
+    {
+        $user = $this->makeUser();
+        $item = $this->makeCartItem($user);
+        DB::table('cart_items')->where('id', $item->id)->update([
+            'created_at' => now()->subDays(4),
+            'updated_at' => now()->subDays(4),
+        ]);
+        $item = $item->fresh();
+        $service = app(AbandonedCartReminderService::class);
+        $stages = [
+            1 => [60, 'You left something in your cart!'],
+            2 => [1440, 'Still thinking about your items?'],
+            3 => [4320, 'Complete your order — your cart is waiting!'],
+        ];
+
+        foreach ($stages as $stage => [$delay, $subject]) {
+            $claim = $service->claim(
+                $user->id,
+                now()->subMinutes($delay),
+                now()->subHours(2),
+                $stage
+            );
+            $this->assertNotNull($claim, "Stage {$stage} should be due {$delay} minutes after abandonment.");
+            (new SendAbandonedCartReminderJob($user->id, $claim, null, $stage))->handle($service);
+
+            $mail = Mail::sent(AbandonedCartReminderMail::class)->last();
+            $this->assertSame($subject, $mail->reminderSubject);
+            $html = view('emails.customer.abandoned-cart-reminder', get_object_vars($mail))->render();
+            $this->assertStringContainsString($subject, $html);
+            $this->assertStringContainsString('Organic Tea', $html);
+            $this->assertStringContainsString(route('cart.index'), $html);
+        }
+
+        $this->assertSame([1 => 60, 2 => 1440, 3 => 4320], config('abandoned_cart.stages'));
+        $this->assertNotNull($item->fresh()->abandoned_cart_reminder_sent_at);
+        $this->assertNotNull($item->fresh()->abandoned_cart_reminder_2_sent_at);
+        $this->assertNotNull($item->fresh()->abandoned_cart_reminder_3_sent_at);
+        Mail::assertSent(AbandonedCartReminderMail::class, 3);
+    }
+
+    public function test_scheduler_dispatches_all_stages_at_offsets_from_original_cart_activity(): void
+    {
+        $base = now()->copy()->setMicrosecond(0);
+        $user = $this->makeUser();
+        $item = $this->makeCartItem($user);
+        DB::table('cart_items')->where('id', $item->id)->update([
+            'created_at' => $base,
+            'updated_at' => $base,
+        ]);
+        $service = app(AbandonedCartReminderService::class);
+        Bus::fake();
+
+        try {
+            $subjects = [
+                1 => 'You left something in your cart!',
+                2 => 'Still thinking about your items?',
+                3 => 'Complete your order — your cart is waiting!',
+            ];
+            foreach ([1 => 1, 2 => 24, 3 => 72] as $stage => $hoursAfterActivity) {
+                Carbon::setTestNow($base->copy()->addHours($hoursAfterActivity));
+                Artisan::call('app:send-abandoned-cart-reminders');
+
+                $job = Bus::dispatched(
+                    SendAbandonedCartReminderJob::class,
+                    function (SendAbandonedCartReminderJob $dispatched) use ($stage) {
+                        return $dispatched->stage === $stage;
+                    }
+                )->last();
+
+                $this->assertNotNull($job, "Stage {$stage} should be dispatched on its scheduled offset.");
+                $job->handle($service);
+                $this->assertSame(
+                    $subjects[$stage],
+                    Mail::sent(AbandonedCartReminderMail::class)->last()->reminderSubject
+                );
+            }
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        $this->assertSame(3, Mail::sent(AbandonedCartReminderMail::class)->count());
+    }
+
+    public function test_cart_activity_resets_all_stage_sent_markers(): void
+    {
+        $user = $this->makeUser();
+        $item = $this->makeCartItem($user);
+        DB::table('cart_items')->where('id', $item->id)->update([
+            'abandoned_cart_reminder_sent_at' => now()->subDays(3),
+            'abandoned_cart_reminder_2_sent_at' => now()->subDays(2),
+            'abandoned_cart_reminder_3_sent_at' => now()->subDay(),
+        ]);
+
+        app(\App\Services\CartService::class)->recordUserActivity($user->id);
+
+        $item = $item->fresh();
+        $this->assertNull($item->abandoned_cart_reminder_sent_at);
+        $this->assertNull($item->abandoned_cart_reminder_2_sent_at);
+        $this->assertNull($item->abandoned_cart_reminder_3_sent_at);
     }
 
     public function test_skips_a_cart_when_a_paid_order_was_completed_after_cart_activity(): void
@@ -108,6 +211,38 @@ class AbandonedCartReminderTest extends TestCase
         $this->assertNull($item->fresh()->abandoned_cart_reminder_claim);
     }
 
+    public function test_paid_purchase_stops_later_stages_for_the_cart(): void
+    {
+        $user = $this->makeUser();
+        $item = $this->makeCartItem($user);
+        DB::table('cart_items')->where('id', $item->id)->update([
+            'created_at' => now()->subDays(4),
+            'updated_at' => now()->subDays(4),
+        ]);
+        $service = app(AbandonedCartReminderService::class);
+        $claim = $service->claim($user->id, now()->subHour(), now()->subHours(2));
+        $this->assertNotNull($claim);
+        (new SendAbandonedCartReminderJob($user->id, $claim))->handle($service);
+
+        DB::table('orders')->insert([
+            'user_id' => $user->id,
+            'payment_status' => 'paid',
+            'status' => 'confirmed',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $nextClaim = $service->claim(
+            $user->id,
+            now()->subDay(),
+            now()->subHours(2),
+            2
+        );
+
+        $this->assertNull($nextClaim);
+        Mail::assertSent(AbandonedCartReminderMail::class, 1);
+    }
+
     public function test_sends_a_reminder_for_an_unpaid_checkout_using_its_payment_link(): void
     {
         $user = $this->makeUser();
@@ -127,6 +262,50 @@ class AbandonedCartReminderTest extends TestCase
         $html = view('emails.customer.abandoned-cart-reminder', get_object_vars($mail))->render();
         $this->assertNotFalse(strpos($html, route('pay.razorpay', $orderId)));
         $this->assertNotNull(Order::query()->find($orderId)->abandoned_cart_reminder_sent_at);
+    }
+
+    public function test_unpaid_checkout_tracks_all_reminder_stages_separately(): void
+    {
+        $user = $this->makeUser();
+        $orderId = $this->makeUnpaidOrder($user);
+        DB::table('orders')->where('id', $orderId)->update([
+            'created_at' => now()->subDays(4),
+            'updated_at' => now()->subDays(4),
+        ]);
+        $service = app(AbandonedCartReminderService::class);
+
+        foreach ([1 => 60, 2 => 1440, 3 => 4320] as $stage => $delayMinutes) {
+            $claim = $service->claimOrder(
+                $orderId,
+                now()->subMinutes($delayMinutes),
+                now()->subHours(2),
+                $stage
+            );
+            $this->assertNotNull($claim);
+            (new SendAbandonedCartReminderJob($user->id, $claim, $orderId, $stage))->handle($service);
+        }
+
+        $order = Order::query()->findOrFail($orderId);
+        $this->assertNotNull($order->abandoned_cart_reminder_sent_at);
+        $this->assertNotNull($order->abandoned_cart_reminder_2_sent_at);
+        $this->assertNotNull($order->abandoned_cart_reminder_3_sent_at);
+        Mail::assertSent(AbandonedCartReminderMail::class, 3);
+    }
+
+    public function test_skips_unpaid_checkout_when_its_product_has_been_deleted(): void
+    {
+        $user = $this->makeUser();
+        $orderId = $this->makeUnpaidOrder($user);
+        DB::table('products')->delete();
+
+        $claim = app(AbandonedCartReminderService::class)->claimOrder(
+            $orderId,
+            now()->subHour(),
+            now()->subHours(2)
+        );
+
+        $this->assertNull($claim);
+        Mail::assertNothingSent();
     }
 
     public function test_skips_an_unpaid_order_if_payment_completes_before_the_job_runs(): void
@@ -159,6 +338,40 @@ class AbandonedCartReminderTest extends TestCase
         (new SendAbandonedCartReminderJob($user->id, 'empty-cart-claim'))
             ->handle(app(AbandonedCartReminderService::class));
 
+        Mail::assertNothingSent();
+    }
+
+    public function test_skips_cart_items_with_deleted_products(): void
+    {
+        $user = $this->makeUser();
+        $item = $this->makeCartItem($user);
+        DB::table('products')->delete();
+
+        $claim = app(AbandonedCartReminderService::class)->claim(
+            $user->id,
+            now()->subHour(),
+            now()->subHours(2)
+        );
+
+        $this->assertNull($claim);
+        Mail::assertNothingSent();
+    }
+
+    public function test_skips_cart_items_that_are_no_longer_buyable(): void
+    {
+        $user = $this->makeUser();
+        $item = $this->makeCartItem($user);
+        DB::table('product_variants')->where('id', $item->product_variant_id)->update([
+            'stock_qty' => 1,
+        ]);
+
+        $claim = app(AbandonedCartReminderService::class)->claim(
+            $user->id,
+            now()->subHour(),
+            now()->subHours(2)
+        );
+
+        $this->assertNull($claim);
         Mail::assertNothingSent();
     }
 
@@ -242,7 +455,7 @@ class AbandonedCartReminderTest extends TestCase
         }));
     }
 
-    public function test_migrations_keep_tracking_columns_and_remove_customer_preferences(): void
+    public function test_migrations_keep_stage_tracking_without_customer_preferences(): void
     {
         Schema::dropIfExists('cart_items');
         Schema::dropIfExists('orders');
@@ -270,11 +483,15 @@ class AbandonedCartReminderTest extends TestCase
         (new \AddAbandonedCartReminderTracking())->up();
         require_once base_path('database/migrations/2026_10_26_140000_remove_abandoned_cart_reminder_preferences.php');
         (new \RemoveAbandonedCartReminderPreferences())->up();
+        require_once base_path('database/migrations/2026_10_27_110000_add_abandoned_cart_reminder_stages.php');
+        (new \AddAbandonedCartReminderStages())->up();
 
         $this->assertTrue(Schema::hasColumns('cart_items', [
             'abandoned_cart_reminder_claim',
             'abandoned_cart_reminder_claimed_at',
             'abandoned_cart_reminder_sent_at',
+            'abandoned_cart_reminder_2_sent_at',
+            'abandoned_cart_reminder_3_sent_at',
         ]));
         $this->assertFalse(Schema::hasColumn('users', 'abandoned_cart_reminders_enabled'));
         $this->assertFalse(Schema::hasColumn('users', 'abandoned_cart_reminders_consent_at'));
@@ -282,6 +499,8 @@ class AbandonedCartReminderTest extends TestCase
             'abandoned_cart_reminder_claim',
             'abandoned_cart_reminder_claimed_at',
             'abandoned_cart_reminder_sent_at',
+            'abandoned_cart_reminder_2_sent_at',
+            'abandoned_cart_reminder_3_sent_at',
         ]));
     }
 
@@ -301,6 +520,7 @@ class AbandonedCartReminderTest extends TestCase
             'name' => 'Organic Tea',
             'base_price' => 100,
             'gst' => 0,
+            'is_active' => true,
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -329,6 +549,23 @@ class AbandonedCartReminderTest extends TestCase
     protected function makeUnpaidOrder(User $user): int
     {
         $now = now();
+        $productId = DB::table('products')->insertGetId([
+            'name' => 'Organic Tea',
+            'base_price' => 100,
+            'gst' => 0,
+            'is_active' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $variantId = DB::table('product_variants')->insertGetId([
+            'product_id' => $productId,
+            'sku' => 'TEA-ORDER-001',
+            'price' => 100,
+            'stock_qty' => 5,
+            'status' => 'active',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
         $orderId = DB::table('orders')->insertGetId([
             'user_id' => $user->id,
             'payment_method' => 'razorpay',
@@ -342,6 +579,7 @@ class AbandonedCartReminderTest extends TestCase
 
         DB::table('order_items')->insert([
             'order_id' => $orderId,
+            'product_variant_id' => $variantId,
             'product_name' => 'Organic Tea',
             'variant_label' => 'Default',
             'product_image' => null,
@@ -371,6 +609,7 @@ class AbandonedCartReminderTest extends TestCase
             $table->string('name');
             $table->decimal('base_price', 12, 2);
             $table->decimal('gst', 8, 2)->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
 
@@ -413,6 +652,8 @@ class AbandonedCartReminderTest extends TestCase
             $table->string('abandoned_cart_reminder_claim', 36)->nullable();
             $table->timestamp('abandoned_cart_reminder_claimed_at')->nullable();
             $table->timestamp('abandoned_cart_reminder_sent_at')->nullable();
+            $table->timestamp('abandoned_cart_reminder_2_sent_at')->nullable();
+            $table->timestamp('abandoned_cart_reminder_3_sent_at')->nullable();
             $table->timestamps();
         });
 
@@ -427,12 +668,15 @@ class AbandonedCartReminderTest extends TestCase
             $table->string('abandoned_cart_reminder_claim', 36)->nullable();
             $table->timestamp('abandoned_cart_reminder_claimed_at')->nullable();
             $table->timestamp('abandoned_cart_reminder_sent_at')->nullable();
+            $table->timestamp('abandoned_cart_reminder_2_sent_at')->nullable();
+            $table->timestamp('abandoned_cart_reminder_3_sent_at')->nullable();
             $table->timestamps();
         });
 
         Schema::create('order_items', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('product_variant_id')->nullable();
             $table->string('product_name');
             $table->string('variant_label')->nullable();
             $table->string('product_image')->nullable();

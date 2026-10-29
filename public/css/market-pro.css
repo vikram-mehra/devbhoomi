@@ -5308,8 +5308,9 @@ body.modal-open.cb-market-pro .cb-header--myntra {
   box-shadow: 0 8px 20px rgba(45, 90, 61, 0.28);
 }
 @media (min-width: 576px) and (max-width: 991.98px) {
-  .cb-market-pro .zm-grid-products.zm-grid-products--shop {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .cb-market-pro .zm-grid-products {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 0.85rem;
   }
 }
 @media (min-width: 992px) {
@@ -5317,6 +5318,46 @@ body.modal-open.cb-market-pro .cb-header--myntra {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.5rem;
   }
+}
+
+@media (max-width: 575.98px) {
+  .cb-market-pro .zm-grid-products {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .cb-market-pro .pro-product-swiper .swiper-slide {
+    width: calc((100% - 12px) / 2);
+  }
+
+  .cb-market-pro .zm-pro-card__options {
+    display: none;
+  }
+
+  .cb-market-pro .zm-pro-card .zm-pro-add-form {
+    display: none !important;
+  }
+
+  .cb-market-pro .zm-pro-card__link {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+  }
+
+  .cb-market-pro .zm-pro-card__img--primary,
+  .cb-market-pro .zm-pro-card__img--secondary {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .cb-market-pro .zm-pro-card__title {
+    -webkit-line-clamp: 1;
+    max-height: 1.35em;
+    text-overflow: ellipsis;
+  }
+
 }
 
 .cb-market-pro .cb-scroll-row > * {
@@ -7370,6 +7411,12 @@ body.cb-market-pro .bi {
   flex-shrink: 0;
 }
 
+@media (max-width: 767.98px) {
+  .cb-market-pro .zm-pro-card__offer-strip {
+    display: none !important;
+  }
+}
+
 /* —— PDP purchase row: qty + add to cart + buy now —— */
 .cb-market-pro .pro-pdp-purchase-row {
   display: flex;
@@ -8690,6 +8737,7 @@ body.cb-market-pro .bi {
 .pro-home-promo__card {
   position: relative;
   display: block;
+  width: 100%;
   border-radius: 1rem;
   overflow: hidden;
   min-height: 220px;
@@ -8715,10 +8763,7 @@ body.cb-market-pro .bi {
 }
 
 .pro-home-promo__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
-  pointer-events: none;
+  display: none;
 }
 
 .pro-home-promo__content {
@@ -8766,10 +8811,33 @@ body.cb-market-pro .bi {
 @media (min-width: 768px) {
   .pro-home-promo__card {
     min-height: 280px;
+    aspect-ratio: 8 / 3;
   }
   .pro-home-promo__content {
     min-height: 280px;
     padding: 1.5rem 1.65rem;
+  }
+}
+@media (max-width: 767.98px) {
+  .pro-home-promo__card {
+    aspect-ratio: auto;
+    min-height: 0;
+    background: #fff;
+  }
+  .pro-home-promo__card picture {
+    display: block;
+  }
+  .pro-home-promo__img {
+    position: relative;
+    inset: auto;
+    display: block;
+    height: auto;
+    object-fit: contain;
+  }
+  .pro-home-promo__content {
+    position: absolute;
+    inset: auto 0 0;
+    min-height: 0;
   }
 }
 

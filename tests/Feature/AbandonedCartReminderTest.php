@@ -405,6 +405,26 @@ class AbandonedCartReminderTest extends TestCase
         Bus::assertDispatchedTimes(SendAbandonedCartReminderJob::class, 1);
     }
 
+    public function test_later_stage_requires_the_previous_stage_to_be_sent(): void
+    {
+        $user = $this->makeUser();
+        $item = $this->makeCartItem($user);
+        DB::table('cart_items')->where('id', $item->id)->update([
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ]);
+
+        $service = app(AbandonedCartReminderService::class);
+        $claim = $service->claim(
+            $user->id,
+            now()->subDay(),
+            now()->subHours(2),
+            2
+        );
+
+        $this->assertNull($claim);
+    }
+
     public function test_command_skips_invalid_customer_email_addresses(): void
     {
         $user = $this->makeUser();

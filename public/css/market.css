@@ -669,6 +669,13 @@ html.dark .cb-section-head h2 {
     max-width: calc(100% - 2.75rem);
   }
 }
+@media (min-width: 500px) and (max-width: 767.98px) {
+  .cb-scroll-row > * {
+    flex: 0 0 calc((100% - 2.3rem) / 3);
+    width: calc((100% - 2.3rem) / 3);
+    max-width: calc((100% - 2.3rem) / 3);
+  }
+}
 @media (min-width: 768px) {
   .cb-scroll-row > * { flex: 0 0 248px; }
 }

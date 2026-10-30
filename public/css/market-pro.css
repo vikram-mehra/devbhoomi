@@ -2949,12 +2949,27 @@ body.cb-market-pro.is-search-open {
   overflow: hidden;
   padding: calc(6px + (10 - 6) * ((100vw - 320px) / (1920 - 320)));
 }
+@media (max-width: 566.98px) {
+  .cb-market-pro .pro-trend-skel__card {
+    flex-basis: calc((100% - 12px) / 2);
+  }
+}
 @media (min-width: 620px) {
   .cb-market-pro .pro-trend-skel__track {
     gap: 16px;
   }
   .cb-market-pro .pro-trend-skel__card {
     flex-basis: calc((100% - 16px) / 2);
+  }
+}
+@media (min-width: 567px) and (max-width: 767.98px) {
+  .cb-market-pro .pro-trend-skel__card {
+    flex-basis: calc((100% - 24px) / 3);
+  }
+}
+@media (min-width: 620px) and (max-width: 767.98px) {
+  .cb-market-pro .pro-trend-skel__card {
+    flex-basis: calc((100% - 32px) / 3);
   }
 }
 @media (min-width: 768px) {
@@ -5358,6 +5373,18 @@ body.modal-open.cb-market-pro .cb-header--myntra {
     text-overflow: ellipsis;
   }
 
+}
+
+@media (min-width: 567px) and (max-width: 619.98px) {
+  .cb-market-pro .pro-product-swiper .swiper-slide {
+    width: calc((100% - 24px) / 3);
+  }
+}
+
+@media (min-width: 620px) and (max-width: 767.98px) {
+  .cb-market-pro .pro-product-swiper .swiper-slide {
+    width: calc((100% - 32px) / 3);
+  }
 }
 
 .cb-market-pro .cb-scroll-row > * {
@@ -9100,7 +9127,7 @@ body.cb-market-pro .bi {
   .cb-market-pro .zm-pro-card__price--listing {
     font-size: var(--pro-mobile-fs-sm) !important;
   }
-  .cb-market-pro .zm-pro-icon-btn--round {
+  .cb-market-pro .zm-pro-icon-btn--round, .zm-pro-card__hover-actions .zm-pro-icon-btn {
     width: 32px !important;
     height: 32px !important;
   }

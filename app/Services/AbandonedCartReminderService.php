@@ -27,7 +27,7 @@ class AbandonedCartReminderService
 
         $sentColumn = $this->sentColumn($stage);
 
-        return DB::transaction(function () use ($userId, $cutoff, $claimExpiresBefore, $sentColumn) {
+        return DB::transaction(function () use ($userId, $cutoff, $claimExpiresBefore, $sentColumn, $stage) {
             $user = User::query()->whereKey($userId)->lockForUpdate()->first();
             if (! $this->canReceive($user)) {
                 return null;
@@ -39,10 +39,11 @@ class AbandonedCartReminderService
                 ->lockForUpdate()
                 ->get();
 
-            if ($items->isEmpty() || $items->contains(function (CartItem $item) use ($cutoff, $claimExpiresBefore, $sentColumn) {
+            if ($items->isEmpty() || $items->contains(function (CartItem $item) use ($cutoff, $claimExpiresBefore, $sentColumn, $stage) {
                 return $item->updated_at === null
                     || $item->updated_at->gt($cutoff)
                     || $item->{$sentColumn} !== null
+                    || ($stage > 1 && $item->{$this->sentColumn($stage - 1)} === null)
                     || ($item->abandoned_cart_reminder_claim !== null
                         && ($item->abandoned_cart_reminder_claimed_at === null
                             || $item->abandoned_cart_reminder_claimed_at->gt($claimExpiresBefore)));
@@ -189,7 +190,7 @@ class AbandonedCartReminderService
 
         $sentColumn = $this->sentColumn($stage);
 
-        return DB::transaction(function () use ($orderId, $cutoff, $claimExpiresBefore, $sentColumn) {
+        return DB::transaction(function () use ($orderId, $cutoff, $claimExpiresBefore, $sentColumn, $stage) {
             $order = Order::query()
                 ->with('items.variant.product')
                 ->whereKey($orderId)
@@ -202,6 +203,7 @@ class AbandonedCartReminderService
             $user = User::query()->whereKey($order->user_id)->lockForUpdate()->first();
             if (! $this->canReceive($user)
                 || $order->{$sentColumn} !== null
+                || ($stage > 1 && $order->{$this->sentColumn($stage - 1)} === null)
                 || ($order->abandoned_cart_reminder_claim !== null
                     && ($order->abandoned_cart_reminder_claimed_at === null
                         || $order->abandoned_cart_reminder_claimed_at->gt($claimExpiresBefore)))

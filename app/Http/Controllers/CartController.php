@@ -57,6 +57,17 @@ class CartController extends Controller
         GoogleAnalyticsService::flashAddToCart($variant, $qty, $request->boolean('buy_now'));
 
         if ($request->boolean('buy_now')) {
+            if (\App\Services\HolidayModeService::isEnabled()) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'error' => \App\Services\HolidayModeService::message(),
+                        'holiday_mode' => true,
+                    ], 403);
+                }
+
+                return redirect()->route('cart.index')->with('error', \App\Services\HolidayModeService::message());
+            }
+
             if (auth()->check()) {
                 return redirect()->route('checkout.index');
             }

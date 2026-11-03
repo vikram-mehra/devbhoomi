@@ -134,16 +134,18 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.submit');
 
 Route::middleware(['auth', 'verified.email'])->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.validate-coupon');
-    Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.remove-coupon');
-    Route::post('/checkout/quote-shipping', [CheckoutController::class, 'quoteShipping'])->name('checkout.quote-shipping');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::middleware('not.holiday')->group(function () {
+        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+        Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.validate-coupon');
+        Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.remove-coupon');
+        Route::post('/checkout/quote-shipping', [CheckoutController::class, 'quoteShipping'])->name('checkout.quote-shipping');
+        Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
-    Route::post('/pay/razorpay/dummy/{order}', [PaymentController::class, 'razorpayDummyComplete'])->name('pay.razorpay.dummy');
-    Route::get('/pay/razorpay/{order}', [PaymentController::class, 'razorpay'])->name('pay.razorpay');
-    Route::post('/pay/razorpay/verify', [PaymentController::class, 'razorpayVerify'])->name('pay.razorpay.verify');
-    Route::post('/pay/razorpay/order/{order}', [PaymentController::class, 'createRazorpayOrder'])->name('pay.razorpay.order');
+        Route::post('/pay/razorpay/dummy/{order}', [PaymentController::class, 'razorpayDummyComplete'])->name('pay.razorpay.dummy');
+        Route::get('/pay/razorpay/{order}', [PaymentController::class, 'razorpay'])->name('pay.razorpay');
+        Route::post('/pay/razorpay/verify', [PaymentController::class, 'razorpayVerify'])->name('pay.razorpay.verify');
+        Route::post('/pay/razorpay/order/{order}', [PaymentController::class, 'createRazorpayOrder'])->name('pay.razorpay.order');
+    });
     Route::post('/pay/razorpay/abandon/{order}', [PaymentController::class, 'razorpayAbandon'])->name('pay.razorpay.abandon');
 
     Route::get('/track-order', [OrderTrackingController::class, 'show'])->name('orders.track');

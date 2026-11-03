@@ -21,6 +21,10 @@ class PaymentController extends Controller
 
     public function razorpay(Order $order)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return redirect()->route('orders.show', $order)->with('error', \App\Services\HolidayModeService::message());
+        }
+
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
 
@@ -51,6 +55,10 @@ class PaymentController extends Controller
 
     public function razorpayDummyComplete(Order $order)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return redirect()->route('orders.show', $order)->with('error', \App\Services\HolidayModeService::message());
+        }
+
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
         abort_if($this->razorpayLive(), 403);
@@ -72,6 +80,12 @@ class PaymentController extends Controller
 
     public function razorpayVerify(Request $request)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            $order = Order::find($request->order_id);
+            $target = $order ? route('orders.show', $order) : route('market.home');
+            return redirect($target)->with('error', __('Payment confirmation blocked: store is currently in holiday mode.'));
+        }
+
         $request->validate([
             'razorpay_order_id' => 'required|string',
             'razorpay_payment_id' => 'required|string',
@@ -129,6 +143,10 @@ class PaymentController extends Controller
 
     public function createRazorpayOrder(Order $order)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return response()->json(['error' => 'holiday_mode', 'message' => \App\Services\HolidayModeService::message()], 403);
+        }
+
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
 

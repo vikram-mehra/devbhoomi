@@ -34,6 +34,10 @@ class CheckoutController extends Controller
 
     public function index(CartService $cart, ShippingService $shipping)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return redirect()->route('cart.index')->with('error', \App\Services\HolidayModeService::message());
+        }
+
         $items = $cart->query()->get();
         if ($items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', __('Your cart is empty.'));
@@ -174,6 +178,17 @@ class CheckoutController extends Controller
 
     public function store(Request $request, CartService $cart, CouponService $coupons, ShippingService $shipping)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return response()->json([
+                    'error' => 'holiday_mode',
+                    'message' => \App\Services\HolidayModeService::message(),
+                ], 403);
+            }
+
+            return redirect()->route('cart.index')->with('error', \App\Services\HolidayModeService::message());
+        }
+
         if ($request->input('address_id') === '' || $request->input('address_id') === null) {
             $request->merge(['address_id' => null]);
         }

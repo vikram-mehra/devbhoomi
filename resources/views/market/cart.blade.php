@@ -246,11 +246,22 @@ input.js-cart-qty-input {
                         </div>
                     </div>
                     
-                    @auth
-                        <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Proceed to checkout') }}</a>
+                    @if(config('holiday.enabled'))
+                        <div class="alert alert-warning border-0 rounded-4 p-3 small text-center mb-3">
+                            <i class="bi bi-pause-circle-fill fs-5 d-block mb-1 text-warning"></i>
+                            <strong class="d-block mb-1 text-dark">{{ config('holiday.title', __('Store on Holiday Break')) }}</strong>
+                            <span class="text-muted">{{ config('holiday.message') }}</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm opacity-75" disabled>
+                            <i class="bi bi-lock-fill me-1"></i> {{ __('Checkout Paused (Holiday)') }}
+                        </button>
                     @else
-                        <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Login to checkout') }}</a>
-                    @endauth
+                        @auth
+                            <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Proceed to checkout') }}</a>
+                        @else
+                            <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Login to checkout') }}</a>
+                        @endauth
+                    @endif
                 </div>
             </div>
         </div>

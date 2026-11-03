@@ -110,7 +110,7 @@ class HimalayanRedRiceBlogSeeder extends Seeder
 
 <h2>Conclusion</h2>
 <p>Red Rice is a nutritious and flavorful grain that brings traditional Himalayan goodness to modern kitchens. One swap from polished white rice opens the door to more fiber, more minerals, and meals that actually taste like something grown in real soil.</p>
-<p><strong>Try Pahadi Red Rice today.</strong> Order <a href="{$redRice}">Himalayan Red Rice</a> from Devbhoomi Naturals. Pair it with <a href="{$rajma}">Pahadi Red Rajma</a> or <a href="{$bhatt}">Kala Bhatt</a>, and explore our full <a href="{$himalayan}">Uttarakhand food products</a> range. <strong>Free delivery on prepaid orders above ₹499.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
+<p><strong>Try Pahadi Red Rice today.</strong> Order <a href="{$redRice}">Himalayan Red Rice</a> from Devbhoomi Naturals. Pair it with <a href="{$rajma}">Pahadi Red Rajma</a> or <a href="{$bhatt}">Kala Bhatt</a>, and explore our full <a href="{$himalayan}">Uttarakhand food products</a> range. <strong>Free delivery on orders above ₹2,999.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
 HTML;
 
         BlogPost::create([

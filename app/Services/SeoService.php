@@ -69,6 +69,7 @@ class SeoService
 
     public function normalizeTitle(string $title, ?string $suffix = null): string
     {
+        $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $title = preg_replace('/\s+/u', ' ', trim(strip_tags($title)));
         $title = preg_replace('/\s*[\|—–-]\s*Devbhoomi(?:\s+Naturals|\s+Blog|\s+Seller)?\s*$/iu', '', (string) $title);
         $title = trim((string) $title);
@@ -78,6 +79,7 @@ class SeoService
 
     public function normalizeDescription(string $description): string
     {
+        $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $description = preg_replace('/\s+/u', ' ', trim(strip_tags($description)));
         $max = (int) config('seo.description_max', 160);
 
@@ -379,11 +381,11 @@ class SeoService
             ],
             [
                 'question' => __('Do you deliver across India?'),
-                'answer' => __('Yes — we ship pan-India. Free delivery on every prepaid order.'),
+                'answer' => __('Yes — we ship pan-India. Free delivery on orders above ₹2,999.'),
             ],
             [
-                'question' => __('Is delivery free on prepaid orders?'),
-                'answer' => __('Yes. Free delivery on every prepaid order, anywhere in India. Extra prepaid discounts may also apply at checkout.'),
+                'question' => __('Is delivery free on orders above ₹2,999?'),
+                'answer' => __('Yes. Free standard delivery on all orders of ₹2,999 and above anywhere in India. For orders below ₹2,999, a nominal delivery charge is calculated at checkout based on your delivery pincode and weight.'),
             ],
             [
                 'question' => __('How can I track my Devbhoomi order?'),

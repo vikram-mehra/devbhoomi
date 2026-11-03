@@ -13,8 +13,8 @@
         ],
         [
             'icon' => 'bi-truck',
-            'title' => __('Pan-India delivery, prepaid made easy'),
-            'text' => __('We ship across India. Free delivery on every prepaid order, so you can stock the home pantry without extra shipping worry.'),
+            'title' => __('Pan-India delivery, free above ₹2,999'),
+            'text' => __('We ship across India. Free standard delivery on orders above ₹2,999, so you can stock your home pantry without extra shipping worry.'),
         ],
         [
             'icon' => 'bi-people',

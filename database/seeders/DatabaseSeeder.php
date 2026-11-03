@@ -199,7 +199,7 @@ class DatabaseSeeder extends Seeder
             'min_cart' => 499,
             'max_discount' => 150,
             'starts_at' => now()->subDay(),
-            'ends_at' => now()->addMonths(3),
+            'ends_at' => now()->addYears(2),
             'usage_limit' => 5000,
             'used_count' => 0,
             'is_active' => true,

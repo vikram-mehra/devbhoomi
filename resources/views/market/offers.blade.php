@@ -1,8 +1,16 @@
 @extends('layouts.market')
 
+@php
+    $featuredOffer = $coupons->first();
+@endphp
+
 @section('title', __('Offers & Coupons'))
 @section('meta_description')
-    {{ __('Active promo codes on organic Himalayan products. Extra 5% off prepaid orders & free delivery above ₹499 at Devbhoomi Naturals.') }}
+@if($featuredOffer)
+{{ __('Active promo codes on organic Himalayan products. Use code :code for :discount & enjoy free delivery above ₹2,999 at Devbhoomi Naturals.', ['code' => $featuredOffer->code, 'discount' => $featuredOffer->discountLabel()]) }}
+@else
+{{ __('Discover active promo codes, discounts and savings on pure Himalayan organic products at Devbhoomi Naturals. Free delivery on orders above ₹2,999.') }}
+@endif
 @endsection
 @section('canonical', route('offers.index'))
 

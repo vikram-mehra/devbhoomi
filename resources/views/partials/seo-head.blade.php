@@ -1,9 +1,9 @@
 @php
     /** @var \App\Support\SeoMeta $seo */
     $seo = $seo ?? app(\App\Services\SeoService::class)->build([
-        'title' => trim(strip_tags((string) view()->yieldContent('title'))),
-        'description' => trim(strip_tags((string) view()->yieldContent('meta_description'))),
-        'keywords' => trim(strip_tags((string) view()->yieldContent('meta_keywords'))),
+        'title' => html_entity_decode(trim(strip_tags((string) view()->yieldContent('title'))), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+        'description' => html_entity_decode(trim(strip_tags((string) view()->yieldContent('meta_description'))), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+        'keywords' => html_entity_decode(trim(strip_tags((string) view()->yieldContent('meta_keywords'))), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
         'canonical' => trim(strip_tags((string) view()->yieldContent('canonical'))),
         'og_image' => trim(strip_tags((string) view()->yieldContent('og_image'))),
         'robots' => trim(strip_tags((string) view()->yieldContent('robots'))),

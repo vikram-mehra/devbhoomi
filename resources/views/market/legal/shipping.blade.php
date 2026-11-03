@@ -1,7 +1,7 @@
 @extends('layouts.market')
 
 @section('title', 'Shipping Policy')
-@section('meta_description', 'Shipping and delivery policy for Devbhoomi Naturals organic products. Pan-India delivery, free shipping above ₹499, and estimated delivery timelines explained.')
+@section('meta_description', 'Shipping and delivery policy for Devbhoomi Naturals organic products. Pan-India delivery, free shipping on orders above ₹2,999, and estimated delivery timelines explained.')
 @section('canonical', route('legal.shipping'))
 
 @push('schema')
@@ -39,7 +39,7 @@
     <p>{{ __('Delivery times are estimates and may vary due to weather conditions, courier delays, public holidays, or other unforeseen circumstances.') }}</p>
 
     <h2 class="h5 mt-4">{{ __('Shipping Charges') }}</h2>
-    <p>{{ __('Shipping charges, if applicable, will be displayed during checkout before payment is completed.') }}</p>
+    <p>{{ __('We offer free standard delivery across India on all orders of ₹2,999 and above. For orders below ₹2,999, a nominal delivery charge (starting at ₹49) is calculated at checkout based on your delivery destination and package weight.') }}</p>
 
     <h2 class="h5 mt-4">{{ __('Order Tracking') }}</h2>
     <p>{{ __('Once your order is shipped, tracking details will be shared via email, SMS, or WhatsApp (where applicable). After logging in, you can also use Track order on this website with your order number and the email or mobile used at checkout.') }}</p>

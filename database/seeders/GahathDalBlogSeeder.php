@@ -110,7 +110,7 @@ class GahathDalBlogSeeder extends Seeder
 
 <h2>Conclusion</h2>
 <p>Gahath Dal combines tradition, nutrition, and taste. It is one of the most underrated foods from Uttarakhand and deserves a place in every healthy kitchen — whether you cook it the way your grandmother did or adapt it for modern meal prep.</p>
-<p><strong>Rediscover this Himalayan superfood.</strong> Order <a href="{$gahat}">Pahadi Gahat Dal</a> from Devbhoomi Naturals. Pair with <a href="{$bhatt}">Kala Bhatt</a> and <a href="{$redRice}">Pahadi Red Rice</a> for a complete pahadi pantry. <strong>Free delivery on prepaid orders above ₹499.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
+<p><strong>Rediscover this Himalayan superfood.</strong> Order <a href="{$gahat}">Pahadi Gahat Dal</a> from Devbhoomi Naturals. Pair with <a href="{$bhatt}">Kala Bhatt</a> and <a href="{$redRice}">Pahadi Red Rice</a> for a complete pahadi pantry. <strong>Free delivery on orders above ₹2,999.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
 HTML;
 
         BlogPost::create([

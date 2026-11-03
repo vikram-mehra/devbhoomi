@@ -26,11 +26,20 @@
         </div>
     </div>
 @else
+    @php
+        $promoCoupon = \App\Models\Coupon::query()->public()->activeValid()->first();
+    @endphp
     <div class="pro-announcement">
         <div class="cb-container">
             <div class="pro-announcement__marquee">
-                <span><i class="bi bi-tag-fill me-1"
-                        aria-hidden="true"></i>{{ __('Extra 10% off on prepaid orders.') }}</span>
+                <span>
+                    <i class="bi bi-tag-fill me-1" aria-hidden="true"></i>
+                    @if($promoCoupon)
+                        {{ __('Use coupon :code for :discount. Free shipping above ₹2,999.', ['code' => $promoCoupon->code, 'discount' => $promoCoupon->discountLabel()]) }}
+                    @else
+                        {{ __('Free shipping on orders above ₹2,999.') }}
+                    @endif
+                </span>
                 <span><i class="bi bi-telephone me-1" aria-hidden="true"></i>{{ __('Support') }}: <a
                         href="tel:+91 9217732670">+91 9217732670</a></span>
             </div>

@@ -210,6 +210,9 @@ Route::middleware(['auth', 'role:admin,seo'])->prefix('admin')->name('admin.')->
 
     Route::get('/contact-page', [ContactPageAdminController::class, 'edit'])->name('contact-page.edit');
     Route::post('/contact-page', [ContactPageAdminController::class, 'update'])->name('contact-page.update');
+
+    Route::get('/settings', [SettingAdminController::class, 'edit'])->name('settings.edit');
+    Route::post('/settings', [SettingAdminController::class, 'update'])->name('settings.update');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -325,9 +328,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/coupons/{coupon}', [CouponAdminController::class, 'update'])->name('coupons.update');
     Route::delete('/coupons/{coupon}', [CouponAdminController::class, 'destroy'])->name('coupons.destroy');
     Route::post('/coupons/{coupon}/toggle', [CouponAdminController::class, 'toggle'])->name('coupons.toggle');
-
-    Route::get('/settings', [SettingAdminController::class, 'edit'])->name('settings.edit');
-    Route::post('/settings', [SettingAdminController::class, 'update'])->name('settings.update');
 
     Route::get('/courier-partners', [CourierPartnerAdminController::class, 'index'])->name('courier-partners.index');
     Route::get('/shipping-settings', [ShippingSettingAdminController::class, 'edit'])->name('shipping-settings.edit');

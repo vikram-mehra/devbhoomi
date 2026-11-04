@@ -48,15 +48,16 @@
                         <input type="text" name="google_analytics_id" id="seo-ga" class="form-control" value="{{ old('google_analytics_id', $settings['google_analytics_id']) }}" maxlength="32" placeholder="G-XXXXXXXXXX">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label" for="seo-twitter">{{ __('Twitter handle') }}</label>
-                        <input type="text" name="twitter_handle" id="seo-twitter" class="form-control" value="{{ old('twitter_handle', $settings['twitter_handle']) }}" maxlength="64" placeholder="@devbhoominaturals">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="seo-faq">{{ __('FAQ schema (JSON)') }}</label>
-                        <textarea name="faq_schema_json" id="seo-faq" class="form-control font-monospace small" rows="8" maxlength="65000" placeholder='[{"question":"Do you deliver across India?","answer":"Yes, we ship pan-India."}]'>{{ old('faq_schema_json', $settings['faq_schema_json']) }}</textarea>
-                        <div class="form-text">{{ __('Array of question/answer objects for FAQ rich results on the homepage.') }}</div>
+                    <div class="p-3 mb-3 rounded-3 bg-light border">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <strong class="d-block text-dark">{{ __('Homepage FAQs & Schema') }}</strong>
+                                <small class="text-muted">{{ __('Homepage FAQs and rich search snippets are now managed under Platform Settings > Homepage FAQs.') }}</small>
+                            </div>
+                            <a href="{{ route('admin.settings.edit') }}#faqs" class="btn btn-sm btn-outline-primary px-3 fw-semibold">
+                                <i class="bi bi-question-circle me-1"></i> {{ __('Manage FAQs') }}
+                            </a>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary">{{ __('Save SEO settings') }}</button>

@@ -1,8 +1,8 @@
 {{-- Top Announcement Bar (Left: Fixed Email | Center: Marquee | Right: Fixed Phone) --}}
 @php
-    $email = config('seo.organization.email', 'support@devbhoominaturals.com');
-    $phone = '+91 9217732670';
-    $phoneLink = 'tel:+919217732670';
+    $email = trim((string) \App\Models\Setting::getValue('contact_email', config('seo.organization.email', 'support@devbhoominaturals.com')));
+    $phone = trim((string) \App\Models\Setting::getValue('contact_phone', '+91 9217732670'));
+    $phoneLink = $phone !== '' ? 'tel:' . preg_replace('/[^\d+]/', '', $phone) : 'tel:+919217732670';
     $publicCoupons = \App\Models\Coupon::query()->public()->activeValid()->get();
     $freeShippingThreshold = (float) (\App\Models\ShippingSetting::current()->free_shipping_amount ?? 0);
 @endphp

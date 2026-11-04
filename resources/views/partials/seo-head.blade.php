@@ -9,7 +9,18 @@
         'robots' => trim(strip_tags((string) view()->yieldContent('robots'))),
         'og_type' => trim(strip_tags((string) view()->yieldContent('og_type'))) ?: 'website',
     ]);
+    $twitterUrl = \App\Models\Setting::getValue('social_twitter');
     $twitterHandle = app(\App\Services\SeoService::class)->global('twitter_handle');
+    if (blank($twitterHandle) && filled($twitterUrl)) {
+        if (str_starts_with(trim($twitterUrl), '@')) {
+            $twitterHandle = ltrim(trim($twitterUrl), '@');
+        } else {
+            $parsedPath = parse_url($twitterUrl, PHP_URL_PATH);
+            if ($parsedPath) {
+                $twitterHandle = trim($parsedPath, '/');
+            }
+        }
+    }
 @endphp
 <title>{{ $seo->title }}</title>
 <meta name="description" content="{{ $seo->description }}">

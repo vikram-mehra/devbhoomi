@@ -64,8 +64,7 @@ class SeoAdminController extends Controller
             'default_keywords' => 'nullable|string|max:500',
             'default_og_image' => 'nullable|string|max:2048',
             'google_analytics_id' => 'nullable|string|max:32',
-            'twitter_handle' => 'nullable|string|max:64',
-            'faq_schema_json' => 'nullable|string|max:65000',
+            
         ]);
 
         foreach ($validated as $key => $value) {

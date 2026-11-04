@@ -14,6 +14,52 @@
             $dnProductItems = $dnOurProducts->dropdownProducts();
         }
     }
+
+    // Dynamic Footer "Get in Touch" & Contact Details
+    $footerHeading = trim((string) \App\Models\Setting::getValue('footer_contact_heading', 'Get in Touch'));
+    if ($footerHeading === '') {
+        $footerHeading = __('Get in Touch');
+    }
+
+    $footerAddress = trim((string) \App\Models\Setting::getValue('contact_address', 'Uttarakhand, India'));
+    $footerEmail = trim((string) \App\Models\Setting::getValue('contact_email', 'support@devbhoominaturals.com'));
+    $footerPhone = trim((string) \App\Models\Setting::getValue('contact_phone', '+91 92177 32670'));
+    $footerHours = trim((string) \App\Models\Setting::getValue('contact_hours', 'Mon – Sat: 10:00 AM – 6:00 PM'));
+    $footerWhatsapp = trim((string) \App\Models\Setting::getValue('contact_whatsapp', '+91 92177 32670'));
+
+    $footerPhoneLink = $footerPhone !== '' ? 'tel:' . preg_replace('/[^\d+]/', '', $footerPhone) : null;
+
+    $footerWhatsappUrl = null;
+    if ($footerWhatsapp !== '') {
+        if (str_starts_with($footerWhatsapp, 'http://') || str_starts_with($footerWhatsapp, 'https://')) {
+            $footerWhatsappUrl = $footerWhatsapp;
+        } else {
+            $whatsappDigits = preg_replace('/\D+/', '', $footerWhatsapp);
+            if ($whatsappDigits !== '') {
+                if (strlen($whatsappDigits) === 10) {
+                    $whatsappDigits = '91' . $whatsappDigits;
+                }
+                $footerWhatsappUrl = 'https://wa.me/' . $whatsappDigits . '?text=Hi';
+            }
+        }
+    }
+
+    // Dynamic Social Media Links
+    $socialFacebook = trim((string) \App\Models\Setting::getValue('social_facebook', 'https://www.facebook.com/share/1D7KtFBEGi/?mibextid=wwXIfr'));
+    $socialInstagram = trim((string) \App\Models\Setting::getValue('social_instagram', 'https://www.instagram.com/dev_bhoominaturals?igsh=MXJwZXYzeDQwamNjMw%3D%3D'));
+    $socialYoutube = trim((string) \App\Models\Setting::getValue('social_youtube', ''));
+    $socialTwitter = trim((string) \App\Models\Setting::getValue('social_twitter', ''));
+    $socialLinkedin = trim((string) \App\Models\Setting::getValue('social_linkedin', ''));
+
+    // Strip dead hashes
+    if ($socialFacebook === '#') $socialFacebook = '';
+    if ($socialInstagram === '#') $socialInstagram = '';
+    if ($socialYoutube === '#') $socialYoutube = '';
+    if ($socialTwitter === '#') $socialTwitter = '';
+    if ($socialLinkedin === '#') $socialLinkedin = '';
+
+    $hasContactInfo = ($footerAddress !== '' || $footerEmail !== '' || $footerPhone !== '' || $footerHours !== '' || $footerWhatsappUrl !== null);
+    $hasSocials = ($socialFacebook !== '' || $socialInstagram !== '' || $socialYoutube !== '' || $socialTwitter !== '' || $socialLinkedin !== '');
 @endphp
 <footer class="dn-ft" aria-label="{{ __('Site footer') }}">
     <div class="dn-ft__top">
@@ -91,40 +137,85 @@
                 </ul>
             </nav>
 
-            <div class="dn-ft__col dn-ft__col--touch">
-                <h3 class="dn-ft__h">{{ __('Get in Touch') }}</h3>
-                <ul class="dn-ft__contact">
-                    <li>
-                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
-                        <span>{{ __('Uttarakhand, India') }}</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-envelope-fill" aria-hidden="true"></i>
-                        <a href="mailto:support@devbhoominaturals.com">support@devbhoominaturals.com</a>
-                    </li>
-                    <li>
-                        <i class="bi bi-telephone-fill" aria-hidden="true"></i>
-                        <a href="tel:+919217732670">+91 92177 32670</a>
-                    </li>
-                    <li>
-                        <i class="bi bi-whatsapp" aria-hidden="true"></i>
-                        <a href="https://wa.me/919217732670?text=Hi" target="_blank"
-                            rel="noopener">{{ __('Chat on WhatsApp') }}</a>
-                    </li>
-                </ul>
-                <h3 class="dn-ft__h dn-ft__h--follow">{{ __('Follow Us') }}</h3>
-                <div class="dn-ft__social">
-                    <a href="https://www.facebook.com/share/1D7KtFBEGi/?mibextid=wwXIfr"
-                        class="pro-footer-mk__social-btn" aria-label="Facebook"><i class="bi bi-facebook"
-                            aria-hidden="true"></i></a>
-                    <a href="https://www.instagram.com/dev_bhoominaturals?igsh=MXJwZXYzeDQwamNjMw%3D%3D"
-                        class="pro-footer-mk__social-btn" aria-label="Instagram" target="_blank" rel="noopener"><i
-                            class="bi bi-instagram" aria-hidden="true"></i></a>
-                    <a href="#" aria-label="YouTube"><i class="bi bi-youtube" aria-hidden="true"></i></a>
-                    <a href="#" class="pro-footer-mk__social-btn" aria-label="Twitter"><i class="bi bi-twitter-x"
-                            aria-hidden="true"></i></a>
+            @if($hasContactInfo || $hasSocials)
+                <div class="dn-ft__col dn-ft__col--touch">
+                    @if($hasContactInfo)
+                        <h3 class="dn-ft__h">{{ $footerHeading }}</h3>
+                        <ul class="dn-ft__contact">
+                            @if($footerAddress !== '')
+                                <li>
+                                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                                    <span>{{ $footerAddress }}</span>
+                                </li>
+                            @endif
+
+                            @if($footerEmail !== '')
+                                <li>
+                                    <i class="bi bi-envelope-fill" aria-hidden="true"></i>
+                                    <a href="mailto:{{ $footerEmail }}">{{ $footerEmail }}</a>
+                                </li>
+                            @endif
+
+                            @if($footerPhone !== '')
+                                <li>
+                                    <i class="bi bi-telephone-fill" aria-hidden="true"></i>
+                                    <a href="{{ $footerPhoneLink }}">{{ $footerPhone }}</a>
+                                </li>
+                            @endif
+
+                            @if($footerHours !== '')
+                                <li>
+                                    <i class="bi bi-clock-fill" aria-hidden="true"></i>
+                                    <span>{{ $footerHours }}</span>
+                                </li>
+                            @endif
+
+                            @if($footerWhatsappUrl)
+                                <li>
+                                    <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                                    <a href="{{ $footerWhatsappUrl }}" target="_blank"
+                                        rel="noopener">{{ __('Chat on WhatsApp') }}</a>
+                                </li>
+                            @endif
+                        </ul>
+                    @endif
+
+                    @if($hasSocials)
+                        <h3 class="dn-ft__h dn-ft__h--follow">{{ __('Follow Us') }}</h3>
+                        <div class="dn-ft__social">
+                            @if($socialFacebook !== '')
+                                <a href="{{ $socialFacebook }}"
+                                    class="pro-footer-mk__social-btn" aria-label="Facebook" target="_blank" rel="noopener"><i class="bi bi-facebook"
+                                        aria-hidden="true"></i></a>
+                            @endif
+
+                            @if($socialInstagram !== '')
+                                <a href="{{ $socialInstagram }}"
+                                    class="pro-footer-mk__social-btn" aria-label="Instagram" target="_blank" rel="noopener"><i
+                                        class="bi bi-instagram" aria-hidden="true"></i></a>
+                            @endif
+
+                            @if($socialYoutube !== '')
+                                <a href="{{ $socialYoutube }}"
+                                    class="pro-footer-mk__social-btn" aria-label="YouTube" target="_blank" rel="noopener"><i class="bi bi-youtube"
+                                        aria-hidden="true"></i></a>
+                            @endif
+
+                            @if($socialTwitter !== '')
+                                <a href="{{ $socialTwitter }}"
+                                    class="pro-footer-mk__social-btn" aria-label="Twitter" target="_blank" rel="noopener"><i class="bi bi-twitter-x"
+                                        aria-hidden="true"></i></a>
+                            @endif
+
+                            @if($socialLinkedin !== '')
+                                <a href="{{ $socialLinkedin }}"
+                                    class="pro-footer-mk__social-btn" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin"
+                                        aria-hidden="true"></i></a>
+                            @endif
+                        </div>
+                    @endif
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 

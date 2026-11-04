@@ -362,7 +362,7 @@ class SeoService
             }
         }
 
-        if (count($fromAdmin) >= 5) {
+        if (!empty($fromAdmin)) {
             return $fromAdmin;
         }
 

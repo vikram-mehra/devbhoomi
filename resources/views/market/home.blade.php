@@ -59,24 +59,30 @@
                                         $slideDesktop = \App\Support\OptimizedImage::url($b->imageUrl(), 1400);
                                     @endphp
                                     @if($i === 0)
-                                        <source media="(max-width: 767.98px)" srcset="{{ $slideMobile }}">
+                                        <source media="(max-width: 767.98px)" srcset="{{ $slideMobile }}" width="768" height="576">
                                         <img
                                             src="{{ $slideDesktop }}"
                                             alt="{{ $b->title }}"
                                             class="mk-hero-full__img"
+                                            width="1400"
+                                            height="509"
                                             sizes="100vw"
                                             fetchpriority="high"
+                                            decoding="async"
                                         >
                                     @else
-                                        <source media="(max-width: 767.98px)" data-srcset="{{ $slideMobile }}">
+                                        <source media="(max-width: 767.98px)" data-srcset="{{ $slideMobile }}" width="768" height="576">
                                         <img
                                             src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                                             data-src="{{ $slideDesktop }}"
                                             alt="{{ $b->title }}"
                                             class="mk-hero-full__img"
+                                            width="1400"
+                                            height="509"
                                             sizes="100vw"
                                             loading="lazy"
                                             fetchpriority="low"
+                                            decoding="async"
                                         >
                                     @endif
                                 </picture>
@@ -580,9 +586,9 @@
                             <div class="swiper-slide">
                                 <article class="pro-testi-card">
                                     <i class="bi bi-quote pro-testi-card__mark" aria-hidden="true"></i>
-                                    <div class="pro-testi-card__stars" aria-label="{{ $rating }} {{ __('out of 5 stars') }}">
+                                    <div class="pro-testi-card__stars" role="img" aria-label="{{ $rating }} {{ __('out of 5 stars') }}">
                                         @for($i = 1; $i <= 5; $i++)
-                                            <i class="bi {{ $i <= $rating ? 'bi-star-fill' : 'bi-star' }}"></i>
+                                            <i class="bi {{ $i <= $rating ? 'bi-star-fill' : 'bi-star' }}" aria-hidden="true"></i>
                                         @endfor
                                     </div>
                                     <p class="pro-testi-card__quote">&ldquo;{{ $t[0] }}&rdquo;</p>

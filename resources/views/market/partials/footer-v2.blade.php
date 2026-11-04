@@ -270,7 +270,7 @@
                     <span><strong>{{ __('Healthy Living') }}</strong><small>{{ __('Our Promise') }}</small></span>
                 </li>
             </ul>
-            <div class="dn-ft__pay" aria-label="{{ __('Payment methods') }}">
+            <div class="dn-ft__pay" role="group" aria-label="{{ __('Payment methods') }}">
                 <img src="{{ asset('images/payments/payment-cards.png') }}" alt="UPI, Visa, Mastercard, RuPay"
                     width="320" height="36">
             </div>

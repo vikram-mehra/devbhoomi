@@ -29,7 +29,7 @@
         <form action="{{ route('shop.search') }}" method="get" role="search" class="mk-myntra-search">
             <label class="visually-hidden" for="mkMyntraSearchInput">{{ __('Search') }}</label>
             <span class="mk-myntra-search__icon" aria-hidden="true"><i class="bi bi-search"></i></span>
-            <input type="search" id="mkMyntraSearchInput" name="q" value="{{ request('q') }}" class="mk-myntra-search__input" placeholder="{{ __('Search for products, brands and more') }}" autocomplete="off" aria-autocomplete="list" aria-controls="mkSearchSuggest" aria-expanded="false">
+            <input type="search" id="mkMyntraSearchInput" name="q" value="{{ request('q') }}" class="mk-myntra-search__input" placeholder="{{ __('Search for products, brands and more') }}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="mkSearchSuggest" aria-expanded="false" aria-haspopup="listbox">
             <button type="submit" class="visually-hidden">{{ __('Search') }}</button>
         </form>
         <div id="mkSearchSuggest" class="mk-search-suggest" hidden role="listbox" aria-label="{{ __('Search suggestions') }}"></div>
@@ -108,7 +108,7 @@
         </div>
         <form action="{{ route('shop.search') }}" method="get" role="search" class="mk-search-screen__form">
             <label class="visually-hidden" for="mkMobileSearchInput">{{ __('Search') }}</label>
-            <input type="search" id="mkMobileSearchInput" name="q" class="mk-search-screen__input" placeholder="{{ __('Search') }}" autocomplete="off" aria-autocomplete="list" aria-controls="mkMobileSearchSuggest" aria-expanded="false">
+            <input type="search" id="mkMobileSearchInput" name="q" class="mk-search-screen__input" placeholder="{{ __('Search') }}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="mkMobileSearchSuggest" aria-expanded="false" aria-haspopup="listbox">
             <button type="submit" class="visually-hidden">{{ __('Search') }}</button>
         </form>
         <div id="mkMobileSearchSuggest" class="mk-search-suggest mk-search-suggest--sheet" hidden role="listbox" aria-label="{{ __('Search suggestions') }}"></div>

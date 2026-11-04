@@ -84,7 +84,17 @@
                                 <h2 class="pro-about-story__title">{{ $page->story_heading }}</h2>
                             @endif
                             @if($page->story_body)
-                                <div class="pro-about-story__body">{!! nl2br(e($page->story_body)) !!}</div>
+                                @php
+                                    $storyHtml = trim((string) $page->story_body);
+                                    $isRichStory = $storyHtml !== '' && $storyHtml !== strip_tags($storyHtml);
+                                @endphp
+                                <div class="pro-about-story__body">
+                                    @if($isRichStory)
+                                        {!! $storyHtml !!}
+                                    @else
+                                        {!! nl2br(e($storyHtml)) !!}
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </div>

@@ -143,6 +143,44 @@
   color: #4a5c52;
 }
 
+.pro-about-story__body p {
+  margin: 0 0 1rem;
+}
+
+.pro-about-story__body p:last-child {
+  margin-bottom: 0;
+}
+
+.pro-about-story__body h2,
+.pro-about-story__body h3,
+.pro-about-story__body h4 {
+  color: #1e3d2a;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.pro-about-story__body ul,
+.pro-about-story__body ol {
+  margin: 0 0 1rem 1.25rem;
+  padding: 0;
+}
+
+.pro-about-story__body li {
+  margin-bottom: 0.35rem;
+}
+
+.pro-about-story__body a {
+  color: #2d5a3d;
+  text-decoration: underline;
+}
+
+.pro-about-story__body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
 .pro-about-mv {
   padding: 0 0 3.5rem;
 }

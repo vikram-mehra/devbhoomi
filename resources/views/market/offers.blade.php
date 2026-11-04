@@ -2,14 +2,23 @@
 
 @php
     $featuredOffer = $coupons->first();
+    $freeShippingThreshold = (float) (\App\Models\ShippingSetting::current()->free_shipping_amount ?? 0);
 @endphp
 
 @section('title', __('Offers & Coupons'))
 @section('meta_description')
 @if($featuredOffer)
-{{ __('Active promo codes on organic Himalayan products. Use code :code for :discount & enjoy free delivery above ₹2,999 at Devbhoomi Naturals.', ['code' => $featuredOffer->code, 'discount' => $featuredOffer->discountLabel()]) }}
+@if($freeShippingThreshold > 0)
+{{ __('Active promo codes on organic Himalayan products. Use code :code for :discount & enjoy free delivery above ₹:amount at Devbhoomi Naturals.', ['code' => $featuredOffer->code, 'discount' => $featuredOffer->discountLabel(), 'amount' => number_format($freeShippingThreshold, 0)]) }}
 @else
-{{ __('Discover active promo codes, discounts and savings on pure Himalayan organic products at Devbhoomi Naturals. Free delivery on orders above ₹2,999.') }}
+{{ __('Active promo codes on organic Himalayan products. Use code :code for :discount at Devbhoomi Naturals.', ['code' => $featuredOffer->code, 'discount' => $featuredOffer->discountLabel()]) }}
+@endif
+@else
+@if($freeShippingThreshold > 0)
+{{ __('Discover active promo codes, discounts and savings on pure Himalayan organic products at Devbhoomi Naturals. Free delivery on orders above ₹:amount.', ['amount' => number_format($freeShippingThreshold, 0)]) }}
+@else
+{{ __('Discover active promo codes, discounts and savings on pure Himalayan organic products at Devbhoomi Naturals.') }}
+@endif
 @endif
 @endsection
 @section('canonical', route('offers.index'))

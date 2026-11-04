@@ -1,5 +1,16 @@
 @php
     $whyUsImage = asset('images/about/gallery-pulses.jpg');
+    $shippingSettings = \App\Models\ShippingSetting::current();
+    $freeShippingThreshold = (float) ($shippingSettings->free_shipping_amount ?? 0);
+
+    $deliveryTitle = $freeShippingThreshold > 0
+        ? __('Pan-India delivery, free above ₹:amount', ['amount' => number_format($freeShippingThreshold, 0)])
+        : __('Pan-India delivery to your doorstep');
+
+    $deliveryText = $freeShippingThreshold > 0
+        ? __('We ship across India. Free standard delivery on orders above ₹:amount, so you can stock your home pantry without extra shipping worry.', ['amount' => number_format($freeShippingThreshold, 0)])
+        : __('We ship across India through trusted logistics partners, with real-time tracking from Uttarakhand to your doorstep.');
+
     $whyUsPoints = [
         [
             'icon' => 'bi-flower1',
@@ -13,8 +24,8 @@
         ],
         [
             'icon' => 'bi-truck',
-            'title' => __('Pan-India delivery, free above ₹2,999'),
-            'text' => __('We ship across India. Free standard delivery on orders above ₹2,999, so you can stock your home pantry without extra shipping worry.'),
+            'title' => $deliveryTitle,
+            'text' => $deliveryText,
         ],
         [
             'icon' => 'bi-people',

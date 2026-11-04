@@ -99,7 +99,7 @@ class WildHimalayanHoneyBlogSeeder extends Seeder
 
 <h2>Why Choose Devbhoomi Naturals Wild Honey</h2>
 <p>Devbhoomi Naturals is rooted in Ranikhet, Uttarakhand. Our wild honey is sourced from forest regions where bees forage on natural flora — not factory-farm monoculture. We prioritise minimal processing so you receive honey as close to the hive as possible.</p>
-<p>When you order from us, you support hill beekeepers and forest communities whose livelihoods depend on ethical harvesting. You also get transparent product information, pan-India delivery, and <strong>free delivery on orders above ₹2,999</strong>.</p>
+<p>When you order from us, you support hill beekeepers and forest communities whose livelihoods depend on ethical harvesting. You also get transparent product information, pan-India delivery, and <strong>pan-India delivery to your doorstep</strong>.</p>
 <p>Explore our full range of <a href="{$uttarakhand}">Uttarakhand food products</a> — millets, pulses, rice, and natural staples from the same trusted source.</p>
 
 <h2>FAQ</h2>

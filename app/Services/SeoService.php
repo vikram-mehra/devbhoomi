@@ -381,11 +381,7 @@ class SeoService
             ],
             [
                 'question' => __('Do you deliver across India?'),
-                'answer' => __('Yes — we ship pan-India. Free delivery on orders above ₹2,999.'),
-            ],
-            [
-                'question' => __('Is delivery free on orders above ₹2,999?'),
-                'answer' => __('Yes. Free standard delivery on all orders of ₹2,999 and above anywhere in India. For orders below ₹2,999, a nominal delivery charge is calculated at checkout based on your delivery pincode and weight.'),
+                'answer' => __('Yes — we ship pan-India through trusted courier and logistics partners with tracking details provided for every order.'),
             ],
             [
                 'question' => __('How can I track my Devbhoomi order?'),

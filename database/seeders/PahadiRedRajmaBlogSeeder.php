@@ -136,7 +136,7 @@ class PahadiRedRajmaBlogSeeder extends Seeder
 
 <h2>Conclusion</h2>
 <p>Pahadi Red Rajma is a traditional Himalayan superfood that combines taste, nutrition, and heritage. Whether you are looking for a healthy protein source, improved digestion, or wholesome meals, this mountain-grown ingredient deserves a place in your kitchen.</p>
-<p><strong>Ready to cook authentic rajma chawal?</strong> Order <a href="{$rajma}">Pahadi Rajma from Devbhoomi Naturals</a> today. Explore our <a href="{$pulses}">Pahadi-Pulses</a> and <a href="{$himalayan}">Healthy Himalayan Foods</a> collections — free delivery on orders above ₹2,999. Questions? <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
+<p><strong>Ready to cook authentic rajma chawal?</strong> Order <a href="{$rajma}">Pahadi Rajma from Devbhoomi Naturals</a> today. Explore our <a href="{$pulses}">Pahadi-Pulses</a> and <a href="{$himalayan}">Healthy Himalayan Foods</a> collections — Pan-India delivery to your doorstep. Questions? <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
 HTML;
 
         BlogPost::create([

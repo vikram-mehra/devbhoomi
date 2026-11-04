@@ -13,7 +13,7 @@
             <label class="form-label">{{ __('Free shipping minimum order amount (₹)') }}</label>
             <input type="number" step="0.01" min="0" name="free_shipping_amount" class="form-control"
                    value="{{ old('free_shipping_amount', $settings->free_shipping_amount) }}" required>
-            <div class="form-text">{{ __('Orders at or above this subtotal qualify for free shipping.') }}</div>
+            <div class="form-text">{{ __('Orders at or above this subtotal qualify for free shipping. Set to 0 to disable free shipping completely.') }}</div>
         </div>
         <div class="mb-3">
             <label class="form-label">{{ __('Fallback delivery charge (₹) for first :grams g', ['grams' => old('base_weight_grams', $settings->base_weight_grams ?: 500)]) }}</label>

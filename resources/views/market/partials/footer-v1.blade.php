@@ -95,7 +95,7 @@
                     <p class="pro-footer-mk__copy small mb-0">&copy; {{ date('Y') }}
                         {{ config('app.name') }}. {{ __('All rights reserved.') }}
                     </p>
-                    <div class="pro-footer-mk__payments" aria-label="{{ __('Payment methods') }}">
+                    <div class="pro-footer-mk__payments" role="group" aria-label="{{ __('Payment methods') }}">
                         <img src="{{ asset('images/payments/visa.svg') }}" alt="Visa" width="48" height="30">
                         <img src="{{ asset('images/payments/mastercard.svg') }}" alt="Mastercard" width="48" height="30">
                         <img src="{{ asset('images/payments/rupay.svg') }}" alt="RuPay" width="52" height="30">

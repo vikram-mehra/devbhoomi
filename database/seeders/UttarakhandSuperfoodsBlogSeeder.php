@@ -109,7 +109,7 @@ class UttarakhandSuperfoodsBlogSeeder extends Seeder
 
 <h2>Conclusion</h2>
 <p>Traditional Uttarakhand foods offer a perfect blend of heritage, nutrition, and authentic taste. By incorporating these ingredients into your daily meals, you can enjoy the goodness of Himalayan agriculture while supporting sustainable and traditional farming communities.</p>
-<p><strong>Start your Himalayan food journey today.</strong> Shop <a href="{$allProducts}">all Uttarakhand superfoods</a> at Devbhoomi Naturals — <a href="{$rajma}">Pahadi Red Rajma</a>, <a href="{$bhatt}">Kala Bhatt</a>, <a href="{$gahat}">Gahath Dal</a>, <a href="{$jhangora}">Jhangora</a>, and <a href="{$redRice}">Red Rice</a>. <strong>Free delivery on orders above ₹2,999.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
+<p><strong>Start your Himalayan food journey today.</strong> Shop <a href="{$allProducts}">all Uttarakhand superfoods</a> at Devbhoomi Naturals — <a href="{$rajma}">Pahadi Red Rajma</a>, <a href="{$bhatt}">Kala Bhatt</a>, <a href="{$gahat}">Gahath Dal</a>, <a href="{$jhangora}">Jhangora</a>, and <a href="{$redRice}">Red Rice</a>. <strong>Pan-India delivery to your doorstep.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
 HTML;
 
         BlogPost::create([

@@ -140,7 +140,7 @@
             </div>
         @endif
         <div class="zm-pro-card__brand-row">
-            <span class="zm-pro-card__brand-name">{{ $vendorName }}</span>
+            {{-- <span class="zm-pro-card__brand-name">{{ $vendorName }}</span> --}}
             @if($variantColors->isNotEmpty())
                 <span class="zm-pro-card__swatches">
                     @foreach($variantColors->take(3) as $cname)
@@ -153,7 +153,7 @@
                 </span>
             @endif
         </div>
-        <a href="{{ route('product.show', $product) }}" class="zm-pro-card__title {{ $listing ? 'zm-pro-card__title--listing' : '' }}">{{ $product->name }}</a>
+        <a href="{{ route('product.show', $product) }}" class="zm-pro-card__title">{{ $product->name }}</a>
         @if($v)
             <div class="js-cart-add-container" data-variant-id="{{ $v->id }}" data-buyable="{{ $v->isBuyable() ? '1' : '0' }}">
                 @php

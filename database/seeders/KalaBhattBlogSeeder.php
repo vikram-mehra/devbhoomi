@@ -124,7 +124,7 @@ class KalaBhattBlogSeeder extends Seeder
 
 <h2>Conclusion</h2>
 <p>Kala Bhatt represents the wisdom of traditional Himalayan nutrition. Rich in protein and authentic flavor, it is a wonderful addition to a healthy lifestyle — whether you cook classic Churkani or a simple weeknight curry.</p>
-<p><strong>Try authentic Kala Bhatt today.</strong> Shop <a href="{$bhatt}">Pahadi Bhatt (Black Soybean)</a> at Devbhoomi Naturals. Explore <a href="{$himalayan}">Uttarakhand food products</a>, pair with <a href="{$rajma}">Pahadi Rajma</a> and <a href="{$jhangora}">Jhangora Millet</a>, and enjoy <strong>free delivery on orders above ₹2,999</strong>. <a href="{$contact}">Contact us</a> at +91 9217732670 for bulk orders.</p>
+<p><strong>Try authentic Kala Bhatt today.</strong> Shop <a href="{$bhatt}">Pahadi Bhatt (Black Soybean)</a> at Devbhoomi Naturals. Explore <a href="{$himalayan}">Uttarakhand food products</a>, pair with <a href="{$rajma}">Pahadi Rajma</a> and <a href="{$jhangora}">Jhangora Millet</a>, and enjoy <strong>pan-India delivery to your doorstep</strong>. <a href="{$contact}">Contact us</a> at +91 9217732670 for bulk orders.</p>
 HTML;
 
         BlogPost::create([

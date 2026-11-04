@@ -105,7 +105,7 @@ class JhangoraMilletBlogSeeder extends Seeder
 
 <h2>Conclusion</h2>
 <p>Jhangora is an ancient Himalayan grain that offers nutrition, versatility, and traditional goodness for modern lifestyles. Whether you start with a simple khichdi or the classic kheer, one meal is enough to understand why this grain is making a well-deserved comeback.</p>
-<p><strong>Bring Jhangora home today.</strong> Order <a href="{$jhangora}">Jhangora (Barnyard Millet)</a> from Devbhoomi Naturals. Explore <a href="{$redRice}">Pahadi Red Rice</a>, <a href="{$gahat}">Gahath Dal</a>, and our full <a href="{$himalayan}">Uttarakhand food products</a> range. <strong>Free delivery on orders above ₹2,999.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
+<p><strong>Bring Jhangora home today.</strong> Order <a href="{$jhangora}">Jhangora (Barnyard Millet)</a> from Devbhoomi Naturals. Explore <a href="{$redRice}">Pahadi Red Rice</a>, <a href="{$gahat}">Gahath Dal</a>, and our full <a href="{$himalayan}">Uttarakhand food products</a> range. <strong>Pan-India delivery to your doorstep.</strong> <a href="{$contact}">Contact us</a> at +91 9217732670.</p>
 HTML;
 
         BlogPost::create([

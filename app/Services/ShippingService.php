@@ -28,8 +28,9 @@ class ShippingService
     public function chargeForCart(Collection $items, float $subtotal, ?string $pincode = null): float
     {
         $settings = $this->settings();
+        $freeThreshold = (float) ($settings->free_shipping_amount ?? 0);
 
-        if ($subtotal >= (float) $settings->free_shipping_amount) {
+        if ($freeThreshold > 0 && $subtotal >= $freeThreshold) {
             return 0.0;
         }
 

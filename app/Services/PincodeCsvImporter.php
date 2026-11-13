@@ -6,7 +6,7 @@ use App\Models\PincodeServiceability;
 
 class PincodeCsvImporter
 {
-    public const MAX_ROWS = 5000;
+    public const MAX_ROWS = 50000;
 
     /**
      * @return array{created: int, updated: int, skipped: int, errors: list<string>}
@@ -83,8 +83,10 @@ class PincodeCsvImporter
                 continue;
             }
 
-            $dayOffset = isset($map['day_offset']) ? (int) ($raw[$map['day_offset']] ?? 3) : 3;
-            $dayOffset = max(0, min(30, $dayOffset));
+            $dayOffset = null;
+            if (isset($map['day_offset']) && ($raw[$map['day_offset']] ?? '') !== '') {
+                $dayOffset = max(0, min(30, (int) $raw[$map['day_offset']]));
+            }
             $courier = isset($map['courier_name']) ? trim((string) ($raw[$map['courier_name']] ?? '')) : '';
             $status = isset($map['status']) ? $this->parseStatus($raw[$map['status']] ?? 1) : true;
             $row = [

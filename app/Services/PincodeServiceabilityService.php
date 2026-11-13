@@ -35,15 +35,18 @@ class PincodeServiceabilityService
             return $this->payload(true, false, $pin, __('Sorry, we do not deliver to this pincode yet.'));
         }
 
-        $eta = Carbon::now()->startOfDay()->addDays(max(0, (int) $row->day_offset));
-        $etaLabel = $eta->format('d M Y');
         $parts = [
             __('Delivery available to :city, :state.', ['city' => $row->city, 'state' => $row->state]),
         ];
         if (filled($row->courier_name)) {
             $parts[] = __('Courier: :name.', ['name' => $row->courier_name]);
         }
-        $parts[] = __('Estimated delivery by :date.', ['date' => $etaLabel]);
+        $etaLabel = null;
+        if ($row->day_offset !== null) {
+            $eta = Carbon::now()->startOfDay()->addDays(max(0, (int) $row->day_offset));
+            $etaLabel = $eta->format('d M Y');
+            $parts[] = __('Estimated delivery by :date.', ['date' => $etaLabel]);
+        }
         // if ($row->delivery_charge !== null) {
         //     $parts[] = __('Delivery ₹:amount for the first 500 g.', ['amount' => number_format((float) $row->delivery_charge, 2)]);
         // }

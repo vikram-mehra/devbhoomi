@@ -66,7 +66,7 @@
                                 <td class="fw-bold font-monospace">{{ $row->pincode }}</td>
                                 <td>{{ $row->city }}</td>
                                 <td>{{ $row->state }}</td>
-                                <td>{{ $row->day_offset }}</td>
+                                <td>{{ $row->day_offset !== null ? $row->day_offset : '-' }}</td>
                                 <td>{{ $row->courier_name ?: '—' }}</td>
                                 <td>{{ $row->delivery_charge !== null ? '₹'.number_format((float) $row->delivery_charge, 2) : '—' }}</td>
                                 <td>{{ $row->additional_500g_charge !== null ? '₹'.number_format((float) $row->additional_500g_charge, 2) : '—' }}</td>
@@ -108,7 +108,7 @@
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label small">{{ __('Day offset') }} *</label>
-                                                        <input name="day_offset" type="number" min="0" max="30" class="form-control" required value="{{ $row->day_offset }}">
+                                                        <input name="day_offset" type="number" min="0" max="30" class="form-control" value="{{ $row->day_offset }}">
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label small">{{ __('City') }} *</label>
@@ -205,7 +205,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small">{{ __('Day offset') }} *</label>
-                                <input name="day_offset" type="number" min="0" max="30" class="form-control" required value="{{ old('_form') === 'add' ? old('day_offset', 3) : 3 }}">
+                                <input name="day_offset" type="number" min="0" max="30" class="form-control" value="{{ old('_form') === 'add' ? old('day_offset') : '' }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small">{{ __('Courier name') }}</label>

@@ -145,7 +145,7 @@ class PincodeServiceabilityAdminController extends Controller
             'city' => 'required|string|max:120',
             'state' => 'required|string|max:120',
             'status' => 'required|boolean',
-            'day_offset' => 'required|integer|min:0|max:30',
+            'day_offset' => 'nullable|integer|min:0|max:30',
             'courier_name' => 'nullable|string|max:120',
             'delivery_charge' => 'nullable|numeric|min:0',
             'additional_500g_charge' => 'nullable|numeric|min:0',

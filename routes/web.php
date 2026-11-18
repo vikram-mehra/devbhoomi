@@ -231,6 +231,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/users', [UserAdminController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/role', [UserAdminController::class, 'updateRole'])->name('users.role');
+    Route::delete('/users/{user}', [UserAdminController::class, 'destroy'])->name('users.destroy');
 
     Route::post('/menu-items', [MenuItemAdminController::class, 'store'])->name('menu-items.store');
     Route::post('/menu-items/reorder', [MenuItemAdminController::class, 'reorder'])->name('menu-items.reorder');

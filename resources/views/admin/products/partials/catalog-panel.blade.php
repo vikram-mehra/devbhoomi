@@ -143,13 +143,15 @@
                                             <i class="bi {{ $p->is_featured ? 'bi-star-fill text-warning' : 'bi-star' }}"></i>
                                         </button>
                                     </form>
-                                    <form method="post" action="{{ route('admin.products.destroy', $p) }}" class="d-inline" onsubmit="return confirm(@json(__('Delete this product permanently?')));">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="{{ __('Delete') }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-danger rounded-pill js-delete-product-btn"
+                                        title="{{ __('Delete') }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteProductModal"
+                                        data-action="{{ route('admin.products.destroy', $p) }}"
+                                        data-name="{{ $p->name }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                     @endif
                                 </div>
                             </td>

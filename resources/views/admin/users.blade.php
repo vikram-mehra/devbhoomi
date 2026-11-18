@@ -47,16 +47,35 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <form method="post" action="{{ route('admin.users.role', $u) }}" class="d-inline-flex flex-wrap gap-1 justify-content-end align-items-center">
-                                        @csrf
-                                        <select name="role" class="form-select form-select-sm" style="width: auto; min-width: 7rem;">
-                                            <option value="user" @if($u->role==='user') selected @endif>user</option>
-                                            <option value="vendor" @if($u->role==='vendor') selected @endif>vendor</option>
-                                            <option value="seo" @if($u->role==='seo') selected @endif>seo</option>
-                                            <option value="admin" @if($u->role==='admin') selected @endif>admin</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-primary">{{ __('Update') }}</button>
-                                    </form>
+                                    <div class="d-inline-flex flex-wrap gap-2 justify-content-end align-items-center">
+                                        <form method="post" action="{{ route('admin.users.role', $u) }}" class="d-inline-flex gap-1 align-items-center">
+                                            @csrf
+                                            <select name="role" class="form-select form-select-sm" style="width: auto; min-width: 7rem;">
+                                                <option value="user" @if($u->role==='user') selected @endif>user</option>
+                                                <option value="vendor" @if($u->role==='vendor') selected @endif>vendor</option>
+                                                <option value="seo" @if($u->role==='seo') selected @endif>seo</option>
+                                                <option value="admin" @if($u->role==='admin') selected @endif>admin</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-primary">{{ __('Update') }}</button>
+                                        </form>
+
+                                        @if($u->id !== auth()->id())
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="{{ __('Delete user') }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteUserModal"
+                                                data-action="{{ route('admin.users.destroy', $u) }}"
+                                                data-name="{{ $u->name }}"
+                                                data-email="{{ $u->email }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        @else
+                                            <button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="{{ __('Cannot delete yourself') }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -66,4 +85,68 @@
         </div>
     </div>
     <div class="admin-pagination-wrap">{{ $users->links() }}</div>
+
+    {{-- Delete User Confirmation Modal --}}
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-light border-0 py-3">
+                    <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2 mb-0" id="deleteUserModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        {{ __('Confirm User Deletion') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2 text-secondary">{{ __('Are you sure you want to delete this user account?') }}</p>
+                    <div class="p-3 rounded bg-light border">
+                        <div class="fw-bold text-dark fs-6 text-truncate" id="deleteUserName"></div>
+                        <div class="small text-muted text-break" id="deleteUserEmail"></div>
+                    </div>
+                    <div class="alert alert-danger py-2 px-3 small mt-3 mb-0">
+                        <div class="d-flex align-items-center gap-2 mb-1 fw-bold">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            <span>{{ __('Warning: Everything related to this user will be deleted!') }}</span>
+                        </div>
+                        <p class="mb-0 text-danger-emphasis">
+                            {{ __('Deleting this user will permanently delete all associated data including their orders, order items, shipments, addresses, cart items, wishlists, reviews, wallet transactions, chat messages, and account credentials. This action cannot be undone.') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <form id="deleteUserForm" method="post" action="" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger px-3">
+                            <i class="bi bi-trash me-1"></i>{{ __('Delete User & Everything') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            deleteUserModal.addEventListener('show.bs.modal', function (event) {
+                var btn = event.relatedTarget;
+                if (!btn) return;
+                var action = btn.getAttribute('data-action');
+                var name = btn.getAttribute('data-name');
+                var email = btn.getAttribute('data-email');
+                var form = deleteUserModal.querySelector('#deleteUserForm');
+                var nameEl = deleteUserModal.querySelector('#deleteUserName');
+                var emailEl = deleteUserModal.querySelector('#deleteUserEmail');
+                if (form && action) form.action = action;
+                if (nameEl) nameEl.textContent = name || '';
+                if (emailEl) emailEl.textContent = email || '';
+            });
+        }
+    });
+    </script>
+    @endpush
 @endsection

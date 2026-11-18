@@ -1,192 +1,268 @@
 @if(empty($product))
     {{-- Skip broken/deleted product references --}}
 @else
-@php
-    $listing = !empty($listing);
-    [$url1, $url2] = $product->cardImageUrls();
-    $v = $product->variants->sortBy('id')->first(fn ($x) => $x->isBuyable())
-        ?? $product->variants->sortBy('id')->first();
-    $price = $v ? $v->effectivePrice() : (float) ($product->base_price ?? 0);
-    $flash = $product->flashSale;
-    $vendorName = $product->vendor->shop_name ?? optional($product->menuItem)->title ?? __('Shop');
-    $compare = $product->compare_price ? (float) $product->compare_price : null;
-    $pctOff = ($compare && $compare > $price) ? (int) round(100 - ($price / $compare) * 100) : null;
-    $rating = (float) ($product->rating_avg ?? 0);
-    $ratingDisplay = $rating > 0 ? number_format($rating, 1) : '0';
-    $starN = $rating > 0 ? (int) min(5, max(1, round($rating))) : 5;
-    $variantColors = $product->variants->pluck('color')->filter()->unique()->values();
-    $swatchMap = [
-        'black' => '#1a1a1a', 'white' => '#f3f4f6', 'red' => '#dc2626', 'blue' => '#2563eb',
-        'green' => '#16a34a', 'yellow' => '#eab308', 'orange' => '#ea580c', 'pink' => '#db2777',
-        'purple' => '#9333ea', 'beige' => '#d4c4a8', 'brown' => '#78350f', 'grey' => '#9ca3af', 'gray' => '#9ca3af',
-        'navy' => '#1e3a5f', 'maroon' => '#7f1d1d', 'gold' => '#ca8a04', 'silver' => '#cbd5e1',
-    ];
-    $hasStock = $product->variants->contains(fn ($x) => $x->isBuyable());
-    $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
-    $isWishlisted = auth()->check() && in_array((int) $product->id, $wishlistIds, true);
-    $wishIcon = $isWishlisted ? 'bi-heart-fill' : 'bi-heart';
-    $wishTitle = $isWishlisted ? __('Remove from wishlist') : __('Wishlist');
-    $qvDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) ($product->short_description ?: $product->description)))), 220);
-    $qvImages = [];
-    $pushQvImage = static function (?string $url) use (&$qvImages): void {
-        $url = trim((string) $url);
-        if ($url === '') {
-            return;
+    @php
+        $listing = !empty($listing);
+        [$url1, $url2] = $product->cardImageUrls();
+        $v = $product->variants->sortBy('id')->first(fn($x) => $x->isBuyable())
+            ?? $product->variants->sortBy('id')->first();
+        $price = $v ? $v->effectivePrice() : (float) ($product->base_price ?? 0);
+        $flash = $product->flashSale;
+        $vendorName = $product->vendor->shop_name ?? optional($product->menuItem)->title ?? __('Shop');
+        $compare = $product->compare_price ? (float) $product->compare_price : null;
+        $pctOff = ($compare && $compare > $price) ? (int) round(100 - ($price / $compare) * 100) : null;
+        $rating = (float) ($product->rating_avg ?? 0);
+        $ratingDisplay = $rating > 0 ? number_format($rating, 1) : '0';
+        $starN = $rating > 0 ? (int) min(5, max(1, round($rating))) : 5;
+        $variantColors = $product->variants->pluck('color')->filter()->unique()->values();
+        $swatchMap = [
+            'black' => '#1a1a1a',
+            'white' => '#f3f4f6',
+            'red' => '#dc2626',
+            'blue' => '#2563eb',
+            'green' => '#16a34a',
+            'yellow' => '#eab308',
+            'orange' => '#ea580c',
+            'pink' => '#db2777',
+            'purple' => '#9333ea',
+            'beige' => '#d4c4a8',
+            'brown' => '#78350f',
+            'grey' => '#9ca3af',
+            'gray' => '#9ca3af',
+            'navy' => '#1e3a5f',
+            'maroon' => '#7f1d1d',
+            'gold' => '#ca8a04',
+            'silver' => '#cbd5e1',
+        ];
+        $hasStock = $product->variants->contains(fn($x) => $x->isBuyable());
+        $wishlistIds = array_map('intval', (array) ($layoutWishlistProductIds ?? []));
+        $isWishlisted = auth()->check() && in_array((int) $product->id, $wishlistIds, true);
+        $wishIcon = $isWishlisted ? 'bi-heart-fill' : 'bi-heart';
+        $wishTitle = $isWishlisted ? __('Remove from wishlist') : __('Wishlist');
+        $qvDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) ($product->short_description ?: $product->description)))), 220);
+        $qvImages = [];
+        $pushQvImage = static function (?string $url) use (&$qvImages): void {
+            $url = trim((string) $url);
+            if ($url === '') {
+                return;
+            }
+            $opt = \App\Support\OptimizedImage::url($url, 600) ?: $url;
+            if ($opt !== '' && !in_array($opt, $qvImages, true)) {
+                $qvImages[] = $opt;
+            }
+        };
+        $pushQvImage($url1);
+        if (!empty($url2) && $url2 !== $url1) {
+            $pushQvImage($url2);
         }
-        $opt = \App\Support\OptimizedImage::url($url, 600) ?: $url;
-        if ($opt !== '' && ! in_array($opt, $qvImages, true)) {
-            $qvImages[] = $opt;
+        foreach ($product->images as $im) {
+            $pushQvImage(\App\Models\Product::publicImageUrl($im->path));
         }
-    };
-    $pushQvImage($url1);
-    if (! empty($url2) && $url2 !== $url1) {
-        $pushQvImage($url2);
-    }
-    foreach ($product->images as $im) {
-        $pushQvImage(\App\Models\Product::publicImageUrl($im->path));
-    }
-    if ($qvImages === []) {
-        $qvImages[] = $url1;
-    }
-    $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE)->sortBy('id')->values();
-    $hasVariantOptions = $activeVariants->count() > 1
-        || $activeVariants->contains(fn ($vx) => filled($vx->size) || filled($vx->color));
-    $variantPayload = [];
-    if ($hasVariantOptions) {
-        $variantPayload = $activeVariants->map(fn ($vx) => [
-            'id' => $vx->id,
-            'color' => (string) ($vx->color ?? ''),
-            'size' => (string) ($vx->size ?? ''),
-            'label' => $vx->size ?: ($vx->color ?: $vx->label()),
-            'stock' => (int) $vx->stock_qty,
-            'effectivePrice' => $vx->effectivePrice(),
-            'unitPrice' => $vx->unitPrice(),
-            'image' => $vx->variantImageUrl(),
-            'buyable' => $vx->isBuyable(),
-        ])->values()->all();
-    }
-@endphp
-<article class="zm-pro-card h-100 is-loading {{ $listing ? 'zm-pro-card--listing' : '' }}">
-    <div class="zm-pro-card__skel" aria-hidden="true">
-        <div class="zm-pro-card__skel-media"></div>
-        <div class="zm-pro-card__skel-body">
-            <span class="zm-pro-card__skel-line zm-pro-card__skel-line--sm"></span>
-            <span class="zm-pro-card__skel-line"></span>
-            <span class="zm-pro-card__skel-line zm-pro-card__skel-line--md"></span>
-        </div>
-    </div>
-    <div class="zm-pro-card__media">
-        @if(!$hasStock)
-            <span class="zm-pro-card__badge bg-danger @if($listing) zm-pro-card__badge--corner @endif">{{ __('Out of stock') }}</span>
-        @elseif(!$listing)
-            @if($product->is_featured)
-                <span class="zm-pro-card__badge zm-pro-card__badge--feat">{{ __('Featured') }}</span>
-            @elseif($flash)
-                <span class="zm-pro-card__badge">{{ __('Sale') }}</span>
-            @endif
-        @elseif($product->is_featured)
-            <span class="zm-pro-card__badge zm-pro-card__badge--feat zm-pro-card__badge--corner">{{ __('Featured') }}</span>
-        @elseif($flash)
-            <span class="zm-pro-card__badge zm-pro-card__badge--corner">{{ __('Sale') }}</span>
-        @endif
-        <a href="{{ route('product.show', $product) }}" class="zm-pro-card__link">
-            <img src="{{ \App\Support\OptimizedImage::url($url1, 420) }}" class="zm-pro-card__img zm-pro-card__img--primary" alt="{{ $product->name }}" title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560" decoding="async" onerror="this.onerror=null;this.src='{{ $product->namedPlaceholderUrl(false) }}';">
-            @if($url2 && $url2 !== $url1)
-            <img src="{{ \App\Support\OptimizedImage::url($url2, 420) }}" class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view" title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560" decoding="async" onload="this.classList.add('is-loaded')" onerror="this.onerror=null;this.classList.remove('is-loaded');this.style.display='none';">
-            @endif
-        </a>
-        @if($listing)
-            <div class="zm-pro-card__img-rate" title="{{ __('Average rating') }}">
-                <i class="bi bi-star-fill" aria-hidden="true"></i>
-                <span>{{ $ratingDisplay }}</span>
-            </div>
-        @endif
-        <div class="zm-pro-card__wish">
-            @auth
-                <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist">@csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <button type="submit" class="zm-pro-icon-btn zm-pro-icon-btn--round {{ $isWishlisted ? 'is-wishlisted' : '' }}" title="{{ $wishTitle }}" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}"><i class="bi {{ $wishIcon }}"></i></button>
-                </form>
-            @else
-                <a href="{{ route('login') }}" class="zm-pro-icon-btn zm-pro-icon-btn--round" title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
-            @endauth
-        </div>
-        <div class="zm-pro-card__actions {{ $listing ? 'zm-pro-card__actions--listing' : '' }}">
-            <div class="zm-pro-card__hover-actions">
-                <button type="button" class="zm-pro-icon-btn js-quick-view" title="{{ __('Quick view') }}" data-bs-toggle="modal" data-bs-target="#quickViewModal"
-                    data-qv-name="{{ e($product->name) }}"
-                    data-qv-brand="{{ e($vendorName) }}"
-                    data-qv-desc="{{ e($qvDescription) }}"
-                    data-qv-price="{{ $price }}"
-                    data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
-                    data-qv-img="{{ e($url1) }}"
-                    data-qv-images='@json($qvImages)'
-                    data-qv-url="{{ route('product.show', $product) }}"
-                    data-qv-variant="{{ $v?->id }}"
-                    data-qv-variants='@json($variantPayload)'
-                    data-qv-label="{{ $product->variant_label ?: __('Weight') }}">
-                    <i class="bi bi-eye"></i>
-                </button>
+        if ($qvImages === []) {
+            $qvImages[] = $url1;
+        }
+        $activeVariants = $product->variants->where('status', \App\Models\ProductVariant::STATUS_ACTIVE)->sortBy('id')->values();
+        $hasVariantOptions = $activeVariants->count() > 1
+            || $activeVariants->contains(fn($vx) => filled($vx->size) || filled($vx->color));
+        $variantPayload = [];
+        if ($hasVariantOptions) {
+            $variantPayload = $activeVariants->map(fn($vx) => [
+                'id' => $vx->id,
+                'color' => (string) ($vx->color ?? ''),
+                'size' => (string) ($vx->size ?? ''),
+                'label' => $vx->size ?: ($vx->color ?: $vx->label()),
+                'stock' => (int) $vx->stock_qty,
+                'effectivePrice' => $vx->effectivePrice(),
+                'unitPrice' => $vx->unitPrice(),
+                'image' => $vx->variantImageUrl(),
+                'buyable' => $vx->isBuyable(),
+            ])->values()->all();
+        }
+        $isNew = $product->isNew();
+        $stock = ($v && $v->isActiveStatus()) ? (int) max(0, $v->stock_qty) : 0;
+    @endphp
+    <article class="zm-pro-card h-100 is-loading {{ $listing ? 'zm-pro-card--listing' : '' }}">
+        <div class="zm-pro-card__skel" aria-hidden="true">
+            <div class="zm-pro-card__skel-media"></div>
+            <div class="zm-pro-card__skel-body">
+                <span class="zm-pro-card__skel-line zm-pro-card__skel-line--sm"></span>
+                <span class="zm-pro-card__skel-line"></span>
+                <span class="zm-pro-card__skel-line zm-pro-card__skel-line--md"></span>
             </div>
         </div>
-    </div>
-    <div class="zm-pro-card__body">
-        @if(!$listing)
-            <div class="zm-pro-card__rating" aria-hidden="true">
-                @for($i = 1; $i <= 5; $i++)
-                    <i class="bi {{ $i <= $starN ? 'bi-star-fill' : 'bi-star' }}"></i>
-                @endfor
-                <span class="zm-pro-card__rating-num">({{ $ratingDisplay }})</span>
-            </div>
-        @endif
-        <div class="zm-pro-card__brand-row">
-            {{-- <span class="zm-pro-card__brand-name">{{ $vendorName }}</span> --}}
-            @if($variantColors->isNotEmpty())
-                <span class="zm-pro-card__swatches">
-                    @foreach($variantColors->take(3) as $cname)
-                        @php $key = strtolower(trim($cname)); $hex = $swatchMap[$key] ?? '#d1d5db'; @endphp
-                        <span class="zm-pro-card__swatch" style="--swatch: {{ $hex }}" title="{{ $cname }}"></span>
-                    @endforeach
-                    @if($variantColors->count() > 3)
-                        <span class="zm-pro-card__swatch-more">+{{ $variantColors->count() - 3 }}</span>
-                    @endif
-                </span>
-            @endif
-        </div>
-        <a href="{{ route('product.show', $product) }}" class="zm-pro-card__title">{{ $product->name }}</a>
-        @if($v)
-            <div class="js-cart-add-container" data-variant-id="{{ $v->id }}" data-buyable="{{ $v->isBuyable() ? '1' : '0' }}">
-                @php
-                    $optionLabel = $product->variant_label ?: __('Weight');
-                @endphp
-                @if($hasVariantOptions)
-                    <div class="zm-pro-card__options" role="group" aria-label="{{ __('Select :label', ['label' => $optionLabel]) }}">
-                        @foreach($activeVariants as $vx)
-                            @php
-                                $optBuyable = $vx->isBuyable();
-                                $optPrice = (float) $vx->effectivePrice();
-                                $optCompare = $vx->unitPrice() > $optPrice ? (float) $vx->unitPrice() : $compare;
-                                if ($optCompare && $optCompare <= $optPrice) {
-                                    $optCompare = null;
-                                }
-                            @endphp
-                            <button type="button"
-                                class="zm-pro-card__opt js-card-variant-pill {{ $vx->id === $v->id ? 'is-active' : '' }} {{ $optBuyable ? '' : 'is-disabled' }}"
-                                data-id="{{ $vx->id }}"
-                                data-price="{{ $optPrice }}"
-                                data-compare="{{ $optCompare ?: '' }}"
-                                data-buyable="{{ $optBuyable ? '1' : '0' }}"
-                                data-image="{{ $vx->variantImageUrl() }}"
-                                @if(! $optBuyable) disabled aria-disabled="true" title="{{ __('Out of stock') }}" @endif>
-                                {{ $vx->size ?: $vx->color ?: $vx->label() }}
-                            </button>
-                        @endforeach
-                    </div>
+        <div class="zm-pro-card__media">
+            <div class="zm-pro-card__badges @if($listing) zm-pro-card__badges--listing @endif">
+                @if($product->is_featured)
+                    <span
+                        class="zm-pro-card__badge zm-pro-card__badge--feat @if($listing) zm-pro-card__badge--corner @endif">{{ __('Featured') }}</span>
                 @endif
+                @if($isNew)
+                    <span
+                        class="zm-pro-card__badge zm-pro-card__badge--new @if($listing) zm-pro-card__badge--corner @endif">{{ __('New') }}</span>
+                @endif
+                @if($flash && !$product->is_featured && !$isNew)
+                    <span class="zm-pro-card__badge @if($listing) zm-pro-card__badge--corner @endif">{{ __('Sale') }}</span>
+                @endif
+            </div>
+            <a href="{{ route('product.show', $product) }}" class="zm-pro-card__link">
+                <img src="{{ \App\Support\OptimizedImage::url($url1, 420) }}"
+                    class="zm-pro-card__img zm-pro-card__img--primary" alt="{{ $product->name }}"
+                    title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560"
+                    decoding="async" onerror="this.onerror=null;this.src='{{ $product->namedPlaceholderUrl(false) }}';">
+                @if($url2 && $url2 !== $url1)
+                    <img src="{{ \App\Support\OptimizedImage::url($url2, 420) }}"
+                        class="zm-pro-card__img zm-pro-card__img--secondary" alt="{{ $product->name }} — alternate view"
+                        title="{{ $product->name }}" loading="lazy" fetchpriority="low" width="420" height="560"
+                        decoding="async" onload="this.classList.add('is-loaded')"
+                        onerror="this.onerror=null;this.classList.remove('is-loaded');this.style.display='none';">
+                @endif
+            </a>
+            @if($listing)
+                <div class="zm-pro-card__img-rate" title="{{ __('Average rating') }}">
+                    <i class="bi bi-star-fill" aria-hidden="true"></i>
+                    <span>{{ $ratingDisplay }}</span>
+                </div>
+            @endif
+            <div class="zm-pro-card__wish">
+                @auth
+                    <form action="{{ route('wishlist.store') }}" method="post" class="d-inline js-ajax-wishlist">@csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <button type="submit"
+                            class="zm-pro-icon-btn zm-pro-icon-btn--round {{ $isWishlisted ? 'is-wishlisted' : '' }}"
+                            title="{{ $wishTitle }}" aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}"><i
+                                class="bi {{ $wishIcon }}"></i></button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="zm-pro-icon-btn zm-pro-icon-btn--round"
+                        title="{{ __('Wishlist') }}"><i class="bi bi-heart"></i></a>
+                @endauth
+            </div>
+            <div class="zm-pro-card__actions {{ $listing ? 'zm-pro-card__actions--listing' : '' }}">
+                <div class="zm-pro-card__hover-actions">
+                    <button type="button" class="zm-pro-icon-btn js-quick-view" title="{{ __('Quick view') }}"
+                        data-bs-toggle="modal" data-bs-target="#quickViewModal" data-qv-name="{{ e($product->name) }}"
+                        data-qv-brand="{{ e($vendorName) }}" data-qv-desc="{{ e($qvDescription) }}"
+                        data-qv-price="{{ $price }}" data-qv-compare="{{ $compare && $compare > $price ? $compare : '' }}"
+                        data-qv-img="{{ e($url1) }}" data-qv-images='@json($qvImages)'
+                        data-qv-url="{{ route('product.show', $product) }}" data-qv-variant="{{ $v?->id }}"
+                        data-qv-variants='@json($variantPayload)'
+                        data-qv-label="{{ $product->variant_label ?: __('Weight') }}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="zm-pro-card__body">
+            @if(!$listing)
+                <div class="zm-pro-card__rating" aria-hidden="true">
+                    @for($i = 1; $i <= 5; $i++)
+                        <i class="bi {{ $i <= $starN ? 'bi-star-fill' : 'bi-star' }}"></i>
+                    @endfor
+                    <span class="zm-pro-card__rating-num">({{ $ratingDisplay }})</span>
+                </div>
+            @endif
+            <div class="zm-pro-card__brand-row">
+                {{-- <span class="zm-pro-card__brand-name">{{ $vendorName }}</span> --}}
+                @if($variantColors->isNotEmpty())
+                    <span class="zm-pro-card__swatches">
+                        @foreach($variantColors->take(3) as $cname)
+                            @php $key = strtolower(trim($cname));
+                            $hex = $swatchMap[$key] ?? '#d1d5db'; @endphp
+                            <span class="zm-pro-card__swatch" style="--swatch: {{ $hex }}" title="{{ $cname }}"></span>
+                        @endforeach
+                        @if($variantColors->count() > 3)
+                            <span class="zm-pro-card__swatch-more">+{{ $variantColors->count() - 3 }}</span>
+                        @endif
+                    </span>
+                @endif
+            </div>
+            <a href="{{ route('product.show', $product) }}" class="zm-pro-card__title">{{ $product->name }}</a>
+            @if($v)
+                <div class="js-cart-add-container" data-variant-id="{{ $v->id }}"
+                    data-buyable="{{ $v->isBuyable() ? '1' : '0' }}">
+                    <div class="zm-pro-card__stock-wrap js-card-stock-wrap" @if($stock > 5) style="display: none;" @endif>
+                        <span
+                            class="zm-pro-card__stock-badge js-card-stock-badge @if($stock === 0) zm-pro-card__stock-badge--oos @elseif($stock >= 1 && $stock <= 5) zm-pro-card__stock-badge--low @endif"
+                            data-text-oos="{{ __('Out of stock') }}" data-text-low="{{ __('Only few left') }}">
+                            @if($stock === 0)
+                                {{ __('Out of stock') }}
+                            @elseif($stock >= 1 && $stock <= 5)
+                                {{ __('Only few left') }}
+                            @endif
+                        </span>
+                    </div>
+                    @php
+                        $optionLabel = $product->variant_label ?: __('Weight');
+                    @endphp
+                    @if($hasVariantOptions)
+                        <div class="zm-pro-card__options" role="group"
+                            aria-label="{{ __('Select :label', ['label' => $optionLabel]) }}">
+                            @foreach($activeVariants as $vx)
+                                @php
+                                    $optBuyable = $vx->isBuyable();
+                                    $optPrice = (float) $vx->effectivePrice();
+                                    $optCompare = $vx->unitPrice() > $optPrice ? (float) $vx->unitPrice() : $compare;
+                                    if ($optCompare && $optCompare <= $optPrice) {
+                                        $optCompare = null;
+                                    }
+                                @endphp
+                                <button type="button"
+                                    class="zm-pro-card__opt js-card-variant-pill {{ $vx->id === $v->id ? 'is-active' : '' }} {{ $optBuyable ? '' : 'is-disabled' }}"
+                                    data-id="{{ $vx->id }}" data-price="{{ $optPrice }}" data-compare="{{ $optCompare ?: '' }}"
+                                    data-buyable="{{ $optBuyable ? '1' : '0' }}" data-image="{{ $vx->variantImageUrl() }}"
+                                    data-stock="{{ (int) max(0, $vx->stock_qty) }}" @if(!$optBuyable) disabled aria-disabled="true"
+                                    title="{{ __('Out of stock') }}" @endif>
+                                    {{ $vx->size ?: $vx->color ?: $vx->label() }}
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="zm-pro-card__price {{ $listing ? 'zm-pro-card__price--listing' : '' }}">
+                        <span class="zm-pro-card__price-now js-card-price-now">₹{{ number_format($price, 0) }}</span>
+                        <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden
+                        @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
+                        <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}%
+                            {{ __('Off') }}</span>
+                    </div>
+                    @if($listing && ($flash || ($pctOff && $pctOff > 0)))
+                        <div class="zm-pro-card__offer-strip">
+                            <i class="bi bi-clock-history" aria-hidden="true"></i>
+                            @if($flash)
+                                <span>{{ __('Limited time offer') }}: ₹{{ number_format((float) $flash->sale_price, 0) }}</span>
+                            @else
+                                <span>{{ __('Limited time offer') }}: {{ $pctOff }}% {{ __('off') }}</span>
+                            @endif
+                        </div>
+                    @endif
+                    <form action="{{ route('cart.add') }}" method="post"
+                        class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if(!$v->isBuyable()) d-none @endif">
+                        @csrf
+                        <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
+                        <input type="hidden" name="qty" value="1">
+                        <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
+                        <button type="submit" name="buy_now" value="1"
+                            class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
+                    </form>
+                    @if(!$v->isBuyable())
+                        <div class="js-pdp-oos-pill w-100">
+                            <button type="button" class="btn btn-secondary w-100" disabled>{{ __('Out of stock') }}</button>
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="zm-pro-card__stock-wrap js-card-stock-wrap">
+                    <span class="zm-pro-card__stock-badge zm-pro-card__stock-badge--oos js-card-stock-badge"
+                        data-text-oos="{{ __('Out of stock') }}" data-text-low="{{ __('Only few left') }}">
+                        {{ __('Out of stock') }}
+                    </span>
+                </div>
                 <div class="zm-pro-card__price {{ $listing ? 'zm-pro-card__price--listing' : '' }}">
                     <span class="zm-pro-card__price-now js-card-price-now">₹{{ number_format($price, 0) }}</span>
-                    <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
-                    <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}% {{ __('Off') }}</span>
+                    <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden
+                    @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
+                    <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}%
+                        {{ __('Off') }}</span>
                 </div>
                 @if($listing && ($flash || ($pctOff && $pctOff > 0)))
                     <div class="zm-pro-card__offer-strip">
@@ -198,80 +274,51 @@
                         @endif
                     </div>
                 @endif
-                <form action="{{ route('cart.add') }}" method="post" class="zm-pro-add-form d-flex gap-2 js-ajax-add-to-cart @if(!$v->isBuyable()) d-none @endif">
-                    @csrf
-                    <input type="hidden" name="product_variant_id" value="{{ $v->id }}">
-                    <input type="hidden" name="qty" value="1">
-                    <button type="submit" class="btn btn-primary w-100">{{ __('Add to cart') }}</button>
-                    <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary w-100">{{ __('Buy now') }}</button>
-                </form>
-                @if(!$v->isBuyable())
-                    <div class="js-pdp-oos-pill w-100">
-                        <button type="button" class="btn btn-secondary w-100" disabled>{{ __('Out of stock') }}</button>
-                    </div>
-                @endif
-            </div>
-        @else
-            <div class="zm-pro-card__price {{ $listing ? 'zm-pro-card__price--listing' : '' }}">
-                <span class="zm-pro-card__price-now js-card-price-now">₹{{ number_format($price, 0) }}</span>
-                <del class="js-card-price-compare" @if(!($compare && $compare > $price)) hidden @endif>₹{{ number_format((float) ($compare ?? 0), 0) }}</del>
-                <span class="zm-pro-card__off js-card-price-off" @if(!$pctOff) hidden @endif>{{ $pctOff ?: 0 }}% {{ __('Off') }}</span>
-            </div>
-            @if($listing && ($flash || ($pctOff && $pctOff > 0)))
-                <div class="zm-pro-card__offer-strip">
-                    <i class="bi bi-clock-history" aria-hidden="true"></i>
-                    @if($flash)
-                        <span>{{ __('Limited time offer') }}: ₹{{ number_format((float) $flash->sale_price, 0) }}</span>
-                    @else
-                        <span>{{ __('Limited time offer') }}: {{ $pctOff }}% {{ __('off') }}</span>
-                    @endif
-                </div>
             @endif
-        @endif
-    </div>
-</article>
-@once('product-card-skeleton')
-@push('scripts')
-<script>
-(function () {
-    function revealCard(card) {
-        if (card) card.classList.remove('is-loading');
-    }
-    function bindCardSkeletons(root) {
-        (root || document).querySelectorAll('.zm-pro-card.is-loading').forEach(function (card) {
-            if (card.dataset.skelBound) return;
-            card.dataset.skelBound = '1';
-            var img = card.querySelector('.zm-pro-card__img--primary');
-            var secImg = card.querySelector('.zm-pro-card__img--secondary');
-            if (secImg) {
-                if (secImg.complete && secImg.naturalWidth > 0) {
-                    secImg.classList.add('is-loaded');
-                } else {
-                    secImg.addEventListener('load', function () { secImg.classList.add('is-loaded'); }, { once: true });
-                }
-            }
-            if (!img) {
-                revealCard(card);
-                return;
-            }
-            var done = function () { revealCard(card); };
-            if (img.complete && img.naturalWidth > 0) {
-                done();
-                return;
-            }
-            img.addEventListener('load', done, { once: true });
-            img.addEventListener('error', done, { once: true });
-            window.setTimeout(done, 8000);
-        });
-    }
-    window.bindProductCardSkeletons = bindCardSkeletons;
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { bindCardSkeletons(); });
-    } else {
-        bindCardSkeletons();
-    }
-})();
-</script>
-@endpush
-@endonce
+        </div>
+    </article>
+    @once('product-card-skeleton')
+        @push('scripts')
+            <script>
+                (function () {
+                    function revealCard(card) {
+                        if (card) card.classList.remove('is-loading');
+                    }
+                    function bindCardSkeletons(root) {
+                        (root || document).querySelectorAll('.zm-pro-card.is-loading').forEach(function (card) {
+                            if (card.dataset.skelBound) return;
+                            card.dataset.skelBound = '1';
+                            var img = card.querySelector('.zm-pro-card__img--primary');
+                            var secImg = card.querySelector('.zm-pro-card__img--secondary');
+                            if (secImg) {
+                                if (secImg.complete && secImg.naturalWidth > 0) {
+                                    secImg.classList.add('is-loaded');
+                                } else {
+                                    secImg.addEventListener('load', function () { secImg.classList.add('is-loaded'); }, { once: true });
+                                }
+                            }
+                            if (!img) {
+                                revealCard(card);
+                                return;
+                            }
+                            var done = function () { revealCard(card); };
+                            if (img.complete && img.naturalWidth > 0) {
+                                done();
+                                return;
+                            }
+                            img.addEventListener('load', done, { once: true });
+                            img.addEventListener('error', done, { once: true });
+                            window.setTimeout(done, 8000);
+                        });
+                    }
+                    window.bindProductCardSkeletons = bindCardSkeletons;
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', function () { bindCardSkeletons(); });
+                    } else {
+                        bindCardSkeletons();
+                    }
+                })();
+            </script>
+        @endpush
+    @endonce
 @endif

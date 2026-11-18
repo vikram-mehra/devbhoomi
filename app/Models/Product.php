@@ -83,6 +83,14 @@ class Product extends Model
         return $this->variants()->where('status', ProductVariant::STATUS_ACTIVE);
     }
 
+    /**
+     * Published within the last 30 days.
+     */
+    public function isNew(): bool
+    {
+        return (bool) ($this->created_at && $this->created_at->greaterThanOrEqualTo(now()->subDays(30)));
+    }
+
     public function flashSale(): HasOne
     {
         return $this->hasOne(FlashSale::class)->where('is_active', true)

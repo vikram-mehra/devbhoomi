@@ -173,6 +173,42 @@
             @include('admin.products.partials.catalog-panel', ['products' => $products])
         </div>
     </div>
+
+    {{-- Delete Product Confirmation Modal --}}
+    <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-light border-0 py-3">
+                    <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2 mb-0" id="deleteProductModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        {{ __('Confirm Product Deletion') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2 text-secondary">{{ __('Are you sure you want to permanently delete this product?') }}</p>
+                    <div class="p-3 rounded bg-light border">
+                        <span class="text-muted small d-block mb-1">{{ __('Product name') }}:</span>
+                        <strong id="deleteProductName" class="text-dark fs-6 text-truncate d-block"></strong>
+                    </div>
+                    <div class="alert alert-danger py-2 px-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+                        <span>{{ __('This action cannot be undone. All variants, images, and catalog mappings will be permanently removed.') }}</span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <form id="deleteProductForm" method="post" action="" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger px-3">
+                            <i class="bi bi-trash me-1"></i>{{ __('Delete Permanently') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -333,6 +369,20 @@
             ctrl.classList.remove('is-busy');
         });
     });
+
+    var deleteProductModal = document.getElementById('deleteProductModal');
+    if (deleteProductModal) {
+        deleteProductModal.addEventListener('show.bs.modal', function (event) {
+            var btn = event.relatedTarget;
+            if (!btn) return;
+            var action = btn.getAttribute('data-action');
+            var name = btn.getAttribute('data-name');
+            var form = deleteProductModal.querySelector('#deleteProductForm');
+            var nameEl = deleteProductModal.querySelector('#deleteProductName');
+            if (form && action) form.action = action;
+            if (nameEl) nameEl.textContent = name || '';
+        });
+    }
 })();
 </script>
 @endpush

@@ -511,12 +511,32 @@
                     var optCompare = cardOpt.getAttribute('data-compare') || '';
                     var optBuyable = cardOpt.getAttribute('data-buyable') === '1';
                     var optImage = cardOpt.getAttribute('data-image') || '';
+                    var optStock = cardOpt.hasAttribute('data-stock') ? parseInt(cardOpt.getAttribute('data-stock'), 10) : null;
                     var container = card.querySelector('.js-cart-add-container');
                     if (container) {
                         container.setAttribute('data-variant-id', optId);
                         container.setAttribute('data-buyable', optBuyable ? '1' : '0');
                         var variantInput = container.querySelector('input[name="product_variant_id"]');
                         if (variantInput) variantInput.value = optId;
+                    }
+                    var stockWrap = card.querySelector('.js-card-stock-wrap');
+                    if (stockWrap && optStock !== null && !isNaN(optStock)) {
+                        var badge = stockWrap.querySelector('.js-card-stock-badge');
+                        if (optStock === 0 || !optBuyable) {
+                            stockWrap.style.display = '';
+                            if (badge) {
+                                badge.className = 'zm-pro-card__stock-badge zm-pro-card__stock-badge--oos js-card-stock-badge';
+                                badge.textContent = badge.getAttribute('data-text-oos') || 'OUT OF STOCK';
+                            }
+                        } else if (optStock >= 1 && optStock <= 5) {
+                            stockWrap.style.display = '';
+                            if (badge) {
+                                badge.className = 'zm-pro-card__stock-badge zm-pro-card__stock-badge--low js-card-stock-badge';
+                                badge.textContent = badge.getAttribute('data-text-low') || 'ONLY FEW LEFT';
+                            }
+                        } else {
+                            stockWrap.style.display = 'none';
+                        }
                     }
                     var nowEl = card.querySelector('.js-card-price-now');
                     var cmpEl = card.querySelector('.js-card-price-compare');

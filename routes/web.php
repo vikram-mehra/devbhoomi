@@ -230,6 +230,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/vendors/{vendor}/commission', [VendorAdminController::class, 'updateCommission'])->name('vendors.commission');
 
     Route::get('/users', [UserAdminController::class, 'index'])->name('users.index');
+    Route::get('/users/admins', [UserAdminController::class, 'admins'])->name('users.admins');
+    Route::get('/users/customers', [UserAdminController::class, 'customers'])->name('users.customers');
     Route::post('/users/{user}/role', [UserAdminController::class, 'updateRole'])->name('users.role');
     Route::delete('/users/{user}', [UserAdminController::class, 'destroy'])->name('users.destroy');
 
@@ -263,6 +265,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/inventory/export/variants.csv', [InventoryDashboardController::class, 'exportVariants'])->name('inventory.export.variants');
     Route::post('/inventory/bulk-adjust', [InventoryDashboardController::class, 'bulkAdjust'])->name('inventory.bulk-adjust');
 
+    Route::get('/suppliers/items', [SupplierAdminController::class, 'items'])->name('suppliers.items');
     Route::get('/suppliers', [SupplierAdminController::class, 'index'])->name('suppliers.index');
     Route::post('/suppliers', [SupplierAdminController::class, 'store'])->name('suppliers.store');
     Route::get('/suppliers/{supplier}', [SupplierAdminController::class, 'show'])->name('suppliers.show');

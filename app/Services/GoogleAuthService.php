@@ -123,6 +123,10 @@ class GoogleAuthService
             $user->avatar = $googleUser->getAvatar();
         }
 
+        if (! $user->email_verified_at) {
+            $user->email_verified_at = now();
+        }
+
         if ($user->isDirty()) {
             $user->save();
         }

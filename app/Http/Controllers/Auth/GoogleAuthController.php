@@ -51,6 +51,9 @@ class GoogleAuthController extends Controller
                 ->redirectUrl($redirectUri)
                 ->user();
             $user = $googleAuth->resolveUser($googleUser);
+            if (! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
         } catch (\RuntimeException $e) {
             return redirect()->route('login')->with('error', $e->getMessage());
         } catch (\Throwable $e) {

@@ -51,8 +51,10 @@ class MarketController extends Controller
                 ->get();
         });
 
+        $topProducts = $trending->take(12);
+
         return view('market.home', compact(
-            'banners', 'promoBanners', 'featured', 'trending', 'newProducts', 'vendors', 'forYou', 'suggestedForYou', 'blogPosts'
+            'banners', 'promoBanners', 'featured', 'trending', 'newProducts', 'vendors', 'forYou', 'suggestedForYou', 'blogPosts', 'topProducts'
         ));
     }
 }

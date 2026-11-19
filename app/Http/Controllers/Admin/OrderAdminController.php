@@ -21,6 +21,9 @@ class OrderAdminController extends Controller
     {
         $query = Order::query()->with(['user', 'items', 'shippingAddress', 'latestShipment']);
 
+        if (filled($request->user_id)) {
+            $query->where('user_id', $request->user_id);
+        }
         if (filled($request->order_id)) {
             $query->where(function ($q) use ($request) {
                 $q->where('id', $request->order_id)
@@ -64,8 +67,9 @@ class OrderAdminController extends Controller
         ];
 
         $couriers = app(CourierManager::class)->availableDrivers();
+        $filteredUser = filled($request->user_id) ? \App\Models\User::find($request->user_id) : null;
 
-        return view('admin.orders.index', compact('orders', 'stats', 'couriers'));
+        return view('admin.orders.index', compact('orders', 'stats', 'couriers', 'filteredUser'));
     }
 
     public function show(Order $order)

@@ -2254,11 +2254,30 @@ body.cb-market-pro.is-search-open {
 }
 @media (max-width: 991.98px) {
   .cb-market-pro .zm-pro-card .zm-pro-add-form .btn {
-    font-size: 0.7rem !important;
-    padding: 0.62rem 0.35rem !important;
-    min-height: 2.4rem !important;
+    font-size: 0.65rem !important;
+    padding: 0.55rem 0.35rem !important;
+    min-height: 2.3rem !important;
     justify-content: center !important;
     text-align: center !important;
+  }
+}
+@media (max-width: 575.98px) {
+  .cb-market-pro .zm-pro-card .zm-pro-add-form {
+    gap: 0.35rem !important;
+  }
+  .cb-market-pro .zm-pro-card .zm-pro-add-form .btn {
+    font-size: 0.64rem !important;
+    padding: 0.45rem 0.2rem !important;
+    letter-spacing: -0.015em !important;
+    min-height: 2.2rem !important;
+    line-height: 1.15 !important;
+  }
+}
+@media (max-width: 380px) {
+  .cb-market-pro .zm-pro-card .zm-pro-add-form .btn {
+    font-size: 0.55rem !important;
+    padding: 0.4rem 0.12rem !important;
+    letter-spacing: -0.025em !important;
   }
 }
 .zm-pro-card__options {
@@ -5450,7 +5469,7 @@ body.modal-open.cb-market-pro .cb-header--myntra {
   }
 
   .cb-market-pro .zm-pro-card .zm-pro-add-form {
-    display: none !important;
+    /* display: none !important; */
   }
 
   .cb-market-pro .zm-pro-card__link {
@@ -9155,6 +9174,14 @@ body.cb-market-pro .bi {
     padding: 0.3rem 0.6rem !important;
     font-size: 0.72rem !important;
     min-height: 32px !important;
+  }
+  @media (max-width: 380px) {
+    .cb-market-pro .pro-sticky-buy .pro-pdp-sticky-add.btn,
+    .cb-market-pro .pro-sticky-buy .pro-pdp-sticky-buy.btn {
+      padding: 0.25rem 0.45rem !important;
+      font-size: 0.66rem !important;
+      letter-spacing: -0.015em;
+    }
   }
 
   /* —— Header & announcement —— */

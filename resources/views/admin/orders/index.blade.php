@@ -37,6 +37,16 @@
         </div>
     </div>
 
+    @if(!empty($filteredUser))
+        <div class="alert alert-info py-2 px-3 d-flex align-items-center justify-content-between mb-3 rounded-3 border-0 shadow-sm">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-funnel-fill text-primary"></i>
+                <span>{{ __('Showing orders for customer:') }} <strong>{{ $filteredUser->name }}</strong> ({{ $filteredUser->email }})</span>
+            </div>
+            <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-outline-dark rounded-pill py-0 px-2">{{ __('Clear Filter') }}</a>
+        </div>
+    @endif
+
     <div class="card border-0 shadow-sm admin-data-card mb-3">
         <div class="card-body">
             <form method="get" id="ordersFilterForm" action="{{ route('admin.orders.index') }}" class="row g-2 align-items-end">
@@ -115,17 +125,19 @@
                 <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Update Selected</button>
                 <button type="submit" formaction="{{ route('admin.orders.bulk-shipping') }}" class="btn btn-sm btn-outline-success text-nowrap">Save Shipping Selected</button>
                 @if(!empty($couriers))
-                    <div class="d-flex flex-wrap align-items-center gap-2 ms-lg-2 ps-lg-2 border-start">
+                    <div class="d-inline-flex align-items-center flex-nowrap gap-2 ms-lg-2 ps-lg-2 border-start">
                         <span class="small text-muted text-nowrap" data-selected-count>Selected: 0 orders</span>
-                        <select name="courier" class="form-select form-select-sm" style="min-width: 10rem;" data-courier-select>
-                            <option value="">{{ __('Select Courier') }}</option>
-                            @foreach($couriers as $key => $name)
-                                <option value="{{ $key }}">{{ $name }}</option>
-                            @endforeach
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-primary text-nowrap" formaction="{{ route('admin.orders.shipments.store') }}" data-create-shipment>
-                            {{ __('Create Shipment') }}
-                        </button>
+                        <div class="input-group input-group-sm flex-nowrap" style="width: auto;">
+                            <select name="courier" class="form-select form-select-sm text-nowrap" style="min-width: 9.5rem; width: auto;" data-courier-select>
+                                <option value="">{{ __('Select Courier') }}</option>
+                                @foreach($couriers as $key => $name)
+                                    <option value="{{ $key }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary text-nowrap" formaction="{{ route('admin.orders.shipments.store') }}" data-create-shipment>
+                                <i class="bi bi-truck me-1"></i>{{ __('Create Shipment') }}
+                            </button>
+                        </div>
                     </div>
                 @endif
             </div>

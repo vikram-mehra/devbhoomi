@@ -11,11 +11,50 @@ use Illuminate\Support\Str;
 
 class UserAdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderByDesc('id')->paginate(30);
+        if ($request->get('type') === 'admin') {
+            return $this->admins($request);
+        }
 
-        return view('admin.users', compact('users'));
+        return redirect()->route('admin.users.customers');
+    }
+
+    public function admins(Request $request)
+    {
+        $type = 'admin';
+        $q = User::query()->where('role', '!=', 'user');
+
+        if ($request->filled('q')) {
+            $term = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $request->get('q')).'%';
+            $q->where(function ($qq) use ($term) {
+                $qq->where('name', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('role', 'like', $term);
+            });
+        }
+
+        $users = $q->orderByDesc('id')->paginate(30)->withQueryString();
+
+        return view('admin.users', compact('users', 'type'));
+    }
+
+    public function customers(Request $request)
+    {
+        $type = 'customer';
+        $q = User::query()->where('role', 'user')->withCount('orders');
+
+        if ($request->filled('q')) {
+            $term = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $request->get('q')).'%';
+            $q->where(function ($qq) use ($term) {
+                $qq->where('name', 'like', $term)
+                    ->orWhere('email', 'like', $term);
+            });
+        }
+
+        $users = $q->orderByDesc('id')->paginate(30)->withQueryString();
+
+        return view('admin.users', compact('users', 'type'));
     }
 
     public function updateRole(Request $request, User $user)

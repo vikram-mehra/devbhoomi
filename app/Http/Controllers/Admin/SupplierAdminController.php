@@ -4,12 +4,37 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class SupplierAdminController extends Controller
 {
+    public function items(Request $request)
+    {
+        $q = PurchaseItem::query()
+            ->with(['product', 'variant', 'purchase.supplier']);
+
+        if ($request->filled('supplier_id')) {
+            $q->whereHas('purchase', fn ($pq) => $pq->where('supplier_id', $request->supplier_id));
+        }
+
+        if ($request->filled('q')) {
+            $term = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $request->get('q')).'%';
+            $q->where(function ($qq) use ($term) {
+                $qq->whereHas('product', fn ($pr) => $pr->where('name', 'like', $term))
+                    ->orWhereHas('purchase.supplier', fn ($sp) => $sp->where('name', 'like', $term))
+                    ->orWhereHas('purchase', fn ($pu) => $pu->where('invoice_number', 'like', $term));
+            });
+        }
+
+        $items = $q->latest()->paginate(25)->withQueryString();
+        $suppliers = Supplier::orderBy('name')->get();
+
+        return view('admin.suppliers.items', compact('items', 'suppliers'));
+    }
+
     public function index(Request $request)
     {
         $q = Supplier::query()->withCount('purchases')->latest();
@@ -91,8 +116,14 @@ class SupplierAdminController extends Controller
             ->where('supplier_id', $supplier->id)
             ->with('warehouse')
             ->latest('purchase_date')
-            ->paginate(15);
+            ->paginate(10, ['*'], 'purchases_page');
 
-        return view('admin.suppliers.show', compact('supplier', 'purchases'));
+        $items = PurchaseItem::query()
+            ->whereHas('purchase', fn ($q) => $q->where('supplier_id', $supplier->id))
+            ->with(['product', 'variant', 'purchase'])
+            ->latest()
+            ->paginate(20, ['*'], 'items_page');
+
+        return view('admin.suppliers.show', compact('supplier', 'purchases', 'items'));
     }
 }

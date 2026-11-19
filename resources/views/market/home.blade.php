@@ -149,146 +149,14 @@
     @endif
 
     <div class="mk-home-bands">
-        {{-- Trending tabs: New · Featured · Best selling (Swiper slider) --}}
-        <style>
-            .cb-market-pro .pro-trend-tab-content .tab-pane .pro-trend-skel { display: none; }
-            .cb-market-pro .pro-trend-tab-content .tab-pane.is-pending .pro-trend-skel { display: block !important; }
-            .cb-market-pro .pro-trend-tab-content .tab-pane.is-pending .pro-product-swiper,
-            .cb-market-pro .pro-trend-tab-content .tab-pane.is-pending > p { display: none !important; }
-        </style>
-        <section class="mk-home-band mk-section" aria-labelledby="trend-heading">
-            <div class="cb-container">
-            <div class="pro-section-head">
-                <p class="pro-section-head__eyebrow">{{ __('Trending now') }}</p>
-                <h2 class="pro-section-head__title" id="trend-heading">{{ __("Products you'll love") }}</h2>
-            </div>
-            <div class="pro-tabs-trend-wrap">
-            <ul class="nav nav-pills pro-tabs pro-tabs--trend" id="proTrendTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tab-new" data-bs-toggle="pill" data-bs-target="#pane-new" type="button" role="tab">
-                        <i class="bi bi-stars" aria-hidden="true"></i>{{ __('New') }}
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-feat" data-bs-toggle="pill" data-bs-target="#pane-feat" type="button" role="tab">
-                        <i class="bi bi-award" aria-hidden="true"></i>{{ __('Featured') }}
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-best" data-bs-toggle="pill" data-bs-target="#pane-best" type="button" role="tab">
-                        <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>{{ __('Best selling') }}
-                    </button>
-                </li>
-            </ul>
-            </div>
-            <div class="tab-content pro-trend-tab-content">
-                <div class="tab-pane show active" id="pane-new" role="tabpanel" aria-labelledby="tab-new">
-                    @include('market.partials.product-card-skel-row')
-                    @if($newTab->isNotEmpty())
-                        <div class="swiper pro-product-swiper">
-                            <div class="swiper-wrapper">
-                                @foreach($newTab as $product)
-                                    <div class="swiper-slide">
-                                        <div class="swiper-slide__inner h-100">@include('market.partials.product-card', ['product' => $product])</div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <button type="button" class="swiper-button-prev pro-product-swiper__nav" aria-label="{{ __('Previous products') }}"></button>
-                            <button type="button" class="swiper-button-next pro-product-swiper__nav" aria-label="{{ __('Next products') }}"></button>
-                        </div>
-                    @else
-                        <p class="text-center text-muted py-4 mb-0">{{ __('No products in this tab yet.') }}</p>
-                    @endif
-                </div>
-                <div class="tab-pane" id="pane-feat" role="tabpanel" aria-labelledby="tab-feat">
-                    @include('market.partials.product-card-skel-row')
-                    @if($featTab->isNotEmpty())
-                        <div class="swiper pro-product-swiper">
-                            <div class="swiper-wrapper">
-                                @foreach($featTab as $product)
-                                    <div class="swiper-slide">
-                                        <div class="swiper-slide__inner h-100">@include('market.partials.product-card', ['product' => $product])</div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <button type="button" class="swiper-button-prev pro-product-swiper__nav" aria-label="{{ __('Previous products') }}"></button>
-                            <button type="button" class="swiper-button-next pro-product-swiper__nav" aria-label="{{ __('Next products') }}"></button>
-                        </div>
-                    @else
-                        <p class="text-center text-muted py-4 mb-0">{{ __('No products in this tab yet.') }}</p>
-                    @endif
-                </div>
-                <div class="tab-pane" id="pane-best" role="tabpanel" aria-labelledby="tab-best">
-                    @include('market.partials.product-card-skel-row')
-                    @if($bestTab->isNotEmpty())
-                        <div class="swiper pro-product-swiper">
-                            <div class="swiper-wrapper">
-                                @foreach($bestTab as $product)
-                                    <div class="swiper-slide">
-                                        <div class="swiper-slide__inner h-100">@include('market.partials.product-card', ['product' => $product])</div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <button type="button" class="swiper-button-prev pro-product-swiper__nav" aria-label="{{ __('Previous products') }}"></button>
-                            <button type="button" class="swiper-button-next pro-product-swiper__nav" aria-label="{{ __('Next products') }}"></button>
-                        </div>
-                    @else
-                        <p class="text-center text-muted py-4 mb-0">{{ __('No products in this tab yet.') }}</p>
-                    @endif
-                </div>
-            </div>
-        </div>
-        </section>
-        
-        @if(isset($suggestedForYou) && $suggestedForYou->isNotEmpty())
-        <section class="mk-home-band mk-section cb-reveal" aria-labelledby="suggested-heading">
-            <div class="cb-container">
-            <div class="pro-section-head">
-                <p class="pro-section-head__eyebrow">{{ __('Based on your browsing') }}</p>
-                <h2 class="pro-section-head__title" id="suggested-heading">{{ __('Suggested for you') }}</h2>
-                <p class="pro-section-head__sub">{{ __('Products you recently viewed') }}</p>
-            </div>
-            <div class="swiper pro-product-swiper" id="proSuggestedForYouSwiper">
-                <div class="swiper-wrapper">
-                    @foreach($suggestedForYou as $product)
-                        <div class="swiper-slide">
-                            <div class="swiper-slide__inner h-100">@include('market.partials.product-card', ['product' => $product])</div>
-                        </div>
-                    @endforeach
-                </div>
-                <button type="button" class="swiper-button-prev pro-product-swiper__nav" aria-label="{{ __('Previous products') }}"></button>
-                <button type="button" class="swiper-button-next pro-product-swiper__nav" aria-label="{{ __('Next products') }}"></button>
-            </div>
-            </div>
-        </section>
-        @endif
+        {{-- Trending tabs: New · Featured · Best selling --}}
+        @include('market.partials.home.trending-now')
 
-        {{-- Featured products --}}
-        <section class="mk-home-band mk-section cb-reveal" aria-labelledby="feat-heading">
-            <div class="cb-container">
-            <div class="pro-section-head">
-                <p class="pro-section-head__eyebrow">{{ __('Handpicked') }}</p>
-                <h2 class="pro-section-head__title" id="feat-heading">{{ __('Featured products') }}</h2>
-                <p class="pro-section-head__sub">{{ __('Hover for quick view, wishlist & cart — second image on hover.') }}</p>
-            </div>
-            @php $feat = $featTab; @endphp
-            @if($feat->isNotEmpty())
-                <div class="swiper pro-product-swiper" id="proFeaturedProductSwiper">
-                    <div class="swiper-wrapper">
-                        @foreach($feat as $product)
-                            <div class="swiper-slide">
-                                <div class="swiper-slide__inner h-100">@include('market.partials.product-card', ['product' => $product])</div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <button type="button" class="swiper-button-prev pro-product-swiper__nav" aria-label="{{ __('Previous products') }}"></button>
-                    <button type="button" class="swiper-button-next pro-product-swiper__nav" aria-label="{{ __('Next products') }}"></button>
-                </div>
-            @else
-                <p class="text-center text-muted">{{ __('Products will show here once listed.') }}</p>
-            @endif
-            </div>
-        </section>
+        {{-- Suggested for you --}}
+        {{-- @include('market.partials.home.suggested-for-you') --}}
+
+        {{-- Top 12 products (4 per row on desktop) --}}
+        @include('market.partials.home.top-products')
 
         @include('market.partials.home-promo-tiles')
         @include('market.partials.home-why-us')
@@ -428,8 +296,6 @@
                 }
 
                 function onReady() {
-                    mountProProductSwiper(document.getElementById('proSuggestedForYouSwiper'));
-                    mountProProductSwiper(document.getElementById('proFeaturedProductSwiper'));
                     mountTrendSwiper(document.getElementById('pane-new'));
                     mountTestimonialSwiper();
                 }
@@ -552,89 +418,12 @@
             </script>
         @endpush
 
-    {{-- Testimonials (autoplay slider) --}}
-    @php
-        $homeTestimonials = [
-            [__('The mandua flour tastes like home in the hills — fresh, earthy, and packed with care.'), 'Priya S.', 'Mumbai', 5],
-            [__('Love comparing sellers in one place. The pahadi pulses arrived sealed and genuinely organic.'), 'Arjun K.', 'Bengaluru', 5],
-            [__('Support helped with a return quickly. I trust this store for weekly Himalayan staples.'), 'Neha R.', 'Delhi', 4],
-            [__('Spices are fragrant, not dusty. You can tell they came straight from Uttarakhand farms.'), 'Kavita M.', 'Dehradun', 5],
-            [__('Fast delivery and genuine products. The millets have become a regular in our kitchen.'), 'Rohan P.', 'Pune', 5],
-            [__('Finally organic grains I can trust for my family — clean packing and honest flavour.'), 'Meera T.', 'Jaipur', 5],
-            [__('Ordered red rice and gahat dal together — both arrived fresh and well packed.'), 'Sanjay D.', 'Chandigarh', 5],
-            [__('A clean, honest store for pahadi groceries. I keep coming back for the millets.'), 'Ananya L.', 'Noida', 5],
-        ];
-    @endphp
-    <section class="pro-testi-section mk-home-band mk-home-band--ownbg mk-section cb-reveal" aria-labelledby="testi-heading">
-        <div class="pro-testi-section__deco" aria-hidden="true">
-            <span class="pro-testi-section__blob pro-testi-section__blob--a"></span>
-            <span class="pro-testi-section__blob pro-testi-section__blob--b"></span>
-            <span class="pro-testi-section__blob pro-testi-section__blob--c"></span>
-            <span class="pro-testi-section__ring"></span>
-        </div>
-        <div class="cb-container position-relative">
-            <div class="pro-section-head">
-                <p class="pro-section-head__eyebrow">{{ __('Reviews') }}</p>
-                <h2 class="pro-section-head__title" id="testi-heading">{{ __('What buyers say') }}</h2>
-                <p class="pro-section-head__sub">{{ __('Real notes from customers who shop Himalayan staples with us.') }}</p>
-            </div>
-            <div class="pro-testi-swiper-wrap">
-                <div class="swiper pro-testi-swiper" id="proTestimonialSwiper">
-                    <div class="swiper-wrapper">
-                        @foreach($homeTestimonials as $t)
-                            @php $rating = min(5, max(0, (int) $t[3])); @endphp
-                            <div class="swiper-slide">
-                                <article class="pro-testi-card">
-                                    <i class="bi bi-quote pro-testi-card__mark" aria-hidden="true"></i>
-                                    <div class="pro-testi-card__stars" role="img" aria-label="{{ $rating }} {{ __('out of 5 stars') }}">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            <i class="bi {{ $i <= $rating ? 'bi-star-fill' : 'bi-star' }}" aria-hidden="true"></i>
-                                        @endfor
-                                    </div>
-                                    <p class="pro-testi-card__quote">&ldquo;{{ $t[0] }}&rdquo;</p>
-                                    <div class="pro-testi-card__author">{{ $t[1] }}</div>
-                                    <div class="small text-muted">{{ $t[2] }}</div>
-                                </article>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="swiper-pagination pro-testi-swiper__dots"></div>
-                </div>
-                <button type="button" class="swiper-button-prev pro-testi-swiper__nav" aria-label="{{ __('Previous testimonials') }}"></button>
-                <button type="button" class="swiper-button-next pro-testi-swiper__nav" aria-label="{{ __('Next testimonials') }}"></button>
-            </div>
-        </div>
-    </section>
+        {{-- Testimonials (autoplay slider) --}}
+        @include('market.partials.home.testimonials')
 
-    @if(isset($blogPosts) && $blogPosts->isNotEmpty())
-    <section class="mk-home-band mk-section cb-reveal" aria-labelledby="blog-heading">
-        <div class="cb-container">
-            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
-                <div>
-                    <p class="pro-section-head__eyebrow mb-1">{{ __('Editorial') }}</p>
-                    <h2 class="h4 mb-0" id="blog-heading">{{ __('From the blog') }}</h2>
-                </div>
-                <a href="{{ route('blog.index') }}" class="pro-blog-viewall">{{ __('View all') }}<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-            </div>
-            <div class="row g-3 pro-blog-list">
-                @foreach($blogPosts as $post)
-                    <div class="col-6 col-md-3">
-                        <article class="pro-blog-card">
-                            <a href="{{ route('blog.show', $post) }}" class="pro-blog-card__media">
-                                <img src="{{ \App\Support\OptimizedImage::url($post->imageUrl(), 640) }}" class="pro-blog-card__img" alt="{{ $post->title }}" title="{{ $post->title }}" loading="lazy" width="640" height="400" decoding="async">
-                            </a>
-                            <div class="pro-blog-card__body">
-                                <div class="pro-blog-card__date">{{ strtoupper(($post->published_at ?? $post->created_at)->format('M Y')) }}</div>
-                                <a href="{{ route('blog.show', $post) }}" class="pro-blog-card__title d-inline-block">{{ $post->title }}</a>
-                            </div>
-                        </article>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
+        {{-- Blog posts --}}
+        @include('market.partials.home.blog-posts')
 
-    @include('market.partials.home-faq')
+        @include('market.partials.home-faq')
     </div>
 @endsection

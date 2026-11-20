@@ -4089,8 +4089,6 @@ a.mk-banner-overlay:hover .mk-banner-overlay__cta {
 }
 .cb-market-pro .pro-blog-detail__content {
   font-size: 1.0625rem;
-  max-width: 40rem;
-  margin: 0 auto;
   color: #475569 !important;
 }
 .cb-market-pro .pro-blog-detail__content--rich h2,

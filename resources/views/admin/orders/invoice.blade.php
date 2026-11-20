@@ -56,7 +56,18 @@
 
     <table style="margin-top: 20px;">
         <tr><td>Subtotal</td><td class="text-right">₹{{ number_format((float) $order->subtotal, 2) }}</td></tr>
-        <tr><td>Shipping</td><td class="text-right">₹{{ number_format((float) $order->shipping, 2) }}</td></tr>
+        <tr>
+            <td>Shipping</td>
+            <td class="text-right">
+                @if((float) ($order->shipping_discount_amount ?? 0) > 0)
+                    <del style="color:#64748b;font-size:12px;">₹{{ number_format((float) $order->shipping_original, 2) }}</del>
+                    ₹{{ number_format((float) $order->shipping, 2) }}
+                    <span style="color:#16a34a;font-size:12px;">({{ (int) $order->shipping_discount_percent }}% off)</span>
+                @else
+                    ₹{{ number_format((float) $order->shipping, 2) }}
+                @endif
+            </td>
+        </tr>
         <tr><td>Discount</td><td class="text-right">-₹{{ number_format((float) $order->discount, 2) }}</td></tr>
         <tr><td>Tax/GST</td><td class="text-right">₹{{ number_format((float) $order->tax_amount, 2) }}</td></tr>
         <tr><th>Grand Total</th><th class="text-right">₹{{ number_format((float) $order->total, 2) }}</th></tr>

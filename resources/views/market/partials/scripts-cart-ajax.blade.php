@@ -283,7 +283,9 @@
                                 var shippingEl = document.getElementById('cartShipping');
                                 var totalEl = document.getElementById('cartTotal');
                                 if (subtotalEl) subtotalEl.textContent = formatMoney(data.totals.subtotal);
-                                if (shippingEl) shippingEl.textContent = data.totals.is_free_shipping ? 'FREE' : formatMoney(data.totals.shipping_charge);
+                                if (shippingEl) {
+                                    shippingEl.textContent = data.totals.is_free_shipping ? 'FREE' : formatMoney(data.totals.shipping_charge);
+                                }
                                 if (totalEl) totalEl.textContent = formatMoney(data.totals.total);
                                 var minusBtn = mainCard.querySelector('.js-qty-minus');
                                 if (minusBtn) {
@@ -291,6 +293,8 @@
                                 }
                             }
                         }
+
+                        document.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
                     })
                     .catch(function (err) {
                         console.error(err);
@@ -346,6 +350,8 @@
                         if (mainCard) {
                             window.location.reload();
                         }
+
+                        document.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
                     })
                     .catch(function (err) {
                         console.error(err);
@@ -427,6 +433,8 @@
                         if (typeof window.zmShowFlashToast === 'function') {
                             window.zmShowFlashToast(data.message || @json(__('Item added to cart')), 'success');
                         }
+
+                        document.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
                     })
                     .catch(function (err) {
                         if (typeof window.zmShowFlashToast === 'function') {

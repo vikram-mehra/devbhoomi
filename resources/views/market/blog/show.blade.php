@@ -72,7 +72,7 @@
             </div>
             <div class="pro-blog-detail__title-card">
                 <p class="pro-blog-detail__eyebrow">{{ __('Editorial') }}</p>
-                <h1 class="pro-blog-detail__title">{{ $post->title }}</h1>
+                <h2 class="pro-blog-detail__title">{{ $post->title }}</h2>
                 <div class="pro-blog-detail__meta">
                     <span class="pro-blog-detail__meta-item">
                         <i class="bi bi-calendar3" aria-hidden="true"></i>

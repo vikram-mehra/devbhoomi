@@ -80,7 +80,7 @@
             </div>
             <div class="pro-blog-detail__title-card">
                 <p class="pro-blog-detail__eyebrow">{{ $showcase['eyebrow'] }}</p>
-                <h1 class="pro-blog-detail__title">{{ $showcase['title'] }}</h1>
+                <h2 class="pro-blog-detail__title">{{ $showcase['title'] }}</h2>
             </div>
         </header>
 

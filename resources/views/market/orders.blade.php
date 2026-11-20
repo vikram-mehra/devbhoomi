@@ -43,7 +43,7 @@
                         @foreach($orders as $o)
                             @php
                                 $ps = strtolower((string) $o->payment_status);
-                                if ($ps === 'pending') {
+                                if ($ps === 'pending' || $ps === 'unpaid') {
                                     $badgeClass = 'account-orders-badge account-orders-badge--pending';
                                 } elseif ($ps === 'paid') {
                                     $badgeClass = 'account-orders-badge account-orders-badge--paid';
@@ -53,6 +53,10 @@
                                     $badgeClass = 'account-orders-badge account-orders-badge--muted';
                                 }
                                 $payLabel = $paymentMethodLabels[$o->payment_method] ?? strtoupper(str_replace('_', ' ', (string) $o->payment_method));
+                                $canPayNow = strtolower((string) $o->payment_method) === 'razorpay'
+                                    && in_array($ps, ['unpaid', 'pending'], true)
+                                    && ! in_array($o->status, ['cancelled', 'returned'], true)
+                                    && $o->payableAmount() > 0;
                             @endphp
                             <tr>
                                 <td data-label="{{ __('Order Number') }}">
@@ -73,6 +77,11 @@
                                 </td>
                                 <td class="account-orders__td-option" data-label="{{ __('Option') }}">
                                     <div class="d-inline-flex align-items-center gap-2">
+                                        @if($canPayNow)
+                                            <a href="{{ route('pay.razorpay', $o) }}" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 py-1 px-3 rounded-pill shadow-sm text-nowrap fw-semibold" style="font-size: 12px;">
+                                                <i class="bi bi-credit-card"></i> {{ __('Pay Now') }}
+                                            </a>
+                                        @endif
                                         @if($o->publicCourierTrackUrl())
                                             <a href="{{ $o->publicCourierTrackUrl() }}" class="account-orders__view-btn" title="{{ __('Track on Delhivery') }}" aria-label="{{ __('Track on Delhivery') }}" target="_blank" rel="noopener noreferrer">
                                                 <i class="bi bi-truck" aria-hidden="true"></i>

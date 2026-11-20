@@ -13,7 +13,8 @@ class Order extends Model
 {
     protected $fillable = [
         'order_number', 'user_id', 'address_id', 'status', 'payment_method', 'payment_status',
-        'payment_ref', 'subtotal', 'shipping', 'discount', 'total', 'admin_commission',
+        'payment_ref', 'subtotal', 'shipping', 'shipping_original', 'shipping_discount_percent', 'shipping_discount_amount',
+        'discount', 'total', 'admin_commission',
         'wallet_used', 'coupon_code', 'notes', 'customer_name', 'customer_phone', 'customer_email',
         'shipping_address_id', 'tax_amount', 'transaction_id', 'razorpay_payment_id', 'courier_name',
         'tracking_id', 'delivery_date', 'confirmed_at', 'shipped_at', 'delivered_at',
@@ -26,6 +27,9 @@ class Order extends Model
     protected $casts = [
         'subtotal' => 'decimal:2',
         'shipping' => 'decimal:2',
+        'shipping_original' => 'decimal:2',
+        'shipping_discount_percent' => 'decimal:2',
+        'shipping_discount_amount' => 'decimal:2',
         'discount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
@@ -274,6 +278,11 @@ class Order extends Model
         return max(0, (float) $this->total - (float) $this->wallet_used);
     }
 
+    public function hasShippingDiscount(): bool
+    {
+        return (float) ($this->shipping_discount_amount ?? 0) > 0;
+    }
+
     public function customerDisplayName(): string
     {
         return (string) ($this->customer_name ?: $this->user?->name ?: __('Customer'));
@@ -363,15 +372,9 @@ class Order extends Model
         return (string) max($startAt, $maxNumeric + 1);
     }
 
-    /** Customer account lists: hide failed / unpaid Razorpay attempts. */
+    /** Customer account lists: exclude failed orders, show placed/pending/paid/unpaid orders. */
     public function scopeVisibleInAccount($query)
     {
-        return $query->where(function ($q) {
-            $q->where('payment_status', '!=', 'failed')
-                ->where(function ($q2) {
-                    $q2->whereNotIn('payment_status', ['pending', 'unpaid'])
-                        ->orWhere('payment_method', '!=', 'razorpay');
-                });
-        });
+        return $query->where('payment_status', '!=', 'failed');
     }
 }

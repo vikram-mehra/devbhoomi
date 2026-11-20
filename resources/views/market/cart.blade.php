@@ -330,13 +330,8 @@ input.js-cart-qty-input {
                     
                     if (drawerSubtotal) drawerSubtotal.textContent = formatMoney(res.data.totals.subtotal);
                     if (drawerShipping) {
-                        if (res.data.totals.is_free_shipping) {
-                            drawerShipping.textContent = 'FREE';
-                            drawerShipping.className = 'text-success fw-semibold';
-                        } else {
-                            drawerShipping.textContent = formatMoney(res.data.totals.shipping_charge);
-                            drawerShipping.className = 'text-muted';
-                        }
+                        drawerShipping.textContent = res.data.totals.is_free_shipping ? 'FREE' : formatMoney(res.data.totals.shipping_charge);
+                        drawerShipping.className = res.data.totals.is_free_shipping ? 'text-success fw-semibold' : 'text-muted';
                     }
                     if (drawerTotal) drawerTotal.textContent = formatMoney(res.data.totals.total);
                     

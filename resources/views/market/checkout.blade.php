@@ -102,6 +102,9 @@
     $taxDisplay = (float) ($taxAmount ?? 0);
     $couponDiscount = (float) ($couponDiscount ?? 0);
     $shippingDisplay = (float) ($shippingCharge ?? 0);
+    $shippingOriginal = (float) ($shippingOriginal ?? $shippingDisplay);
+    $shippingDiscountPercent = (float) ($shippingDiscountPercent ?? 0);
+    $shippingDiscountAmount = (float) ($shippingDiscountAmount ?? 0);
     $estTotal = max(0, $subtotal + $shippingDisplay - $couponDiscount);
     $hasAppliedCoupon = $couponDiscount > 0 && ! empty($appliedCouponCode);
     $showNewAddressForm = true;
@@ -277,7 +280,7 @@
                     <h2 class="pro-checkout-card__title mb-1">{{ __('Summary order') }}</h2>
                     <p class="small text-muted mb-4">{{ __('Review items before placing your order.') }}</p>
 
-                    <ul class="pro-checkout-lines list-unstyled mb-0">
+                    <ul class="pro-checkout-lines list-unstyled mb-0" id="checkoutOrderLines">
                         @foreach($items as $item)
                             @php
                                 $v = $item->variant;
@@ -286,13 +289,13 @@
                                 $line = $unit * $item->qty;
                                 $cartImg = \App\Models\Product::publicImageUrl($p->images->first()?->path) ?? $p->namedPlaceholderUrl();
                             @endphp
-                            <li class="pro-checkout-line">
+                            <li class="pro-checkout-line js-checkout-item-line" data-cart-id="{{ $item->id }}" data-variant-id="{{ $v->id }}" data-unit-price="{{ $unit }}">
                                 <img src="{{ $cartImg }}" alt="" class="pro-checkout-line__img" width="56" height="56" loading="lazy" decoding="async">
                                 <div class="pro-checkout-line__mid">
                                     <div class="pro-checkout-line__name">{{ $p->name }}</div>
-                                    <div class="pro-checkout-line__meta">₹{{ number_format($unit, 2) }} × {{ $item->qty }}</div>
+                                    <div class="pro-checkout-line__meta">₹{{ number_format($unit, 2) }} × <span class="js-checkout-line-qty">{{ $item->qty }}</span></div>
                                 </div>
-                                <div class="pro-checkout-line__price">₹{{ number_format($line, 2) }}</div>
+                                <div class="pro-checkout-line__price js-checkout-line-price">₹{{ number_format($line, 2) }}</div>
                             </li>
                         @endforeach
                     </ul>
@@ -562,6 +565,63 @@ document.addEventListener('DOMContentLoaded', function () {
     if (pinField) {
         pinField.addEventListener('change', refreshShippingQuote);
     }
+
+    document.addEventListener('cart:updated', function (e) {
+        var data = e.detail;
+        if (!data || !data.items) return;
+
+        if (data.items.length === 0) {
+            window.location.href = "{{ route('cart.index') }}";
+            return;
+        }
+
+        var lines = document.querySelectorAll('.js-checkout-item-line');
+        var existingVariantMap = {};
+        lines.forEach(function (line) {
+            existingVariantMap[line.getAttribute('data-variant-id')] = line;
+        });
+
+        var hasNewItems = false;
+        data.items.forEach(function (it) {
+            var line = existingVariantMap[String(it.product_variant_id)];
+            if (line) {
+                var unit = parseFloat(line.getAttribute('data-unit-price')) || 0;
+                var qty = parseInt(it.qty, 10) || 1;
+                var qtyEl = line.querySelector('.js-checkout-line-qty');
+                var priceEl = line.querySelector('.js-checkout-line-price');
+                if (qtyEl) qtyEl.textContent = qty;
+                if (priceEl) priceEl.textContent = formatMoney(unit * qty);
+            } else {
+                hasNewItems = true;
+            }
+        });
+
+        // Remove deleted lines from summary order
+        var currentVariantIds = data.items.map(function (it) { return String(it.product_variant_id); });
+        lines.forEach(function (line) {
+            var vId = line.getAttribute('data-variant-id');
+            if (currentVariantIds.indexOf(vId) === -1) {
+                line.style.transition = 'all 0.25s ease';
+                line.style.opacity = '0';
+                line.style.transform = 'translateX(20px)';
+                setTimeout(function () { line.remove(); }, 250);
+            }
+        });
+
+        if (hasNewItems) {
+            window.location.reload();
+            return;
+        }
+
+        if (data.totals) {
+            var subtotal = parseFloat(data.totals.subtotal) || 0;
+            totalsEl.setAttribute('data-subtotal', String(subtotal));
+            var subtotalEl = document.getElementById('checkoutSubtotal');
+            if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal);
+        }
+
+        refreshShippingQuote();
+    });
 
     function parseJsonResponse(r) {
         return r.text().then(function (text) {

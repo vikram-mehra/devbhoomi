@@ -50,9 +50,14 @@ class CheckoutController extends Controller
         $subtotal = $pricing->inclusiveSubtotal($items);
         $addresses = auth()->user()->addresses()->orderByDesc('is_default')->get();
         $checkoutPincode = optional($addresses->firstWhere('is_default') ?? $addresses->first())->pincode;
-        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $checkoutPincode);
-        $isFreeShipping = $shippingCharge <= 0;
-        $cartWeightGrams = $shipping->cartWeightGrams($items);
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $checkoutPincode);
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
+        $isFreeShipping = $deliveryBreakdown['is_free_shipping'];
+        $cartWeightGrams = $deliveryBreakdown['weight_grams'];
+        $cartWeightKg = $deliveryBreakdown['weight_kg'];
+        $shippingOriginal = $deliveryBreakdown['original_shipping'];
+        $shippingDiscountPercent = $deliveryBreakdown['discount_percent'];
+        $shippingDiscountAmount = $deliveryBreakdown['discount_amount'];
         $states = State::enabled()->orderBy('name')->get();
 
         $promoCoupons = Coupon::query()
@@ -87,7 +92,8 @@ class CheckoutController extends Controller
 
         return view('market.checkout', compact(
             'items', 'subtotal', 'shippingCharge', 'isFreeShipping', 'taxAmount', 'addresses', 'promoCoupons', 'razorpayConfigured',
-            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath', 'quoteShippingPath', 'states', 'cartWeightGrams', 'checkoutPincode'
+            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath', 'quoteShippingPath', 'states',
+            'cartWeightGrams', 'cartWeightKg', 'checkoutPincode', 'shippingOriginal', 'shippingDiscountPercent', 'shippingDiscountAmount'
         ));
     }
 
@@ -105,7 +111,8 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $this->requestPincode($request));
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $this->requestPincode($request));
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
 
         try {
             $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal, [
@@ -133,12 +140,17 @@ class CheckoutController extends Controller
             'discount_formatted' => '₹'.number_format($discount, 2),
             'subtotal' => $subtotal,
             'shipping_charge' => $shippingCharge,
+            'shipping_original' => $deliveryBreakdown['original_shipping'],
+            'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+            'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
+            'weight_grams' => $deliveryBreakdown['weight_grams'],
+            'weight_kg' => $deliveryBreakdown['weight_kg'],
             'tax' => $taxAmount,
             'tax_formatted' => '₹'.number_format($taxAmount, 2),
             'total' => $total,
             'total_formatted' => '₹'.number_format($total, 2),
-            'is_free_shipping' => $shippingCharge <= 0,
-            'shipping_label' => $shippingCharge <= 0 ? 'FREE' : '₹'.number_format($shippingCharge, 2),
+            'is_free_shipping' => $deliveryBreakdown['is_free_shipping'],
+            'shipping_label' => $deliveryBreakdown['shipping_label'],
             'message' => $coupon->type === 'percent'
                 ? __(':code applied — :value% off', ['code' => $coupon->code, 'value' => rtrim(rtrim(number_format((float) $coupon->value, 2), '0'), '.')])
                 : __(':code applied — ₹:value off', ['code' => $coupon->code, 'value' => number_format((float) $coupon->value, 2)]),
@@ -159,7 +171,8 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $this->requestPincode($request));
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $this->requestPincode($request));
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
         $total = $pricing->grandTotal($subtotalExclusive, $shippingCharge, $taxAmount, 0);
 
         return response()->json([
@@ -167,12 +180,17 @@ class CheckoutController extends Controller
             'discount' => 0,
             'subtotal' => $subtotal,
             'shipping_charge' => $shippingCharge,
+            'shipping_original' => $deliveryBreakdown['original_shipping'],
+            'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+            'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
+            'weight_grams' => $deliveryBreakdown['weight_grams'],
+            'weight_kg' => $deliveryBreakdown['weight_kg'],
             'tax' => $taxAmount,
             'tax_formatted' => '₹'.number_format($taxAmount, 2),
             'total' => $total,
             'total_formatted' => '₹'.number_format($total, 2),
-            'is_free_shipping' => $shippingCharge <= 0,
-            'shipping_label' => $shippingCharge <= 0 ? 'FREE' : '₹'.number_format($shippingCharge, 2),
+            'is_free_shipping' => $deliveryBreakdown['is_free_shipping'],
+            'shipping_label' => $deliveryBreakdown['shipping_label'],
         ]);
     }
 
@@ -246,7 +264,8 @@ class CheckoutController extends Controller
             return back()->withInput()->with('error', $pinCheck['message']);
         }
 
-        $shipping = $shipping->chargeForCart($items, $subtotal, $pincodeToCheck);
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $pincodeToCheck);
+        $shippingFinal = $deliveryBreakdown['final_shipping'];
         $discount = 0.0;
         $couponCode = null;
         $resolvedCoupon = null;
@@ -268,7 +287,7 @@ class CheckoutController extends Controller
             }
         }
 
-        $grand = $pricing->grandTotal($subtotalExclusive, $shipping, $taxAmount, $discount);
+        $grand = $pricing->grandTotal($subtotalExclusive, $shippingFinal, $taxAmount, $discount);
         $walletUse = 0.0;
         $payable = round($grand - $walletUse, 2);
 
@@ -294,7 +313,7 @@ class CheckoutController extends Controller
         $ledger = app(StockLedgerService::class);
 
         DB::transaction(function () use (
-            $items, $user, $addressId, $request, $subtotalExclusive, $shipping, $taxAmount, $discount, $grand,
+            $items, $user, $addressId, $request, $subtotalExclusive, $shippingFinal, $deliveryBreakdown, $shipping, $taxAmount, $discount, $grand,
             $walletUse, $payable, $couponCode, $defaultCommission, &$order, $ledger, $coupons, $resolvedCoupon, $couponContext
         ) {
             $adminCommission = 0.0;
@@ -307,7 +326,10 @@ class CheckoutController extends Controller
                 'payment_method' => $request->payment_method,
                 'payment_status' => $payable <= 0 ? 'paid' : 'unpaid',
                 'subtotal' => $subtotalExclusive,
-                'shipping' => $shipping,
+                'shipping' => $shippingFinal,
+                'shipping_original' => $deliveryBreakdown['original_shipping'],
+                'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+                'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
                 'discount' => $discount,
                 'tax_amount' => $taxAmount,
                 'total' => $grand,
@@ -345,6 +367,8 @@ class CheckoutController extends Controller
                 $comm = round($lineTotal * ($pct / 100), 2);
                 $adminCommission += $comm;
 
+                $itemWeightKg = $shipping->itemWeightKg($line);
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'vendor_id' => $vendor->id,
@@ -352,7 +376,7 @@ class CheckoutController extends Controller
                     'product_name' => $product->name,
                     'variant_label' => $variant->label(),
                     'sku' => $variant->sku,
-                    'weight_kg' => $product->weight_kg,
+                    'weight_kg' => $itemWeightKg ?: $product->weight_kg,
                     'product_image' => $variant->variantImageUrl(),
                     'unit_price' => $unit,
                     'qty' => $line->qty,
@@ -400,7 +424,8 @@ class CheckoutController extends Controller
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
         $pincode = $this->requestPincode($request);
-        $shippingCharge = $shipping->chargeForCart($items, $subtotal, $pincode);
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $pincode);
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
         $discount = 0.0;
 
         $couponInput = $request->input('coupon_code', session('checkout_coupon_code'));
@@ -423,14 +448,18 @@ class CheckoutController extends Controller
             'pincode' => PincodeServiceability::normalizePincode($pincode),
             'subtotal' => $subtotal,
             'shipping_charge' => $shippingCharge,
+            'shipping_original' => $deliveryBreakdown['original_shipping'],
+            'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+            'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
             'tax' => $taxAmount,
             'tax_formatted' => '₹'.number_format($taxAmount, 2),
             'discount' => $discount,
             'total' => $total,
             'total_formatted' => '₹'.number_format($total, 2),
-            'is_free_shipping' => $shippingCharge <= 0,
-            'shipping_label' => $shippingCharge <= 0 ? 'FREE' : '₹'.number_format($shippingCharge, 2),
-            'weight_grams' => $shipping->cartWeightGrams($items),
+            'is_free_shipping' => $deliveryBreakdown['is_free_shipping'],
+            'shipping_label' => $deliveryBreakdown['shipping_label'],
+            'weight_grams' => $deliveryBreakdown['weight_grams'],
+            'weight_kg' => $deliveryBreakdown['weight_kg'],
         ]);
     }
 

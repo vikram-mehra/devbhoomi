@@ -137,7 +137,18 @@
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
                 <h6 class="mb-3">Order Summary</h6>
                 <p class="mb-1 d-flex justify-content-between"><span>Subtotal</span><strong>₹{{ number_format((float) $order->subtotal, 2) }}</strong></p>
-                <p class="mb-1 d-flex justify-content-between"><span>Shipping Charge</span><strong>₹{{ number_format((float) $order->shipping, 2) }}</strong></p>
+                <p class="mb-1 d-flex justify-content-between">
+                    <span>Shipping Charge</span>
+                    <span>
+                        @if((float) ($order->shipping_discount_amount ?? 0) > 0)
+                            <del class="text-muted small me-1">₹{{ number_format((float) $order->shipping_original, 2) }}</del>
+                            <strong>₹{{ number_format((float) $order->shipping, 2) }}</strong>
+                            <span class="badge bg-success-subtle text-success small ms-1">{{ (int) $order->shipping_discount_percent }}% off</span>
+                        @else
+                            <strong>₹{{ number_format((float) $order->shipping, 2) }}</strong>
+                        @endif
+                    </span>
+                </p>
                 <p class="mb-1 d-flex justify-content-between"><span>Discount</span><strong>-₹{{ number_format((float) $order->discount, 2) }}</strong></p>
                 <p class="mb-1 d-flex justify-content-between"><span>Tax/GST</span><strong>₹{{ number_format((float) $order->tax_amount, 2) }}</strong></p>
                 <hr>

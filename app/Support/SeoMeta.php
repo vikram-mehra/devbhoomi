@@ -19,6 +19,15 @@ class SeoMeta
     /** @var string|null */
     public $ogImage;
 
+    /** @var int|null */
+    public $ogImageWidth;
+
+    /** @var int|null */
+    public $ogImageHeight;
+
+    /** @var string|null */
+    public $ogImageType;
+
     /** @var string|null */
     public $robots;
 
@@ -35,6 +44,9 @@ class SeoMeta
         $this->keywords = isset($data['keywords']) ? (string) $data['keywords'] : null;
         $this->canonical = (string) ($data['canonical'] ?? url()->current());
         $this->ogImage = isset($data['og_image']) ? (string) $data['og_image'] : null;
+        $this->ogImageWidth = isset($data['og_image_width']) ? (int) $data['og_image_width'] : null;
+        $this->ogImageHeight = isset($data['og_image_height']) ? (int) $data['og_image_height'] : null;
+        $this->ogImageType = isset($data['og_image_type']) ? (string) $data['og_image_type'] : null;
         $this->robots = isset($data['robots']) ? (string) $data['robots'] : null;
         $this->ogType = (string) ($data['og_type'] ?? 'website');
         $this->schemaExtra = $data['schema_extra'] ?? null;

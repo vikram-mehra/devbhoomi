@@ -7,19 +7,21 @@ return [
     'description_min' => 150,
     'description_max' => 160,
 
+    'default_title' => 'Devbhoomi Naturals | Pure Organic Himalayan Products',
+
     'default_title_suffix' => 'Devbhoomi Naturals',
 
-    'default_description' => 'Shop pure Himalayan organic products — millets, pahadi pulses, spices & grains. Direct from Uttarakhand farmers. Free delivery above ₹499.',
+    'default_description' => 'Shop pure Himalayan organic products — millets, pahadi pulses, spices & grains. Direct from Uttarakhand farmers. Fast pan-India delivery.',
 
     'default_keywords' => 'organic food, Himalayan products, Uttarakhand, millets, pahadi pulses, natural spices, Devbhoomi Naturals',
 
-    'default_og_image' => '/images/inner-page-banner.jpg',
+    'default_og_image' => '/images/og-share.png',
 
     'organization' => [
         'name' => 'Devbhoomi Naturals',
         'legal_name' => 'Dev Bhoomi Naturals',
         'url' => 'https://devbhoominaturals.com',
-        'logo' => '/images/logo.svg',
+        'logo' => '/images/footer-logo.png',
         'email' => 'support@devbhoominaturals.com',
         'phone' => '+919217732670',
         'address' => [

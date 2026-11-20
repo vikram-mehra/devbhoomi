@@ -14,11 +14,15 @@ class PincodeServiceability extends Model
         'status',
         'day_offset',
         'courier_name',
+        'delivery_charge',
+        'additional_500g_charge',
     ];
 
     protected $casts = [
         'status' => 'boolean',
         'day_offset' => 'integer',
+        'delivery_charge' => 'decimal:2',
+        'additional_500g_charge' => 'decimal:2',
     ];
 
     public function scopeEnabled(Builder $query): Builder

@@ -13,7 +13,8 @@ class Order extends Model
 {
     protected $fillable = [
         'order_number', 'user_id', 'address_id', 'status', 'payment_method', 'payment_status',
-        'payment_ref', 'subtotal', 'shipping', 'discount', 'total', 'admin_commission',
+        'payment_ref', 'subtotal', 'shipping', 'shipping_original', 'shipping_discount_percent', 'shipping_discount_amount',
+        'discount', 'total', 'admin_commission',
         'wallet_used', 'coupon_code', 'notes', 'customer_name', 'customer_phone', 'customer_email',
         'shipping_address_id', 'tax_amount', 'transaction_id', 'razorpay_payment_id', 'courier_name',
         'tracking_id', 'delivery_date', 'confirmed_at', 'shipped_at', 'delivered_at',
@@ -26,6 +27,9 @@ class Order extends Model
     protected $casts = [
         'subtotal' => 'decimal:2',
         'shipping' => 'decimal:2',
+        'shipping_original' => 'decimal:2',
+        'shipping_discount_percent' => 'decimal:2',
+        'shipping_discount_amount' => 'decimal:2',
         'discount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
@@ -37,6 +41,10 @@ class Order extends Model
         'delivered_at' => 'datetime',
         'customer_confirmation_sent_at' => 'datetime',
         'admin_notification_sent_at' => 'datetime',
+        'abandoned_cart_reminder_claimed_at' => 'datetime',
+        'abandoned_cart_reminder_sent_at' => 'datetime',
+        'abandoned_cart_reminder_2_sent_at' => 'datetime',
+        'abandoned_cart_reminder_3_sent_at' => 'datetime',
         'delhivery_expected_delivery' => 'datetime',
         'delhivery_last_synced_at' => 'datetime',
         'delhivery_last_attempt_at' => 'datetime',
@@ -127,8 +135,40 @@ class Order extends Model
     public function awb(): ?string
     {
         $awb = trim((string) $this->tracking_id);
+        if ($awb !== '') {
+            return $awb;
+        }
 
-        return $awb !== '' ? $awb : null;
+        $shipmentAwb = $this->relationLoaded('latestShipment')
+            ? $this->latestShipment?->trackingNumber()
+            : $this->latestShipment()->first()?->trackingNumber();
+
+        return $shipmentAwb ?: null;
+    }
+
+    public function usesDelhiveryCourier(): bool
+    {
+        $latest = $this->relationLoaded('latestShipment')
+            ? $this->latestShipment
+            : $this->latestShipment()->first();
+        $partner = strtolower((string) ($latest?->courier_partner ?? ''));
+        $name = strtolower(trim((string) $this->courier_name));
+
+        if (str_contains($partner, 'delhivery') || str_contains($name, 'delhivery')) {
+            return true;
+        }
+
+        return $this->awb() !== null && $name === '' && $partner === '';
+    }
+
+    public function publicCourierTrackUrl(): ?string
+    {
+        $awb = $this->awb();
+        if (! $awb || ! $this->usesDelhiveryCourier()) {
+            return null;
+        }
+
+        return 'https://www.delhivery.com/track/package/'.rawurlencode($awb);
     }
 
     public function needsDelhiveryPoll(): bool
@@ -157,6 +197,21 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function couponUsages(): HasMany
+    {
+        return $this->hasMany(CouponUsage::class);
+    }
+
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class)->latest('id');
+    }
+
+    public function latestShipment(): HasOne
+    {
+        return $this->hasOne(Shipment::class)->latestOfMany();
     }
 
     public function shippingAddress(): HasOne
@@ -221,6 +276,11 @@ class Order extends Model
     public function payableAmount(): float
     {
         return max(0, (float) $this->total - (float) $this->wallet_used);
+    }
+
+    public function hasShippingDiscount(): bool
+    {
+        return (float) ($this->shipping_discount_amount ?? 0) > 0;
     }
 
     public function customerDisplayName(): string
@@ -312,15 +372,9 @@ class Order extends Model
         return (string) max($startAt, $maxNumeric + 1);
     }
 
-    /** Customer account lists: hide failed / unpaid Razorpay attempts. */
+    /** Customer account lists: exclude failed orders, show placed/pending/paid/unpaid orders. */
     public function scopeVisibleInAccount($query)
     {
-        return $query->where(function ($q) {
-            $q->where('payment_status', '!=', 'failed')
-                ->where(function ($q2) {
-                    $q2->whereNotIn('payment_status', ['pending', 'unpaid'])
-                        ->orWhere('payment_method', '!=', 'razorpay');
-                });
-        });
+        return $query->where('payment_status', '!=', 'failed');
     }
 }

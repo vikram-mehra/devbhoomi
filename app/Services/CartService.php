@@ -95,6 +95,24 @@ class CartService
                 'qty' => $qty,
             ]);
         }
+
+        if ($userId) {
+            $this->recordUserActivity((int) $userId);
+        }
+    }
+
+    public function recordUserActivity(int $userId): void
+    {
+        CartItem::query()
+            ->where('user_id', $userId)
+            ->update([
+                'updated_at' => now(),
+                'abandoned_cart_reminder_claim' => null,
+                'abandoned_cart_reminder_claimed_at' => null,
+                'abandoned_cart_reminder_sent_at' => null,
+                'abandoned_cart_reminder_2_sent_at' => null,
+                'abandoned_cart_reminder_3_sent_at' => null,
+            ]);
     }
 
     public function mergeGuestCart(): void
@@ -131,6 +149,10 @@ class CartService
             } else {
                 $guest->update(['user_id' => $userId, 'session_id' => null]);
             }
+        }
+
+        if ($guestItems->isNotEmpty()) {
+            $this->recordUserActivity((int) $userId);
         }
     }
 }

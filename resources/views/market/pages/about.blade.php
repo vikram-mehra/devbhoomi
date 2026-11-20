@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', ($page->meta_title ?: $page->hero_title).' | Devbhoomi Naturals')
+@section('title', $page->meta_title ?: $page->hero_title)
 @section('meta_description', $page->meta_description ?: Str::limit(strip_tags($page->hero_subtitle), 155))
 @if(filled($page->meta_keywords))
 @section('meta_keywords', $page->meta_keywords)
@@ -11,12 +11,12 @@
 @endif
 
 @push('head')
-    <link href="{{ asset('css/pages-static.css') }}?v=2" rel="stylesheet">
+    <link href="{{ asset('css/pages-static.css') }}?v=3" rel="stylesheet">
 @endpush
 
 @push('schema')
 <script type="application/ld+json">
-{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema(($page->meta_title ?: $page->hero_title).' | Devbhoomi Naturals', $page->canonical_url ?: route('pages.about'), $page->meta_description ?: Str::limit(strip_tags($page->hero_subtitle), 155)), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema($page->meta_title ?: $page->hero_title, $page->canonical_url ?: route('pages.about'), $page->meta_description ?: Str::limit(strip_tags($page->hero_subtitle), 155)), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
 
@@ -84,7 +84,17 @@
                                 <h2 class="pro-about-story__title">{{ $page->story_heading }}</h2>
                             @endif
                             @if($page->story_body)
-                                <div class="pro-about-story__body">{!! nl2br(e($page->story_body)) !!}</div>
+                                @php
+                                    $storyHtml = trim((string) $page->story_body);
+                                    $isRichStory = $storyHtml !== '' && $storyHtml !== strip_tags($storyHtml);
+                                @endphp
+                                <div class="pro-about-story__body">
+                                    @if($isRichStory)
+                                        {!! $storyHtml !!}
+                                    @else
+                                        {!! nl2br(e($storyHtml)) !!}
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </div>

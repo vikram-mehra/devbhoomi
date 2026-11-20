@@ -18,7 +18,7 @@ class EmailVerificationService
 {
     public function requiresVerification(User $user): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->isAdmin() || $user->isSeo()) {
             return false;
         }
 

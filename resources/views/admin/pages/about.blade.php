@@ -59,9 +59,15 @@
                     @endif
                 </div>
                 <div class="col-12">
-                    <label class="form-label fw-semibold">{{ __('Story body') }}</label>
-                    <textarea name="story_body" class="form-control" rows="8">{{ old('story_body', $page->story_body) }}</textarea>
-                    <div class="form-text">{{ __('Line breaks are shown on the site.') }}</div>
+                    <label class="form-label fw-semibold" for="aboutStoryBodyEditor">{{ __('Story body') }}</label>
+                    <div class="form-text mb-2">{{ __('Use headings (H2–H4), lists, links, and formatting for the brand story.') }}</div>
+                    @include('admin.partials.rich-text-editor', [
+                        'editorId' => 'aboutStoryBodyEditor',
+                        'editorName' => 'story_body',
+                        'editorValue' => $page->story_body ?? '',
+                        'editorHeight' => 450,
+                        'editorRequired' => false,
+                    ])
                 </div>
 
                 <div class="col-12 pt-3"><h2 class="h6 text-uppercase text-muted mb-0">{{ __('Mission & vision') }}</h2></div>
@@ -115,7 +121,9 @@
                                     <div class="border rounded p-2 text-center">
                                         <img src="{{ $item->imageUrl() }}" alt="" class="img-fluid rounded mb-2" style="max-height:80px;object-fit:cover;width:100%">
                                         @if($item->caption)<p class="small mb-2">{{ $item->caption }}</p>@endif
+                                        @if(auth()->user()->isAdmin())
                                         <button type="submit" form="del-gallery-{{ $item->id }}" class="btn btn-sm btn-outline-danger w-100">{{ __('Remove') }}</button>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -149,10 +157,12 @@
         </div>
     </div>
 
+    @if(auth()->user()->isAdmin())
     @foreach($page->galleryItems as $item)
         <form id="del-gallery-{{ $item->id }}" method="post" action="{{ route('admin.about-page.gallery.destroy', $item) }}" class="d-none">
             @csrf
             @method('DELETE')
         </form>
     @endforeach
+    @endif
 @endsection

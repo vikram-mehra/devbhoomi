@@ -41,29 +41,59 @@ class DelhiveryTrackingSyncService
         return $this->applyShipment($order, $shipment, 'webhook');
     }
 
-    public function pollOrder(Order $order, bool $force = false): bool
+    /**
+     * @return array{ok: bool, error: ?string, status: ?string}
+     */
+    public function pollOrder(Order $order, bool $force = false): array
     {
         $awb = $order->awb();
         if (! $awb) {
-            return false;
+            return $this->pollResult(false, 'missing_awb');
         }
 
         if (! $force && ! $order->needsDelhiveryPoll()) {
-            return false;
+            return $this->pollResult(false, 'skipped_recent');
+        }
+
+        if (! $this->delhivery->enabled()) {
+            return $this->pollResult(false, 'missing_token');
         }
 
         $order->forceFill(['delhivery_last_attempt_at' => now()])->save();
 
-        if (! $this->delhivery->enabled()) {
-            return false;
-        }
-
         $result = $this->delhivery->fetchShipmentByWaybill($awb);
         if (! $result['ok'] || ! $result['shipment']) {
-            return false;
+            return $this->pollResult(false, $result['error'] ?? 'not_found');
         }
 
-        return $this->applyShipment($order->fresh() ?: $order, $result['shipment'], 'poll');
+        $this->applyShipment($order->fresh() ?: $order, $result['shipment'], 'poll');
+        $status = is_array($result['shipment']['Status'] ?? null) ? $result['shipment']['Status'] : [];
+
+        return $this->pollResult(true, null, trim((string) ($status['Status'] ?? '')) ?: 'Updated');
+    }
+
+    /**
+     * @return array{ok: bool, error: ?string, status: ?string}
+     */
+    public function pollResult(bool $ok, ?string $error = null, ?string $status = null): array
+    {
+        return ['ok' => $ok, 'error' => $error, 'status' => $status];
+    }
+
+    public function pollErrorMessage(?string $error): string
+    {
+        return match ($error) {
+            'missing_token' => __('Delhivery API token is not configured.'),
+            'unauthorized' => __('Delhivery rejected the API token. Check test/live credentials.'),
+            'invalid_awb' => __('Delhivery says this AWB is invalid.'),
+            'not_found' => __('Delhivery has no shipment for this AWB yet.'),
+            'http_error' => __('Delhivery tracking API returned an error.'),
+            'timeout_or_network' => __('Could not reach Delhivery. Check the API URL and network.'),
+            'missing_awb' => __('No AWB / waybill is saved on this order.'),
+            'skipped_recent' => __('Tracking was checked recently. Try again in a few minutes.'),
+            'invalid_response' => __('Delhivery returned an unexpected response.'),
+            default => $error ? (string) $error : __('Delhivery did not return tracking.'),
+        };
     }
 
     /**

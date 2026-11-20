@@ -102,10 +102,16 @@
                         <label class="form-label small mb-1" for="adminAwb">AWB / Waybill</label>
                         <input id="adminAwb" type="text" name="tracking_id" value="{{ old('tracking_id', $order->tracking_id) }}" class="form-control form-control-sm" placeholder="Delhivery AWB">
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 d-flex flex-wrap gap-2">
                         <button class="btn btn-sm btn-primary">Save AWB</button>
                     </div>
                 </form>
+                @if($order->tracking_id)
+                    <form method="post" action="{{ route('admin.orders.tracking.refresh', $order) }}" class="mb-3">
+                        @csrf
+                        <button class="btn btn-sm btn-outline-primary">{{ __('Refresh tracking now') }}</button>
+                    </form>
+                @endif
                 <p class="mb-1"><strong>Current status:</strong> {{ $order->delhivery_status ?: 'Awaiting scans' }}</p>
                 <p class="mb-1"><strong>Location:</strong> {{ $order->delhivery_location ?: 'N/A' }}</p>
                 <p class="mb-1"><strong>Last synced:</strong> {{ $order->delhivery_last_synced_at?->tz('Asia/Kolkata')->format('d M Y, h:i A') ?: 'Not yet' }}</p>
@@ -131,7 +137,18 @@
             <div class="card border-0 shadow-sm h-100"><div class="card-body">
                 <h6 class="mb-3">Order Summary</h6>
                 <p class="mb-1 d-flex justify-content-between"><span>Subtotal</span><strong>₹{{ number_format((float) $order->subtotal, 2) }}</strong></p>
-                <p class="mb-1 d-flex justify-content-between"><span>Shipping Charge</span><strong>₹{{ number_format((float) $order->shipping, 2) }}</strong></p>
+                <p class="mb-1 d-flex justify-content-between">
+                    <span>Shipping Charge</span>
+                    <span>
+                        @if((float) ($order->shipping_discount_amount ?? 0) > 0)
+                            <del class="text-muted small me-1">₹{{ number_format((float) $order->shipping_original, 2) }}</del>
+                            <strong>₹{{ number_format((float) $order->shipping, 2) }}</strong>
+                            <span class="badge bg-success-subtle text-success small ms-1">{{ (int) $order->shipping_discount_percent }}% off</span>
+                        @else
+                            <strong>₹{{ number_format((float) $order->shipping, 2) }}</strong>
+                        @endif
+                    </span>
+                </p>
                 <p class="mb-1 d-flex justify-content-between"><span>Discount</span><strong>-₹{{ number_format((float) $order->discount, 2) }}</strong></p>
                 <p class="mb-1 d-flex justify-content-between"><span>Tax/GST</span><strong>₹{{ number_format((float) $order->tax_amount, 2) }}</strong></p>
                 <hr>

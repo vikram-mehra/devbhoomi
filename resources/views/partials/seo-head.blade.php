@@ -1,15 +1,26 @@
 @php
     /** @var \App\Support\SeoMeta $seo */
     $seo = $seo ?? app(\App\Services\SeoService::class)->build([
-        'title' => trim(strip_tags((string) view()->yieldContent('title'))),
-        'description' => trim(strip_tags((string) view()->yieldContent('meta_description'))),
-        'keywords' => trim(strip_tags((string) view()->yieldContent('meta_keywords'))),
+        'title' => html_entity_decode(trim(strip_tags((string) view()->yieldContent('title'))), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+        'description' => html_entity_decode(trim(strip_tags((string) view()->yieldContent('meta_description'))), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+        'keywords' => html_entity_decode(trim(strip_tags((string) view()->yieldContent('meta_keywords'))), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
         'canonical' => trim(strip_tags((string) view()->yieldContent('canonical'))),
         'og_image' => trim(strip_tags((string) view()->yieldContent('og_image'))),
         'robots' => trim(strip_tags((string) view()->yieldContent('robots'))),
         'og_type' => trim(strip_tags((string) view()->yieldContent('og_type'))) ?: 'website',
     ]);
+    $twitterUrl = \App\Models\Setting::getValue('social_twitter');
     $twitterHandle = app(\App\Services\SeoService::class)->global('twitter_handle');
+    if (blank($twitterHandle) && filled($twitterUrl)) {
+        if (str_starts_with(trim($twitterUrl), '@')) {
+            $twitterHandle = ltrim(trim($twitterUrl), '@');
+        } else {
+            $parsedPath = parse_url($twitterUrl, PHP_URL_PATH);
+            if ($parsedPath) {
+                $twitterHandle = trim($parsedPath, '/');
+            }
+        }
+    }
 @endphp
 <title>{{ $seo->title }}</title>
 <meta name="description" content="{{ $seo->description }}">
@@ -33,7 +44,17 @@
 <meta property="og:site_name" content="{{ config('seo.organization.name', config('app.name')) }}">
 @if(filled($seo->ogImage))
 <meta property="og:image" content="{{ $seo->ogImage }}">
+<meta property="og:image:secure_url" content="{{ $seo->ogImage }}">
 <meta property="og:image:alt" content="{{ $seo->title }}">
+@if(!empty($seo->ogImageType))
+<meta property="og:image:type" content="{{ $seo->ogImageType }}">
+@endif
+@if(!empty($seo->ogImageWidth))
+<meta property="og:image:width" content="{{ $seo->ogImageWidth }}">
+@endif
+@if(!empty($seo->ogImageHeight))
+<meta property="og:image:height" content="{{ $seo->ogImageHeight }}">
+@endif
 @endif
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ $seo->title }}">

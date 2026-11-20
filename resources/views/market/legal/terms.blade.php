@@ -1,12 +1,12 @@
 @extends('layouts.market')
 
-@section('title', 'Terms & Conditions | Devbhoomi Naturals')
+@section('title', 'Terms & Conditions')
 @section('meta_description', 'Read the terms and conditions for shopping organic Himalayan products on Devbhoomi Naturals. Orders, payments, shipping and user responsibilities explained.')
 @section('canonical', route('legal.terms'))
 
 @push('schema')
 <script type="application/ld+json">
-{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Terms & Conditions | Devbhoomi Naturals', route('legal.terms'), 'Terms and conditions for shopping on Devbhoomi Naturals.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Terms & Conditions', route('legal.terms'), 'Terms and conditions for shopping on Devbhoomi Naturals.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
 

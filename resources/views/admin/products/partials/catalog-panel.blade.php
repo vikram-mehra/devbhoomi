@@ -66,7 +66,7 @@
                             <td class="d-none d-lg-table-cell small">{{ $p->brand ? \Illuminate\Support\Str::limit($p->brand, 24) : '—' }}</td>
                             <td class="fw-semibold">₹{{ number_format($price, 0) }}</td>
                             <td>
-                                @if ($variantCount > 0)
+                                @if ($variantCount > 0 && auth()->user()->isAdmin())
                                     <div
                                         class="admin-stock-ctrl"
                                         data-adjust-url="{{ route('admin.products.stock-adjust', $p) }}"
@@ -103,6 +103,8 @@
                                             <span class="badge rounded-pill text-bg-warning ms-1 admin-stock-low-badge d-none" title="{{ __('Low stock') }}">!</span>
                                         @endif
                                     </div>
+                                @elseif ($variantCount > 0)
+                                    <span class="fw-semibold">{{ $stock }}</span>
                                 @else
                                     <span class="text-muted small">—</span>
                                 @endif
@@ -129,6 +131,7 @@
                                     <a href="{{ route('admin.products.edit', $p) }}" class="btn btn-sm btn-outline-primary rounded-pill" title="{{ __('Edit') }}">
                                         <i class="bi bi-pencil"></i>
                                     </a>
+                                    @if(auth()->user()->isAdmin())
                                     <form method="post" action="{{ route('admin.products.toggle', $p) }}" class="d-inline">@csrf
                                         <input type="hidden" name="is_active" value="{{ $p->is_active ? 0 : 1 }}">
                                         <button type="submit" class="btn btn-sm rounded-pill {{ $p->is_active ? 'btn-outline-warning' : 'btn-outline-success' }}" title="{{ $p->is_active ? __('Deactivate') : __('Activate') }}">
@@ -140,13 +143,16 @@
                                             <i class="bi {{ $p->is_featured ? 'bi-star-fill text-warning' : 'bi-star' }}"></i>
                                         </button>
                                     </form>
-                                    <form method="post" action="{{ route('admin.products.destroy', $p) }}" class="d-inline" onsubmit="return confirm(@json(__('Delete this product permanently?')));">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="{{ __('Delete') }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-danger rounded-pill js-delete-product-btn"
+                                        title="{{ __('Delete') }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteProductModal"
+                                        data-action="{{ route('admin.products.destroy', $p) }}"
+                                        data-name="{{ $p->name }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -155,9 +161,11 @@
                             <td colspan="10" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
                                 {{ __('No products match these filters.') }}
+                                @if(auth()->user()->isAdmin())
                                 <div class="mt-3">
                                     <a href="{{ route('admin.products.create') }}" class="btn btn-primary rounded-pill">{{ __('Add product') }}</a>
                                 </div>
+                                @endif
                             </td>
                         </tr>
                     @endforelse

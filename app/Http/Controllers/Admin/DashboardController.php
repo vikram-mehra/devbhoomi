@@ -13,6 +13,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
+        if ($user && $user->isSeo() && ! $user->isAdmin()) {
+            return redirect()->route('admin.seo.index');
+        }
+
         $revenue = (float) Order::where('payment_status', 'paid')->sum('total');
         $ordersCount = Order::count();
         $pendingOrders = Order::where('status', 'pending')->count();

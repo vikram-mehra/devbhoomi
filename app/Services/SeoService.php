@@ -11,6 +11,7 @@ class SeoService
     public function global(string $key, $default = null)
     {
         $map = [
+            'default_title' => config('seo.default_title'),
             'site_title_suffix' => config('seo.default_title_suffix'),
             'default_description' => config('seo.default_description'),
             'default_keywords' => config('seo.default_keywords'),
@@ -28,9 +29,11 @@ class SeoService
 
     public function build(array $data): SeoMeta
     {
-        $suffix = $this->global('site_title_suffix');
         $rawTitle = trim(strip_tags((string) ($data['title'] ?? '')));
-        $title = $this->normalizeTitle($rawTitle, $suffix);
+        if ($rawTitle === '') {
+            $rawTitle = (string) $this->global('default_title');
+        }
+        $title = $this->normalizeTitle($rawTitle);
 
         $rawDesc = trim(strip_tags((string) ($data['description'] ?? '')));
         if ($rawDesc === '') {
@@ -43,12 +46,8 @@ class SeoService
             $canonical = url()->current();
         }
 
-        $ogImage = trim((string) ($data['og_image'] ?? ''));
-        if ($ogImage === '') {
-            $ogImage = $this->absoluteUrl($this->global('default_og_image'));
-        } elseif (! preg_match('#^https?://#i', $ogImage)) {
-            $ogImage = $this->absoluteUrl($ogImage);
-        }
+        $ogResolved = $this->resolveOgImage((string) ($data['og_image'] ?? ''));
+        $ogImage = $ogResolved['url'];
 
         $robots = trim((string) ($data['robots'] ?? ''));
         $robots = $robots !== '' ? $robots : $this->robotsDirective();
@@ -59,6 +58,9 @@ class SeoService
             'keywords' => filled($data['keywords'] ?? null) ? (string) $data['keywords'] : null,
             'canonical' => $canonical,
             'og_image' => $ogImage,
+            'og_image_width' => $ogResolved['width'],
+            'og_image_height' => $ogResolved['height'],
+            'og_image_type' => $ogResolved['type'],
             'robots' => $robots,
             'og_type' => (string) ($data['og_type'] ?? 'website'),
             'schema_extra' => $data['schema_extra'] ?? null,
@@ -67,27 +69,17 @@ class SeoService
 
     public function normalizeTitle(string $title, ?string $suffix = null): string
     {
-        $suffix = $suffix ?: $this->global('site_title_suffix');
-        $title = preg_replace('/\s+/u', ' ', trim(strip_tags($title))) ?: $suffix;
-        $min = (int) config('seo.title_min', 50);
-        $max = (int) config('seo.title_max', 60);
+        $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $title = preg_replace('/\s+/u', ' ', trim(strip_tags($title)));
+        $title = preg_replace('/\s*[\|—–-]\s*Devbhoomi(?:\s+Naturals|\s+Blog|\s+Seller)?\s*$/iu', '', (string) $title);
+        $title = trim((string) $title);
 
-        if (mb_strlen($title) > $max) {
-            return Str::limit($title, $max, '');
-        }
-
-        if (mb_strlen($title) < $min && $suffix && ! Str::contains($title, $suffix)) {
-            $candidate = $title.' | '.$suffix;
-            if (mb_strlen($candidate) <= $max) {
-                return $candidate;
-            }
-        }
-
-        return $title;
+        return $title !== '' ? $title : (string) $this->global('default_title');
     }
 
     public function normalizeDescription(string $description): string
     {
+        $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $description = preg_replace('/\s+/u', ' ', trim(strip_tags($description)));
         $max = (int) config('seo.description_max', 160);
 
@@ -122,7 +114,7 @@ class SeoService
 
     public function hasThinListingQuery(): bool
     {
-        if (! request()->routeIs(['shop.search', 'shop.menu'])) {
+        if (! request()->routeIs(['shop.search', 'shop.menu', 'shop.products'])) {
             return false;
         }
 
@@ -148,6 +140,99 @@ class SeoService
         }
 
         return url('/'.ltrim($path, '/'));
+    }
+
+    /**
+     * WhatsApp/Facebook need a JPG/PNG around 1200x630. Wide header logos get cropped.
+     *
+     * @return array{url: string, width: int|null, height: int|null, type: string|null}
+     */
+    public function resolveOgImage(string $ogImage): array
+    {
+        $fallback = '/images/og-share.png';
+        $ogImage = trim($ogImage);
+        if ($ogImage === '') {
+            $ogImage = trim((string) $this->global('default_og_image'));
+        }
+        if ($ogImage === '' || $this->isLocalUnusableOgImage($ogImage)) {
+            $ogImage = $fallback;
+        }
+
+        $url = preg_match('#^https?://#i', $ogImage) ? $ogImage : $this->absoluteUrl($ogImage);
+        $meta = $this->localOgImageMeta($ogImage) ?? $this->localOgImageMeta($fallback);
+
+        return [
+            'url' => $url,
+            'width' => $meta['width'] ?? 1200,
+            'height' => $meta['height'] ?? 630,
+            'type' => $meta['type'] ?? 'image/png',
+        ];
+    }
+
+    /**
+     * @return array{width: int, height: int, type: string}|null
+     */
+    private function localOgImageMeta(string $ogImage): ?array
+    {
+        $full = $this->localPublicPath($ogImage);
+        if (! $full) {
+            return null;
+        }
+        $info = @getimagesize($full);
+        if (! $info || ($info[0] ?? 0) < 1 || ($info[1] ?? 0) < 1) {
+            return null;
+        }
+
+        return [
+            'width' => (int) $info[0],
+            'height' => (int) $info[1],
+            'type' => (string) ($info['mime'] ?? 'image/png'),
+        ];
+    }
+
+    private function isLocalUnusableOgImage(string $ogImage): bool
+    {
+        if (preg_match('#^https?://#i', $ogImage)) {
+            $host = parse_url($ogImage, PHP_URL_HOST);
+            $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+            if ($host && $appHost && strcasecmp((string) $host, (string) $appHost) !== 0) {
+                return false;
+            }
+        }
+
+        $full = $this->localPublicPath($ogImage);
+        if (! $full) {
+            return true;
+        }
+        if (strtolower((string) pathinfo($full, PATHINFO_EXTENSION)) === 'svg') {
+            return true;
+        }
+        $info = @getimagesize($full);
+        if (! $info || ($info[0] ?? 0) < 200 || ($info[1] ?? 0) < 200) {
+            return true;
+        }
+        $ratio = $info[0] / max($info[1], 1);
+
+        return $ratio > 3.2 || $ratio < 0.4;
+    }
+
+    private function localPublicPath(string $ogImage): ?string
+    {
+        $path = $ogImage;
+        if (preg_match('#^https?://#i', $ogImage)) {
+            $path = (string) (parse_url($ogImage, PHP_URL_PATH) ?? '');
+        }
+        $base = \App\Support\AppUrl::basePath();
+        if ($base !== '' && str_starts_with($path, $base.'/')) {
+            $path = substr($path, strlen($base));
+        }
+        $path = ltrim($path, '/');
+        if ($path === '') {
+            return null;
+        }
+        $full = public_path($path);
+
+        return is_file($full) ? $full : null;
     }
 
     public function organizationSchema(): array
@@ -261,18 +346,76 @@ class SeoService
         ];
     }
 
+    /**
+     * Homepage FAQ rows for the accordion and FAQPage schema.
+     *
+     * @return array<int, array{question: string, answer: string, track_link?: bool}>
+     */
+    public function homepageFaqItems(): array
+    {
+        $fromAdmin = [];
+        $json = $this->global('faq_schema_json');
+        if (filled($json)) {
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                $fromAdmin = array_values(array_filter($decoded, fn ($row) => filled($row['question'] ?? null) && filled($row['answer'] ?? null)));
+            }
+        }
+
+        if (!empty($fromAdmin)) {
+            return $fromAdmin;
+        }
+
+        return [
+            [
+                'question' => __('What is Devbhoomi Naturals?'),
+                'answer' => __('Devbhoomi Naturals is an online store for pure Himalayan foods from Uttarakhand — millets, pahadi pulses, red rice, and spices sourced from hill farmers and packed for pan-India delivery.'),
+            ],
+            [
+                'question' => __('Are Devbhoomi products organic and authentic?'),
+                'answer' => __('Yes. We source traditional Uttarakhand staples such as Jhangora millet, Gahat dal, Kala Bhatt, Pahadi rajma, and Himalayan red rice from verified growers so you get clean, chemical-free pantry foods.'),
+            ],
+            [
+                'question' => __('Which Himalayan products can I buy online?'),
+                'answer' => __('Shop millets (Jhangora, Mandua/Ragi), pahadi pulses (Gahat, Bhatt, Rajma), Himalayan red rice, and spices. Browse Our Products to see the full Devbhoomi Naturals catalog.'),
+            ],
+            [
+                'question' => __('Do you deliver across India?'),
+                'answer' => __('Yes — we ship pan-India through trusted courier and logistics partners with tracking details provided for every order.'),
+            ],
+            [
+                'question' => __('How can I track my Devbhoomi order?'),
+                'answer' => __('Use Track order on the website with your order number and the email or mobile used at checkout. You can also follow updates from My orders after you sign in.'),
+                'track_link' => true,
+            ],
+            [
+                'question' => __('How should I store millets, pulses, and red rice?'),
+                'answer' => __('Keep them in a cool, dry place in an airtight jar, away from sunlight. Himalayan grains and pulses stay fresh longer when transferred from the pack after opening.'),
+            ],
+            [
+                'question' => __('How do I contact Devbhoomi Naturals for bulk or support?'),
+                'answer' => __('Use the Contact us page or call +91 9217732670 for product questions, bulk orders, and delivery help. We are happy to guide you on pahadi staples and order status.'),
+            ],
+        ];
+    }
+
     public function faqSchemaFromJson(?string $json): ?array
     {
         if (! filled($json)) {
-            return null;
+            return $this->faqSchemaFromItems($this->homepageFaqItems());
         }
         $decoded = json_decode($json, true);
         if (! is_array($decoded) || empty($decoded)) {
-            return null;
+            return $this->faqSchemaFromItems($this->homepageFaqItems());
         }
 
+        return $this->faqSchemaFromItems($decoded);
+    }
+
+    public function faqSchemaFromItems(array $items): ?array
+    {
         $entities = [];
-        foreach ($decoded as $row) {
+        foreach ($items as $row) {
             $q = trim((string) ($row['question'] ?? ''));
             $a = trim(strip_tags((string) ($row['answer'] ?? '')));
             if ($q === '' || $a === '') {

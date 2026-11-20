@@ -44,7 +44,15 @@
     </tr>
     <tr>
         <td style="padding:6px 0;font-size:14px;color:#475569;">{{ __('Shipping Charges') }}</td>
-        <td align="right" style="padding:6px 0;font-size:14px;color:#0f172a;font-weight:600;">₹{{ number_format((float) $order->shipping, 2) }}</td>
+        <td align="right" style="padding:6px 0;font-size:14px;color:#0f172a;font-weight:600;">
+            @if((float) ($order->shipping_discount_amount ?? 0) > 0)
+                <span style="color:#64748b;text-decoration:line-through;font-size:12px;margin-right:4px;">₹{{ number_format((float) $order->shipping_original, 2) }}</span>
+                ₹{{ number_format((float) $order->shipping, 2) }}
+                <span style="color:#16a34a;font-size:12px;">({{ (int) $order->shipping_discount_percent }}% off)</span>
+            @else
+                ₹{{ number_format((float) $order->shipping, 2) }}
+            @endif
+        </td>
     </tr>
     @if((float) $order->wallet_used > 0)
         <tr>

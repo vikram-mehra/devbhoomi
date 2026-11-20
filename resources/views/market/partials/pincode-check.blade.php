@@ -83,6 +83,10 @@
                 setMsg(wrap, data.message || '', serviceable);
                 if (serviceable && wrap.getAttribute('data-autofill') === '1') applyAutofill(data);
                 if (document.getElementById('checkoutMainForm')) setCheckoutReady(serviceable);
+                wrap.dispatchEvent(new CustomEvent('pincode:checked', {
+                    bubbles: true,
+                    detail: { pincode: pin, serviceable: serviceable, data: data }
+                }));
             })
             .catch(function () {
                 setMsg(wrap, 'Could not check this pincode. Try again.', false);

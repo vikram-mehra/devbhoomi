@@ -65,5 +65,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'verified.email' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\EnsureRole::class,
+        'not.holiday' => \App\Http\Middleware\EnsureNotInHolidayMode::class,
     ];
 }

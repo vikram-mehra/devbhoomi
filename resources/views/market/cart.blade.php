@@ -65,6 +65,7 @@ input.js-cart-qty-input {
     border: none;
     background: transparent;
     font-weight: 600;
+    font-size: 16px;
     color: var(--pro-ink, #1a2e22);
 }
 
@@ -174,9 +175,6 @@ input.js-cart-qty-input {
                                         @if($v->label() !== 'Default')
                                             <span class="badge bg-light text-muted border mt-1">{{ $v->label() }}</span>
                                         @endif
-                                        @if($p->formattedWeightKg())
-                                            <span class="badge bg-light text-muted border mt-1"><i class="bi bi-tag-fill me-1 small text-primary"></i>{{ $p->formattedWeightKg() }}</span>
-                                        @endif
                                     </div>
                                     
                                     <!-- Desktop Delete Button -->
@@ -248,11 +246,22 @@ input.js-cart-qty-input {
                         </div>
                     </div>
                     
-                    @auth
-                        <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Proceed to checkout') }}</a>
+                    @if(config('holiday.enabled'))
+                        <div class="alert alert-warning border-0 rounded-4 p-3 small text-center mb-3">
+                            <i class="bi bi-pause-circle-fill fs-5 d-block mb-1 text-warning"></i>
+                            <strong class="d-block mb-1 text-dark">{{ config('holiday.title', __('Store on Holiday Break')) }}</strong>
+                            <span class="text-muted">{{ config('holiday.message') }}</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm opacity-75" disabled>
+                            <i class="bi bi-lock-fill me-1"></i> {{ __('Checkout Paused (Holiday)') }}
+                        </button>
                     @else
-                        <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Login to checkout') }}</a>
-                    @endauth
+                        @auth
+                            <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Proceed to checkout') }}</a>
+                        @else
+                            <a href="{{ route('checkout.index') }}" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase shadow-sm hover-up">{{ __('Login to checkout') }}</a>
+                        @endauth
+                    @endif
                 </div>
             </div>
         </div>
@@ -321,13 +330,8 @@ input.js-cart-qty-input {
                     
                     if (drawerSubtotal) drawerSubtotal.textContent = formatMoney(res.data.totals.subtotal);
                     if (drawerShipping) {
-                        if (res.data.totals.is_free_shipping) {
-                            drawerShipping.textContent = 'FREE';
-                            drawerShipping.className = 'text-success fw-semibold';
-                        } else {
-                            drawerShipping.textContent = formatMoney(res.data.totals.shipping_charge);
-                            drawerShipping.className = 'text-muted';
-                        }
+                        drawerShipping.textContent = res.data.totals.is_free_shipping ? 'FREE' : formatMoney(res.data.totals.shipping_charge);
+                        drawerShipping.className = res.data.totals.is_free_shipping ? 'text-success fw-semibold' : 'text-muted';
                     }
                     if (drawerTotal) drawerTotal.textContent = formatMoney(res.data.totals.total);
                     

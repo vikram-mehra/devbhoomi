@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', ($post->meta_title ?: $post->title).' — Devbhoomi Blog')
+@section('title', ($post->meta_title ?: $post->title))
 @section('meta_description')
     {{ $post->meta_description ?: ($post->excerpt ?: Str::limit(strip_tags($post->body), 155)) }}
 @endsection
@@ -62,19 +62,17 @@
     <article class="pro-blog-article pro-blog-detail">
         <header class="pro-blog-detail__hero">
             <div class="pro-blog-detail__hero-glow" aria-hidden="true"></div>
-            <div class="pro-blog-detail__hero-media ratio ratio-16x9">
+            <div class="pro-blog-detail__hero-media">
                 <img
                     src="{{ $post->imageUrl() }}"
-                    class="object-fit-cover w-100 h-100"
+                    class="pro-blog-detail__hero-img"
                     alt="{{ $post->title }}"
                     loading="eager"
-                    width="1200"
-                    height="675"
                 >
             </div>
             <div class="pro-blog-detail__title-card">
                 <p class="pro-blog-detail__eyebrow">{{ __('Editorial') }}</p>
-                <h1 class="pro-blog-detail__title">{{ $post->title }}</h1>
+                <h2 class="pro-blog-detail__title">{{ $post->title }}</h2>
                 <div class="pro-blog-detail__meta">
                     <span class="pro-blog-detail__meta-item">
                         <i class="bi bi-calendar3" aria-hidden="true"></i>

@@ -8,6 +8,7 @@ use App\Services\OrderConfirmationMailService;
 use App\Services\StockLedgerService;
 use App\Services\GoogleAnalyticsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -20,6 +21,10 @@ class PaymentController extends Controller
 
     public function razorpay(Order $order)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return redirect()->route('orders.show', $order)->with('error', \App\Services\HolidayModeService::message());
+        }
+
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
 
@@ -50,6 +55,10 @@ class PaymentController extends Controller
 
     public function razorpayDummyComplete(Order $order)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return redirect()->route('orders.show', $order)->with('error', \App\Services\HolidayModeService::message());
+        }
+
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
         abort_if($this->razorpayLive(), 403);
@@ -71,6 +80,12 @@ class PaymentController extends Controller
 
     public function razorpayVerify(Request $request)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            $order = Order::find($request->order_id);
+            $target = $order ? route('orders.show', $order) : route('market.home');
+            return redirect($target)->with('error', __('Payment confirmation blocked: store is currently in holiday mode.'));
+        }
+
         $request->validate([
             'razorpay_order_id' => 'required|string',
             'razorpay_payment_id' => 'required|string',
@@ -128,6 +143,10 @@ class PaymentController extends Controller
 
     public function createRazorpayOrder(Order $order)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return response()->json(['error' => 'holiday_mode', 'message' => \App\Services\HolidayModeService::message()], 403);
+        }
+
         $this->authorizeOrder($order);
         abort_unless($order->payment_method === 'razorpay', 400);
 
@@ -220,35 +239,45 @@ class PaymentController extends Controller
 
     protected function failUnpaidOrder(Order $order): void
     {
-        if ($order->payment_status === 'paid') {
-            return;
-        }
+        DB::transaction(function () use ($order) {
+            $locked = Order::query()->where('id', $order->id)->lockForUpdate()->first();
+            if (! $locked || $locked->payment_status === 'paid') {
+                return;
+            }
 
-        $order->update([
-            'payment_status' => 'failed',
-            'status' => 'cancelled',
-        ]);
+            $locked->update([
+                'payment_status' => 'failed',
+                'status' => 'cancelled',
+            ]);
+
+            app(CouponService::class)->releaseForOrder($locked->fresh(), true);
+        });
 
         app(StockLedgerService::class)->restoreUnpaidOrderStock($order->fresh(), 'Payment failed or abandoned');
     }
 
     protected function markOrderPaid(Order $order, string $paymentRef): void
     {
-        $wasPaid = $order->payment_status === 'paid';
-        $couponCode = $order->coupon_code;
+        $sendMail = false;
 
-        $order->update([
-            'status' => 'confirmed',
-            'payment_status' => 'paid',
-            'payment_ref' => $paymentRef,
-            'razorpay_payment_id' => Str::startsWith($paymentRef, 'pay_') ? $paymentRef : $order->razorpay_payment_id,
-        ]);
+        DB::transaction(function () use ($order, $paymentRef, &$sendMail) {
+            $locked = Order::query()->where('id', $order->id)->lockForUpdate()->firstOrFail();
+            $wasPaid = $locked->payment_status === 'paid';
 
-        if (! $wasPaid && $couponCode) {
-            app(CouponService::class)->markUsed($couponCode);
-        }
+            $locked->update([
+                'status' => 'confirmed',
+                'payment_status' => 'paid',
+                'payment_ref' => $paymentRef,
+                'razorpay_payment_id' => Str::startsWith($paymentRef, 'pay_') ? $paymentRef : $locked->razorpay_payment_id,
+            ]);
 
-        if (! $wasPaid) {
+            if (! $wasPaid) {
+                app(CouponService::class)->redeemForOrder($locked->fresh());
+                $sendMail = true;
+            }
+        });
+
+        if ($sendMail) {
             app(OrderConfirmationMailService::class)->dispatchForOrder($order->fresh());
         }
     }

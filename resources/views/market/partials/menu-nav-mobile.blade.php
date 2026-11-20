@@ -10,7 +10,7 @@
     @if($kids->isNotEmpty() || $menuProducts->isNotEmpty())
         <div class="pro-mnav-item">
             <button type="button" class="pro-mnav-toggle" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="false" aria-controls="{{ $collapseId }}">
-                <span class="pro-mnav-toggle__text">{{ $item->title }}</span>
+                <a href="{{ $item->resolvedUrl() }}"><span class="pro-mnav-toggle__text">{{ $item->title }}</span></a>
                 <span class="pro-mnav-toggle__icon" aria-hidden="true"><i class="bi bi-plus-lg"></i></span>
             </button>
             <div id="{{ $collapseId }}" class="collapse pro-mnav-collapse">

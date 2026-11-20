@@ -19,9 +19,10 @@
                     <h2 class="h6 fw-bold mb-3">{{ __('Global SEO settings') }}</h2>
 
                     <div class="mb-3">
-                        <label class="form-label" for="seo-title-suffix">{{ __('Title suffix') }}</label>
-                        <input type="text" name="site_title_suffix" id="seo-title-suffix" class="form-control @error('site_title_suffix') is-invalid @enderror" value="{{ old('site_title_suffix', $settings['site_title_suffix']) }}" maxlength="120" required>
-                        @error('site_title_suffix')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <label class="form-label" for="seo-default-title">{{ __('Homepage title') }}</label>
+                        <input type="text" name="default_title" id="seo-default-title" class="form-control @error('default_title') is-invalid @enderror" value="{{ old('default_title', $settings['default_title']) }}" maxlength="180" required data-seo-preview="title">
+                        <div class="form-text">{{ __('Used on the homepage. Other pages keep their own title — nothing is appended.') }}</div>
+                        @error('default_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="mb-3">
@@ -38,7 +39,8 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="seo-og-image">{{ __('Default OG image URL') }}</label>
-                        <input type="text" name="default_og_image" id="seo-og-image" class="form-control" value="{{ old('default_og_image', $settings['default_og_image']) }}" maxlength="2048" placeholder="/images/logo.png">
+                        <input type="text" name="default_og_image" id="seo-og-image" class="form-control" value="{{ old('default_og_image', $settings['default_og_image']) }}" maxlength="2048" placeholder="/images/og-share.png">
+                        <div class="form-text">{{ __('Use a JPG or PNG about 1200×630. Wide header logos are cropped in WhatsApp.') }}</div>
                     </div>
 
                     <div class="mb-3">
@@ -46,15 +48,16 @@
                         <input type="text" name="google_analytics_id" id="seo-ga" class="form-control" value="{{ old('google_analytics_id', $settings['google_analytics_id']) }}" maxlength="32" placeholder="G-XXXXXXXXXX">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label" for="seo-twitter">{{ __('Twitter handle') }}</label>
-                        <input type="text" name="twitter_handle" id="seo-twitter" class="form-control" value="{{ old('twitter_handle', $settings['twitter_handle']) }}" maxlength="64" placeholder="@devbhoominaturals">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label" for="seo-faq">{{ __('FAQ schema (JSON)') }}</label>
-                        <textarea name="faq_schema_json" id="seo-faq" class="form-control font-monospace small" rows="8" maxlength="65000" placeholder='[{"question":"Do you deliver across India?","answer":"Yes, we ship pan-India."}]'>{{ old('faq_schema_json', $settings['faq_schema_json']) }}</textarea>
-                        <div class="form-text">{{ __('Array of question/answer objects for FAQ rich results on the homepage.') }}</div>
+                    <div class="p-3 mb-3 rounded-3 bg-light border">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <strong class="d-block text-dark">{{ __('Homepage FAQs & Schema') }}</strong>
+                                <small class="text-muted">{{ __('Homepage FAQs and rich search snippets are now managed under Platform Settings > Homepage FAQs.') }}</small>
+                            </div>
+                            <a href="{{ route('admin.settings.edit') }}#faqs" class="btn btn-sm btn-outline-primary px-3 fw-semibold">
+                                <i class="bi bi-question-circle me-1"></i> {{ __('Manage FAQs') }}
+                            </a>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary">{{ __('Save SEO settings') }}</button>
@@ -107,6 +110,13 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var title = document.getElementById('seo-default-title');
+    var titlePreview = document.querySelector('[data-seo-preview="title"]');
+    if (title && titlePreview) {
+        title.addEventListener('input', function () {
+            titlePreview.textContent = title.value || {{ json_encode(__('Homepage title')) }};
+        });
+    }
     var desc = document.getElementById('seo-default-desc');
     var counter = document.querySelector('[data-seo-count="description"]');
     if (desc && counter) {

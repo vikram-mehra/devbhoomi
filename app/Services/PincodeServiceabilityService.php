@@ -17,6 +17,8 @@ class PincodeServiceabilityService
      *     courier_name: ?string,
      *     day_offset: ?int,
      *     eta_date: ?string,
+     *     delivery_charge: ?float,
+     *     additional_500g_charge: ?float,
      *     message: string
      * }
      */
@@ -33,15 +35,21 @@ class PincodeServiceabilityService
             return $this->payload(true, false, $pin, __('Sorry, we do not deliver to this pincode yet.'));
         }
 
-        $eta = Carbon::now()->startOfDay()->addDays(max(0, (int) $row->day_offset));
-        $etaLabel = $eta->format('d M Y');
         $parts = [
             __('Delivery available to :city, :state.', ['city' => $row->city, 'state' => $row->state]),
         ];
         if (filled($row->courier_name)) {
             $parts[] = __('Courier: :name.', ['name' => $row->courier_name]);
         }
-        $parts[] = __('Estimated delivery by :date.', ['date' => $etaLabel]);
+        $etaLabel = null;
+        if ($row->day_offset !== null) {
+            $eta = Carbon::now()->startOfDay()->addDays(max(0, (int) $row->day_offset));
+            $etaLabel = $eta->format('d M Y');
+            $parts[] = __('Estimated delivery by :date.', ['date' => $etaLabel]);
+        }
+        // if ($row->delivery_charge !== null) {
+        //     $parts[] = __('Delivery ₹:amount for the first 500 g.', ['amount' => number_format((float) $row->delivery_charge, 2)]);
+        // }
 
         return $this->payload(true, true, $pin, implode(' ', $parts), $row, $etaLabel);
     }
@@ -66,6 +74,8 @@ class PincodeServiceabilityService
             'courier_name' => $row?->courier_name,
             'day_offset' => $row?->day_offset,
             'eta_date' => $etaDate,
+            'delivery_charge' => $row?->delivery_charge !== null ? (float) $row->delivery_charge : null,
+            'additional_500g_charge' => $row?->additional_500g_charge !== null ? (float) $row->additional_500g_charge : null,
             'message' => $message,
         ];
     }

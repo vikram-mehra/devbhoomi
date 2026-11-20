@@ -33,6 +33,11 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class);
     }
 
+    public function couponUsages(): HasMany
+    {
+        return $this->hasMany(CouponUsage::class);
+    }
+
     public function adminUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'admin_user_id');

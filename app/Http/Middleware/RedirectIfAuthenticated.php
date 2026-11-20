@@ -23,6 +23,9 @@ class RedirectIfAuthenticated
             if ($user instanceof User && $user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
+            if ($user instanceof User && $user->isSeo()) {
+                return redirect()->route('admin.seo.index');
+            }
             if ($user instanceof User && $user->role === User::ROLE_VENDOR) {
                 return redirect()->route('vendor.dashboard');
             }

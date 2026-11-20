@@ -5,7 +5,7 @@
 @if(filled($menuItem->meta_keywords))
 @section('meta_keywords', $menuItem->meta_keywords)
 @endif
-@section('canonical', $menuItem->canonical_url ?: app(\App\Services\SeoService::class)->canonicalForListing(route('shop.menu', $menuItem->slug)))
+@section('canonical', $menuItem->canonical_url ?: app(\App\Services\SeoService::class)->canonicalForListing($menuItem->resolvedUrl()))
 @if(filled($menuItem->og_image))
 @section('og_image', $menuItem->og_image)
 @endif
@@ -27,7 +27,7 @@
     '@type' => 'CollectionPage',
     'name' => $menuItem->title,
     'description' => Str::limit(strip_tags($menuItem->meta_description ?: 'Shop '.$menuItem->title), 160),
-    'url' => route('shop.menu', $menuItem->slug),
+    'url' => $menuItem->resolvedUrl(),
 ], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @if($itemListSchema)
@@ -48,7 +48,7 @@
     <div class="row g-4 pro-listing-page">
         <aside class="col-lg-3 mk-shop-filter-col" id="mkShopFilterCol">
             @include('market.partials.shop-filters', [
-                'formAction' => route('shop.menu', $menuItem->slug),
+                'formAction' => $menuItem->resolvedUrl(),
                 'facets' => $facets,
                 'hiddenFields' => array_filter([
                     'q' => request('q'),
@@ -57,7 +57,7 @@
             ])
         </aside>
         <div class="col-lg-9">
-            <form method="get" action="{{ route('shop.menu', $menuItem->slug) }}" class="mk-shop-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <form method="get" action="{{ $menuItem->resolvedUrl() }}" class="mk-shop-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                 @foreach(request()->except(['sort', 'page']) as $k => $v)
                     @if(is_array($v))
                         @foreach($v as $item)

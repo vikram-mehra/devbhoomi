@@ -168,7 +168,7 @@ class SeoAuditService
             if ($m->isBuiltInPage()) {
                 return;
             }
-            $url = route('shop.menu', $m->slug);
+            $url = $m->resolvedUrl();
 
             if (! filled($m->meta_description)) {
                 $issues[] = $this->issue('high', 'Category missing meta description', $m->title, $url, 'Add SEO fields in Menu admin.');

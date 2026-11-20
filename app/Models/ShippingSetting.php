@@ -10,11 +10,15 @@ class ShippingSetting extends Model
     protected $fillable = [
         'free_shipping_amount',
         'shipping_charge',
+        'base_weight_grams',
+        'additional_500g_charge',
     ];
 
     protected $casts = [
         'free_shipping_amount' => 'decimal:2',
         'shipping_charge' => 'decimal:2',
+        'base_weight_grams' => 'integer',
+        'additional_500g_charge' => 'decimal:2',
     ];
 
     public static function current(): self
@@ -23,6 +27,8 @@ class ShippingSetting extends Model
             return static::query()->firstOrCreate([], [
                 'free_shipping_amount' => 500,
                 'shipping_charge' => 50,
+                'base_weight_grams' => 500,
+                'additional_500g_charge' => null,
             ]);
         });
     }

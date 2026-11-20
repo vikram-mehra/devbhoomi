@@ -77,7 +77,7 @@ class MenuItem extends Model
     }
 
     /**
-     * Menu slugs that point to fixed site pages (not product listing /menu/{slug}).
+     * Menu slugs that point to fixed site pages (not product listing /products/{slug}).
      */
     public static function builtInPageRouteName(string $slug): ?string
     {
@@ -105,6 +105,10 @@ class MenuItem extends Model
                 $routeName = static::builtInPageRouteName($this->slug);
                 if ($routeName !== null) {
                     return route($routeName);
+                }
+
+                if ($this->isOurProductsListing()) {
+                    return route('shop.products');
                 }
 
                 return route('shop.menu', $this->slug);
@@ -199,5 +203,13 @@ class MenuItem extends Model
             ->first();
 
         return $item ? $item->resolvedUrl() : route('shop.search');
+    }
+
+    public function isOurProductsListing(): bool
+    {
+        $slug = Str::lower(trim((string) $this->slug));
+        $title = Str::lower(trim((string) $this->title));
+
+        return $slug === 'our-products' || $title === 'our products';
     }
 }

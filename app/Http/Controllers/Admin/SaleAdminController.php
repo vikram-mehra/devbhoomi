@@ -102,8 +102,8 @@ class SaleAdminController extends Controller
             return $sale;
         });
 
-        if (! empty($data['coupon_code']) && $data['payment_status'] === 'paid') {
-            $coupons->markUsed($data['coupon_code']);
+        if (! empty($data['coupon_code'])) {
+            $coupons->syncUsageWithSale($sale->fresh(['items.product']));
         }
 
         return redirect()
@@ -127,6 +127,7 @@ class SaleAdminController extends Controller
 
         $sale->update($data);
         $ledger->applySaleStock($sale->fresh(), $request->user()?->id);
+        app(CouponService::class)->syncUsageWithSale($sale->fresh(['items.product']));
 
         return back()->with('status', __('Sale status updated.'));
     }
@@ -192,7 +193,19 @@ class SaleAdminController extends Controller
 
         if ($coupons->normalizeCode($data['coupon_code'] ?? '') !== '') {
             try {
-                $resolved = $coupons->resolveForCart($data['coupon_code'], round($subtotal, 2));
+                $saleItems = [];
+                foreach ($items as $row) {
+                    $variant = ProductVariant::query()->with('product')->find($row['product_variant_id']);
+                    $saleItems[] = [
+                        'product_id' => $variant?->product_id,
+                        'menu_item_id' => $variant?->product?->menu_item_id,
+                        'line_total' => $row['line_total'],
+                    ];
+                }
+                $resolved = $coupons->resolveForCart($data['coupon_code'], round($subtotal, 2), [
+                    'items' => $saleItems,
+                    'guest_key' => $coupons->guestKey(null, $data['customer_email'] ?? null, $data['customer_phone'] ?? null),
+                ]);
                 $discountAmount = $resolved['discount'];
                 $couponCode = $resolved['coupon']->code;
             } catch (ValidationException $e) {

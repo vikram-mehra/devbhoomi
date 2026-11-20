@@ -1,12 +1,22 @@
 @extends('layouts.market')
 
-@section('title', 'Shipping Policy | Devbhoomi Naturals')
-@section('meta_description', 'Shipping and delivery policy for Devbhoomi Naturals organic products. Pan-India delivery, free shipping above ₹499, and estimated delivery timelines explained.')
+@php
+    $freeShippingThreshold = (float) (\App\Models\ShippingSetting::current()->free_shipping_amount ?? 0);
+@endphp
+
+@section('title', 'Shipping Policy')
+@section('meta_description')
+@if($freeShippingThreshold > 0)
+{{ __('Shipping and delivery policy for Devbhoomi Naturals organic products. Pan-India delivery, free shipping on orders above ₹:amount, and estimated delivery timelines explained.', ['amount' => number_format($freeShippingThreshold, 0)]) }}
+@else
+{{ __('Shipping and delivery policy for Devbhoomi Naturals organic products. Pan-India delivery rates, courier tracking, and estimated delivery timelines explained.') }}
+@endif
+@endsection
 @section('canonical', route('legal.shipping'))
 
 @push('schema')
 <script type="application/ld+json">
-{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Shipping Policy | Devbhoomi Naturals', route('legal.shipping'), 'Shipping and delivery policy for Devbhoomi Naturals organic products.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
+{!! json_encode(app(\App\Services\SeoService::class)->webPageSchema('Shipping Policy', route('legal.shipping'), 'Shipping and delivery policy for Devbhoomi Naturals organic products.'), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}
 </script>
 @endpush
 
@@ -39,7 +49,11 @@
     <p>{{ __('Delivery times are estimates and may vary due to weather conditions, courier delays, public holidays, or other unforeseen circumstances.') }}</p>
 
     <h2 class="h5 mt-4">{{ __('Shipping Charges') }}</h2>
-    <p>{{ __('Shipping charges, if applicable, will be displayed during checkout before payment is completed.') }}</p>
+    @if($freeShippingThreshold > 0)
+        <p>{{ __('We offer free standard delivery across India on all orders of ₹:amount and above. For orders below ₹:amount, a nominal delivery charge (starting at ₹49) is calculated at checkout based on your delivery destination and package weight.', ['amount' => number_format($freeShippingThreshold, 0)]) }}</p>
+    @else
+        <p>{{ __('Shipping charges are calculated at checkout based on your delivery destination and package weight. Nominal delivery rates apply across all serviced pincodes in India.') }}</p>
+    @endif
 
     <h2 class="h5 mt-4">{{ __('Order Tracking') }}</h2>
     <p>{{ __('Once your order is shipped, tracking details will be shared via email, SMS, or WhatsApp (where applicable). After logging in, you can also use Track order on this website with your order number and the email or mobile used at checkout.') }}</p>

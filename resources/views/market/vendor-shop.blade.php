@@ -1,6 +1,6 @@
 @extends('layouts.market')
 
-@section('title', $vendor->meta_title ?: $vendor->shop_name.' | Devbhoomi Seller')
+@section('title', $vendor->meta_title ?: $vendor->shop_name)
 @section('meta_description', Str::limit($vendor->meta_description ?: strip_tags($vendor->description ?: 'Shop organic products from '.$vendor->shop_name.' on Devbhoomi Naturals.'), 160))
 @if(filled($vendor->meta_keywords))
 @section('meta_keywords', $vendor->meta_keywords)

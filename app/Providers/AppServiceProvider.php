@@ -95,7 +95,10 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $shippingService = app(\App\Services\ShippingService::class);
-            $shippingTotals = $shippingService->totalsForSubtotal($subtotal);
+            $pincode = auth()->check()
+                ? optional(auth()->user()->addresses()->orderByDesc('is_default')->first())->pincode
+                : null;
+            $shippingTotals = $shippingService->totalsForSubtotal($subtotal, $pincode, $items);
 
             $menus = app(MenuItemService::class);
 
@@ -104,6 +107,9 @@ class AppServiceProvider extends ServiceProvider
                 'layoutCartCount' => (int) $items->sum('qty'),
                 'layoutCartSubtotal' => $subtotal,
                 'layoutCartShipping' => $shippingTotals['shipping_charge'],
+                'layoutCartShippingOriginal' => $shippingTotals['shipping_original'] ?? $shippingTotals['shipping_charge'],
+                'layoutCartShippingDiscountPercent' => $shippingTotals['shipping_discount_percent'] ?? 0,
+                'layoutCartShippingDiscountAmount' => $shippingTotals['shipping_discount_amount'] ?? 0,
                 'layoutCartTotal' => $shippingTotals['total'],
                 'layoutHeaderMenu' => $menus->headerTree(),
                 'layoutFooterMenu' => $menus->footerLinks(),

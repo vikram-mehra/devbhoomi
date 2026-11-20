@@ -1,0 +1,247 @@
+<?php
+
+return [
+    'jhangora-barnyard-millet' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Jhangora (Barnyard Millet)',
+        'meta_title' => 'Jhangora (Barnyard Millet): Uttarakhand Grain and Cooking Guide',
+        'meta_description' => 'Learn what Jhangora is, how it grows in Uttarakhand, its traditional uses, and how to cook Jhangora millet at home.',
+        'keywords' => 'Jhangora, barnyard millet, Jhangora millet Uttarakhand, how to cook Jhangora, Jhangora ki Kheer',
+        'summary' => 'A traditional Himalayan millet with a mild, slightly nutty taste, enjoyed as a rice alternative, porridge, pulao and kheer.',
+        'images' => [
+            '/images/showcase/jhangora-kheer.jpeg',
+            '/images/showcase/jhangora2.jpeg',
+            '/images/showcase/jhangora-barnyard-millet.jpeg'
+        ],
+        'article_sections' => [
+            [
+                'heading' => 'What is Jhangora?',
+                'paragraphs' => [
+                    'Jhangora is a traditional small-grained millet, commonly identified with barnyard millet, grown in the Himalayan region.',
+                    'It has a mild, slightly nutty taste and can be prepared as a rice alternative, porridge, pulao or traditional sweet kheer.',
+                ],
+            ],
+            [
+                'heading' => 'How it grows in Uttarakhand',
+                'paragraphs' => [
+                    'Jhangora is generally cultivated during the monsoon or Kharif season in rain-fed hill fields. Farmers sow the seeds after the arrival of seasonal rainfall.',
+                    'The crop matures relatively quickly, and the harvested grains are dried, threshed and dehulled before cooking.',
+                ],
+            ],
+            [
+                'heading' => 'Product description',
+                'paragraphs' => [
+                    'Bring traditional Himalayan grains into your kitchen with Devbhoomi Naturals Jhangora. This versatile millet is naturally gluten-free when free from cross-contact, and offers a source of carbohydrates and dietary fibre.',
+                    'Its delicate flavour makes it suitable for savoury meals and traditional Uttarakhand desserts.',
+                ],
+            ],
+        ],
+        'story' => [
+            'Jhangora is one of the traditional grains of Uttarakhand. Its small, pale grains cook quickly and have a soft bite with a subtle, comforting taste.',
+            'Use it like rice with dal and vegetables, or simmer it with milk, cardamom and nuts for a festive Jhangora ki Kheer.',
+        ],
+        'highlights' => [
+            ['label' => 'Grain', 'value' => 'Barnyard millet'],
+            ['label' => 'Grown in', 'value' => 'Rain-fed Himalayan fields'],
+            ['label' => 'Uses', 'value' => 'Rice, porridge, pulao and kheer'],
+        ],
+        'ingredients' => ['1 cup Jhangora', '2–2½ cups water'],
+        'method' => [
+            'Wash 1 cup of Jhangora thoroughly.',
+            'Add approximately 2–2½ cups of water.',
+            'Bring to a boil, cover and simmer for 12–18 minutes, adjusting for the grain.',
+            'Rest for 5 minutes and fluff gently.',
+            'Serve with dal, vegetables or curry.',
+        ],
+        'serving' => 'Jhangora ki Kheer is made with milk, cardamom and a sweetener.',
+    ],
+    'pahadi-bhatt-black-soybean' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Pahadi Bhatt (Black Soybean)',
+        'meta_title' => 'Pahadi Bhatt (Black Soybean): Bhatt ki Churkani Guide',
+        'meta_description' => 'Learn what Pahadi Bhatt is, how black soybean grows in Uttarakhand and how to cook traditional Bhatt ki Churkani.',
+        'keywords' => 'Pahadi Bhatt, black soybean Uttarakhand, Bhatt ki Churkani, how to cook black soybean',
+        'summary' => 'A traditional black-seeded soybean from Uttarakhand, known for its earthy flavour and hearty mountain curries.',
+        'images' => [
+            '/images/showcase/bhatt-ki-daal.jpeg',
+            '/images/showcase/bhatt-ki-daal1.jpeg'
+        ],
+        'article_sections' => [
+            ['heading' => 'What is Pahadi Bhatt?', 'paragraphs' => ["Pahadi Bhatt is a traditional black-seeded soybean used in Uttarakhand's mountain cuisine. Unlike the uniformly round appearance of some beans, traditional Bhatt seeds can be somewhat oval or elongated.", 'It is especially popular in dishes such as Bhatt ki Churkani.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['Black soybean is grown in seasonal hill farming systems, often in rain-fed fields and sometimes alongside other crops. It is generally sown during the monsoon and harvested after the pods mature and dry.', 'The beans are then separated, cleaned and stored.']],
+            ['heading' => 'Product description', 'paragraphs' => ["Devbhoomi Naturals Pahadi Bhatt brings the distinctive taste of Uttarakhand's traditional black soybean to everyday meals. Rich in plant-based protein and containing dietary fibre, these beans are ideal for preparing hearty curries, dals and regional dishes.", 'Their earthy flavour pairs particularly well with rice and traditional mountain spices.']],
+        ],
+        'story' => ['Traditional black soybean is a much-loved ingredient in Uttarakhand kitchens.', 'Its earthy flavour and hearty texture make it a natural partner for rice and mountain spices.'],
+        'highlights' => [['label' => 'Pulse', 'value' => 'Black soybean'], ['label' => 'Cuisine', 'value' => 'Uttarakhand mountain food'], ['label' => 'Traditional dish', 'value' => 'Bhatt ki Churkani']],
+        'ingredients' => ['1 cup black Bhatt', 'Turmeric, salt and water', 'Mustard oil or ghee, cumin, garlic and spices', 'Wheat or rice flour slurry (optional)'],
+        'method' => ['Wash 1 cup of black Bhatt and soak overnight.', 'Drain and dry-roast lightly for a deeper flavour.', 'Cook the beans with turmeric, salt and sufficient water in a pressure cooker until tender.', 'Prepare a tempering of mustard oil or ghee, cumin, garlic and spices.', 'Add a little wheat or rice flour slurry if a thicker gravy is desired, then simmer until cooked through.'],
+        'serving' => 'Bhatt ki Churkani, served with steamed rice.',
+    ],
+    'pahadi-gahat-dal' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Pahadi Gahat Dal (Horse Gram)',
+        'meta_title' => 'Pahadi Gahat Dal (Horse Gram): Uttarakhand Cooking Guide',
+        'meta_description' => 'Discover Gahat Dal, also called horse gram or Kulthi, how it grows in Uttarakhand and how to cook Gahat ka Ras.',
+        'keywords' => 'Gahat Dal, horse gram Uttarakhand, Kulthi dal, Gahat ka Ras, how to cook Gahat Dal',
+        'summary' => 'A hardy traditional pulse with a strong earthy flavour, used in warming soups, dals and Uttarakhand home cooking.',
+        'images' => [
+            '/images/showcase/pahadi-gahat-dal5.jpeg',
+            '/images/showcase/pahadi-gahat-dal4.jpeg',
+            '/images/showcase/pahadi-gahat-dal3.jpeg'
+        ],
+        'article_sections' => [
+            ['heading' => 'What is Gahat Dal?', 'paragraphs' => ['Gahat Dal, also known as horse gram or Kulthi, is a traditional pulse valued in Uttarakhand for its strong earthy flavour and hearty texture.', 'It is used in warming soups, dals and regional preparations such as Gahat ka Ras and Phanu.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['Horse gram is a hardy legume that can grow in relatively low-input, rain-fed farming conditions. It is commonly cultivated in the warm growing season, with mature pods harvested and dried before the seeds are separated.']],
+            ['heading' => 'Product description', 'paragraphs' => ['Experience the traditional flavour of the hills with Devbhoomi Naturals Pahadi Gahat Dal. This nutrient-dense pulse provides plant protein and fibre and works beautifully in soups, thick dals and slow-cooked dishes.', 'Its distinctive earthy taste makes it a familiar ingredient in Uttarakhand home cooking.']],
+        ],
+        'story' => ['Gahat is a treasured pulse in the hills, valued for its robust taste and satisfying texture.', 'It brings depth to soups, dals and slow-cooked regional dishes.'],
+        'highlights' => [['label' => 'Also called', 'value' => 'Horse gram or Kulthi'], ['label' => 'Growing system', 'value' => 'Low-input, rain-fed fields'], ['label' => 'Traditional dish', 'value' => 'Gahat ka Ras']],
+        'ingredients' => ['1 cup Gahat Dal', 'Fresh water, turmeric and salt', 'Garlic, cumin, ghee and spices'],
+        'method' => ['Rinse 1 cup of Gahat Dal and soak for 8–10 hours.', 'Drain and add fresh water, turmeric and salt.', 'Pressure-cook until completely soft, generally around 20–35 minutes at pressure depending on the beans.', 'Prepare a tempering using garlic, cumin, ghee and spices.', 'Combine and simmer for another 5–10 minutes.'],
+        'serving' => 'Gahat ka Ras, a thin, flavourful horse gram preparation served with rice.',
+    ],
+    'lobia-black-eyed-beans' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Lobia (Black-Eyed Beans)',
+        'meta_title' => 'Lobia (Black-Eyed Beans): How to Cook Lobia Masala',
+        'meta_description' => 'Learn what Lobia is, how black-eyed beans grow in Uttarakhand and how to make a homestyle Lobia Masala.',
+        'keywords' => 'Lobia black-eyed beans, Lobia Masala, Uttarakhand beans, how to cook Lobia',
+        'summary' => 'A mild, slightly nutty legume with a soft texture, perfect for homestyle curry, salads, soups and rice dishes.',
+        'images' => [
+            '/images/showcase/lobia-black-eyed-beans.jpeg',
+            '/images/showcase/lobia-black-eyed-beans1.jpeg',
+            '/images/showcase/lobia-black-eyed-beans2.jpeg',
+            '/images/showcase/lobia-black-eyed-beans3.jpeg',
+            '/images/showcase/lobia-black-eyed-beans4.jpeg',
+            '/images/showcase/lobia-black-eyed-beans5.jpeg',
+        ],
+        'article_sections' => [
+            ['heading' => 'What is Lobia?', 'paragraphs' => ['Lobia, or black-eyed beans, is a legume recognised by its pale cream-coloured seed and distinctive dark marking. It has a mild, slightly nutty taste and a soft texture when cooked.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['Lobia can be cultivated in suitable warm-season fields in Uttarakhand, particularly where soil drainage and temperatures support the crop. The plants produce pods containing multiple seeds. Mature pods are harvested and dried before threshing.']],
+            ['heading' => 'Product description', 'paragraphs' => ['Devbhoomi Naturals Lobia offers a versatile addition to everyday Indian meals. These black-eyed beans contain plant-based protein, fibre and essential minerals.', 'Their mild flavour makes them suitable for homestyle curry, salads, soups and rice dishes.']],
+        ],
+        'story' => ['Lobia is a versatile bean with a gentle flavour that suits everyday Indian cooking.', 'Its soft cooked texture works equally well in curry, salad, soup or rice dishes.'],
+        'highlights' => [['label' => 'Bean type', 'value' => 'Black-eyed bean'], ['label' => 'Flavour', 'value' => 'Mild and slightly nutty'], ['label' => 'Best for', 'value' => 'Curries, salads and soups']],
+        'ingredients' => ['1 cup Lobia', 'Onions, tomatoes, ginger and garlic', 'Cumin, turmeric, coriander powder and chilli'],
+        'method' => ['Wash and soak 1 cup of Lobia for 6–8 hours.', 'Pressure-cook with fresh water until tender.', 'Sauté onions, tomatoes, ginger, garlic and cumin.', 'Add turmeric, coriander powder and chilli to taste.', 'Mix in the cooked beans and simmer for 10 minutes.'],
+        'serving' => 'Lobia Masala with steamed rice or roti.',
+    ],
+    'pahadi-rajma' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Pahadi Rajma',
+        'meta_title' => 'Pahadi Rajma: Himalayan Kidney Beans Cooking Guide',
+        'meta_description' => 'Discover Pahadi Rajma from Himalayan hill regions and learn how to safely cook a comforting Pahadi Rajma Chawal.',
+        'keywords' => 'Pahadi Rajma, Himalayan kidney beans, Rajma Chawal, how to cook Rajma safely',
+        'summary' => 'Himalayan kidney beans with rich flavour and a hearty texture that absorb aromatic spices in slow-cooked curries.',
+        'images' => [
+            '/images/showcase/pahadi-rajma2.jpeg',
+            '/images/showcase/pahadi-rajma3.jpeg',
+            '/images/showcase/pahadi-rajma4.jpeg',
+            '/images/showcase/pahadi-rajma5.jpeg'
+        ],
+        'article_sections' => [
+            ['heading' => 'What is Pahadi Rajma?', 'paragraphs' => ['Pahadi Rajma refers to kidney beans cultivated in Himalayan hill regions. These beans are appreciated for their rich flavour, hearty texture and ability to absorb spices in slow-cooked curries.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['Rajma is cultivated in suitable hill valleys and terraced fields, with sowing and harvesting schedules varying by elevation and local climate. Farmers harvest mature pods, dry them and separate the beans for storage.']],
+            ['heading' => 'Product description', 'paragraphs' => ['Enjoy the homestyle flavour of Devbhoomi Naturals Pahadi Rajma. These Himalayan kidney beans are a source of plant protein and fibre, making them a satisfying ingredient for traditional Indian meals.', 'Prepare them with onions, tomatoes and aromatic spices for a comforting bowl of rajma curry.']],
+        ],
+        'story' => ['Pahadi Rajma is loved for its rich flavour and hearty texture.', 'When cooked thoroughly, the beans absorb aromatic spices beautifully in a comforting curry.'],
+        'highlights' => [['label' => 'Bean type', 'value' => 'Himalayan kidney bean'], ['label' => 'Best for', 'value' => 'Slow-cooked curries'], ['label' => 'Traditional dish', 'value' => 'Pahadi Rajma Chawal']],
+        'ingredients' => ['1 cup Rajma', 'Onions, tomatoes, ginger and garlic', 'Aromatic spices and fresh water'],
+        'method' => ['Soak 1 cup of Rajma for 8–12 hours.', 'Discard soaking water and rinse.', 'Boil vigorously in fresh water for at least 10 minutes, then continue cooking until fully soft; use a pressure cooker as appropriate.', 'Prepare a tomato-onion gravy with ginger, garlic and spices.', 'Combine and simmer for 15–20 minutes.'],
+        'serving' => 'Pahadi Rajma Chawal. Kidney beans must never be eaten raw or undercooked; a slow cooker alone is not suitable for raw kidney beans.',
+    ],
+    'ragi-flour-madua' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Ragi Flour (Madua)',
+        'meta_title' => 'Ragi Flour (Madua): How to Make Traditional Mandua Roti',
+        'meta_description' => 'Learn what Ragi Flour or Madua is, how finger millet grows in Uttarakhand and how to make traditional Mandua ki Roti.',
+        'keywords' => 'Ragi Flour, Madua flour, Mandua ki Roti, finger millet Uttarakhand, how to make ragi roti',
+        'summary' => 'Traditional Himalayan finger millet flour for wholesome rotis, porridge, pancakes and everyday home cooking.',
+        'images' => [
+            '/images/showcase/madua-roti.jpeg',
+            '/images/showcase/madua-roti1.jpeg',
+            '/images/showcase/madua-roti2.jpeg',
+            '/images/showcase/madua-roti3.jpeg'
+        ],
+        'article_sections' => [
+            ['heading' => 'What is Ragi Flour?', 'paragraphs' => ['Ragi Flour, locally known as Madua or Mandua flour, is made by grinding finger millet into a fine powder. It is traditionally used to prepare rotis, porridge, pancakes and other everyday foods.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['Finger millet is cultivated in the hill farming systems of Uttarakhand, commonly during the rainy season. The plant develops distinctive finger-like seed heads. After harvesting, the grain is dried, threshed, cleaned and milled into flour.']],
+            ['heading' => 'Product description', 'paragraphs' => ['Devbhoomi Naturals Ragi Flour (Madua) brings the traditional goodness of Himalayan finger millet to your kitchen. Naturally gluten-free when uncontaminated, ragi is known for its calcium content and also provides dietary fibre.', 'Its earthy flavour is especially suitable for wholesome rotis, porridge and homemade snacks.']],
+        ],
+        'story' => ['Madua is a familiar Himalayan flour, ground from finger millet and used across everyday Uttarakhand cooking.', 'Its earthy taste makes a nourishing base for rotis, porridge and homemade snacks.'],
+        'highlights' => [['label' => 'Also called', 'value' => 'Madua or Mandua'], ['label' => 'Grain', 'value' => 'Finger millet'], ['label' => 'Best for', 'value' => 'Rotis, porridge and pancakes']],
+        'ingredients' => ['1 cup Ragi Flour', 'A pinch of salt', 'Warm water'],
+        'method' => ['Take 1 cup of Ragi Flour and a pinch of salt.', 'Add warm water gradually to form a soft dough.', 'Shape into small balls and carefully pat into rotis using damp hands or parchment.', 'Cook on a heated tawa on both sides until fully cooked.', 'Serve warm with ghee, dal or vegetables.'],
+        'serving' => 'Mandua ki Roti.',
+    ],
+    'pahadi-bhatt-white' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Pahadi Bhatt (White Soybean)',
+        'meta_title' => 'Pahadi Bhatt White Soybean: White Bhatt Curry Guide',
+        'meta_description' => 'Discover Pahadi White Bhatt, a traditional Himalayan soybean, and learn how to cook a comforting White Bhatt Curry.',
+        'keywords' => 'Pahadi White Bhatt, white soybean Uttarakhand, White Bhatt Curry, how to cook white soybean',
+        'summary' => 'A light-coloured Himalayan soybean with a mild, nutty taste for slow-cooked curries and homestyle dals.',
+        'images' => [
+            '/images/showcase/pahadi-bhatt-white.jpeg',
+            '/images/showcase/pahadi-bhatt-white1.jpeg'
+        ],
+        'article_sections' => [
+            ['heading' => 'What is White Bhatt?', 'paragraphs' => ['Pahadi White Bhatt is a light-coloured soybean variety used in traditional Himalayan food preparations. Like black Bhatt, it belongs to the soybean family and can be prepared as a curry, dal or other cooked pulse dish.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['White soybean varieties can be cultivated during the monsoon growing season in suitable hill fields. Once the plants mature and pods dry, the seeds are harvested, cleaned and stored.']],
+            ['heading' => 'Product description', 'paragraphs' => ['Devbhoomi Naturals Pahadi Bhatt White is a traditional soybean ingredient with a mild, nutty taste. Soybeans are naturally rich in plant protein and contain dietary fibre.', 'These light-coloured beans are suitable for slow-cooked curries, homestyle dals and protein-rich vegetarian dishes.']],
+        ],
+        'story' => ['White Bhatt is a light-coloured soybean used in traditional Himalayan pulse dishes.', 'Its mild, nutty taste is suited to slow-cooked curries and homestyle dals.'],
+        'highlights' => [['label' => 'Pulse', 'value' => 'White soybean'], ['label' => 'Flavour', 'value' => 'Mild and nutty'], ['label' => 'Best for', 'value' => 'Curries and dals']],
+        'ingredients' => ['1 cup White Bhatt', 'Onion, tomato, ginger, garlic and spices', 'Fresh water'],
+        'method' => ['Wash 1 cup of White Bhatt and soak overnight.', 'Drain and rinse.', 'Pressure-cook in fresh water until completely tender.', 'Prepare an onion-tomato masala with ginger, garlic and spices.', 'Add the cooked beans and simmer for 10–15 minutes.'],
+        'serving' => 'White Bhatt Masala with rice.',
+    ],
+    'pahadi-red-rajma' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Pahadi Red Rajma',
+        'meta_title' => 'Pahadi Red Rajma: Himalayan Red Kidney Bean Guide',
+        'meta_description' => 'Learn what Pahadi Red Rajma is, how it grows in Himalayan farming regions and how to cook Red Rajma safely.',
+        'keywords' => 'Pahadi Red Rajma, red kidney beans Uttarakhand, Red Rajma Chawal, how to cook kidney beans safely',
+        'summary' => 'Red-coloured Himalayan kidney beans with a hearty texture, ideal for rajma chawal and aromatic family meals.',
+        'images' => [
+            '/images/showcase/pahadi-red-rajma1.jpeg',
+            '/images/showcase/pahadi-red-rajma.jpeg',
+            '/images/showcase/pahadi-red-rajma2.jpeg',
+            '/images/showcase/pahadi-red-rajma3.jpeg'
+        ],
+        'article_sections' => [
+            ['heading' => 'What is Pahadi Red Rajma?', 'paragraphs' => ['Pahadi Red Rajma is a red-coloured kidney bean associated with Himalayan farming and regional cuisine. Its rich colour and satisfying texture make it a popular ingredient for traditional rajma preparations.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['Red kidney beans are grown in suitable agricultural areas of Uttarakhand, with cultivation practices influenced by altitude, temperature and rainfall. After the pods reach maturity, farmers harvest, dry and clean the beans.']],
+            ['heading' => 'Product description', 'paragraphs' => ['Bring home the flavour of Himalayan cooking with Devbhoomi Naturals Pahadi Red Rajma. These red kidney beans provide plant-based protein and dietary fibre.', 'Their hearty texture and ability to absorb aromatic spices make them ideal for rajma chawal, thick gravies and comforting family meals.']],
+        ],
+        'story' => ['Pahadi Red Rajma brings colour and hearty texture to Himalayan-style bean curries.', 'It absorbs aromatic spices well and is a comforting partner for steamed rice.'],
+        'highlights' => [['label' => 'Bean type', 'value' => 'Red kidney bean'], ['label' => 'Flavour', 'value' => 'Rich and hearty'], ['label' => 'Best for', 'value' => 'Rajma chawal and gravies']],
+        'ingredients' => ['1 cup Red Rajma', 'Tomatoes, onions, ginger and garlic', 'Fresh water and spices'],
+        'method' => ['Wash and soak 1 cup of Red Rajma overnight.', 'Drain, rinse and add fresh water.', 'Boil vigorously for at least 10 minutes and continue cooking until thoroughly tender.', 'Prepare a rich gravy with tomatoes, onions, ginger and spices.', 'Add the cooked rajma and simmer for 15 minutes.'],
+        'serving' => 'Pahadi Red Rajma Chawal. Kidney beans must never be eaten raw or undercooked.',
+    ],
+    'pahadi-chitra-rajma' => [
+        'eyebrow' => 'Uttarakhand food story',
+        'title' => 'Pahadi Chitra Rajma',
+        'meta_title' => 'Pahadi Chitra Rajma: Speckled Kidney Bean Cooking Guide',
+        'meta_description' => 'Discover Pahadi Chitra Rajma, its Himalayan farming story and how to prepare a creamy Chitra Rajma Masala.',
+        'keywords' => 'Pahadi Chitra Rajma, speckled kidney beans, Chitra Rajma Masala, Uttarakhand rajma',
+        'summary' => 'Beautifully speckled kidney beans with a creamy cooked texture, made for flavourful gravies and rice.',
+        'images' => [
+            '/images/showcase/chitra-rajma2.jpeg',
+            '/images/showcase/chitra-rajma1.jpeg',
+            '/images/showcase/chitra-rajma3.jpeg',
+            '/images/showcase/chitra-rajma4.jpeg'
+        ],
+        'article_sections' => [
+            ['heading' => 'What is Chitra Rajma?', 'paragraphs' => ['Chitra Rajma is a speckled kidney bean variety, typically recognised by its cream or beige base colour with reddish-brown markings. Its creamy texture after cooking makes it especially suitable for flavourful gravies.']],
+            ['heading' => 'How it grows in Uttarakhand', 'paragraphs' => ['Chitra Rajma is cultivated in suitable hill agricultural conditions using seasonal bean-growing practices. The plants produce pods that are allowed to mature before harvesting. The dried beans are then cleaned and sorted.']],
+            ['heading' => 'Product description', 'paragraphs' => ['Discover the distinctive appearance and comforting taste of Devbhoomi Naturals Pahadi Chitra Rajma. These beautifully speckled kidney beans provide protein and dietary fibre.', 'When thoroughly cooked, their soft, creamy texture works well with tomato-based curries, rice and traditional Indian spices.']],
+        ],
+        'story' => ['Chitra Rajma is recognised by its cream-coloured base and reddish-brown markings.', 'Once thoroughly cooked, it develops a soft, creamy texture that carries tomato-based gravies beautifully.'],
+        'highlights' => [['label' => 'Appearance', 'value' => 'Cream with reddish-brown markings'], ['label' => 'Texture', 'value' => 'Soft and creamy when cooked'], ['label' => 'Best for', 'value' => 'Gravies and rice']],
+        'ingredients' => ['1 cup Chitra Rajma', 'Onion, tomato, ginger and garlic', 'Fresh water and Indian spices'],
+        'method' => ['Rinse 1 cup of Chitra Rajma and soak for 8–12 hours.', 'Drain and add fresh water.', 'Boil vigorously for at least 10 minutes, then cook until completely soft.', 'Prepare a gravy using onion, tomato, ginger, garlic and spices.', 'Simmer the cooked beans in the gravy for 15–20 minutes.'],
+        'serving' => 'Chitra Rajma Masala.',
+    ],
+];

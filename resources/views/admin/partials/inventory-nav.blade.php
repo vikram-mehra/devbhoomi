@@ -50,8 +50,11 @@
         <i class="bi bi-chevron-down admin-nav-group__chevron" aria-hidden="true"></i>
     </button>
     <div class="admin-nav-group__panel">
-        <a href="{{ route('admin.suppliers.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.suppliers.*') ? 'is-active' : '' }}">
+        <a href="{{ route('admin.suppliers.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.suppliers.index', 'admin.suppliers.show') ? 'is-active' : '' }}">
             <i class="bi bi-truck" aria-hidden="true"></i>{{ __('Suppliers') }}
+        </a>
+        <a href="{{ route('admin.suppliers.items') }}" class="admin-sidebar__link {{ request()->routeIs('admin.suppliers.items') ? 'is-active' : '' }}">
+            <i class="bi bi-tag" aria-hidden="true"></i>{{ __('Items with cost') }}
         </a>
         <a href="{{ route('admin.warehouses.index') }}" class="admin-sidebar__link {{ request()->routeIs('admin.warehouses.*') ? 'is-active' : '' }}">
             <i class="bi bi-house-door" aria-hidden="true"></i>{{ __('Warehouses') }}

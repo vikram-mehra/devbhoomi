@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\MenuItemAdminController;
 use App\Http\Controllers\Admin\CouponAdminController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrderAdminController;
+use App\Http\Controllers\Admin\CourierShipmentController;
+use App\Http\Controllers\Admin\CourierPartnerAdminController;
 use App\Http\Controllers\Admin\ProductAdminController;
 use App\Http\Controllers\Admin\InventoryDashboardController;
 use App\Http\Controllers\Admin\InventoryLedgerAdminController;
@@ -33,6 +35,7 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DelhiveryWebhookController;
+use App\Http\Controllers\CourierWebhookController;
 use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
@@ -68,7 +71,9 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/robots.txt', [RobotsController::class, 'index'])->name('robots');
 Route::get('/sitemap', [HtmlSitemapController::class, 'index'])->name('pages.sitemap');
 
-Route::get('/menu/{slug}', [ShopController::class, 'menu'])->name('shop.menu');
+Route::get('/products', [ShopController::class, 'products'])->name('shop.products');
+Route::get('/products/{slug}', [ShopController::class, 'menu'])->name('shop.menu');
+Route::get('/menu/{slug}', [ShopController::class, 'legacyMenu'])->name('shop.menu.legacy');
 Route::get('/category/{slug}', [ShopController::class, 'category'])->name('shop.category');
 Route::get('/search', [ShopController::class, 'search'])->name('shop.search');
 Route::get('/search/suggest', [ShopController::class, 'searchSuggest'])->name('shop.search.suggest');
@@ -88,8 +93,13 @@ Route::post('/contact-us', [PageController::class, 'contactSubmit'])->name('page
 Route::post('/webhooks/delhivery/tracking', [DelhiveryWebhookController::class, 'handle'])
     ->middleware('throttle:60,1')
     ->name('webhooks.delhivery.tracking');
+Route::post('/webhooks/couriers/{courier}', [CourierWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
+    ->name('webhooks.couriers');
 
 Route::get('/product/{product}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/showcase/{slug}', [\App\Http\Controllers\ShowcaseController::class, 'show'])
+    ->name('showcase.show');
 Route::post('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
 Route::redirect('/store/{slug}', '/')->name('vendor.shop');
 
@@ -102,9 +112,12 @@ Route::delete('/cart/{item}', [CartController::class, 'destroy'])->name('cart.de
 Route::get('/vendor/join', [VendorRegisterController::class, 'create'])->name('vendor.register');
 Route::post('/vendor/join', [VendorRegisterController::class, 'store'])->name('vendor.register.store');
 
-Route::get('/login/phone', [OtpController::class, 'showPhoneForm'])->name('login.phone');
-Route::post('/login/phone/send', [OtpController::class, 'sendOtp'])->name('login.phone.send');
-Route::post('/login/phone/verify', [OtpController::class, 'verifyOtp'])->name('login.phone.verify');
+Route::middleware('guest')->group(function () {
+    Route::get('/login/phone', [OtpController::class, 'showPhoneForm'])->name('login.phone');
+    Route::post('/login/phone/send', [OtpController::class, 'sendOtp'])->name('login.phone.send');
+    Route::post('/login/phone/resend', [OtpController::class, 'resendOtp'])->name('login.phone.resend');
+    Route::post('/login/phone/verify', [OtpController::class, 'verifyOtp'])->name('login.phone.verify');
+});
 
 Auth::routes();
 
@@ -121,15 +134,18 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name
 Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.submit');
 
 Route::middleware(['auth', 'verified.email'])->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.validate-coupon');
-    Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.remove-coupon');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::middleware('not.holiday')->group(function () {
+        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+        Route::post('/checkout/validate-coupon', [CheckoutController::class, 'validateCoupon'])->name('checkout.validate-coupon');
+        Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.remove-coupon');
+        Route::post('/checkout/quote-shipping', [CheckoutController::class, 'quoteShipping'])->name('checkout.quote-shipping');
+        Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
-    Route::post('/pay/razorpay/dummy/{order}', [PaymentController::class, 'razorpayDummyComplete'])->name('pay.razorpay.dummy');
-    Route::get('/pay/razorpay/{order}', [PaymentController::class, 'razorpay'])->name('pay.razorpay');
-    Route::post('/pay/razorpay/verify', [PaymentController::class, 'razorpayVerify'])->name('pay.razorpay.verify');
-    Route::post('/pay/razorpay/order/{order}', [PaymentController::class, 'createRazorpayOrder'])->name('pay.razorpay.order');
+        Route::post('/pay/razorpay/dummy/{order}', [PaymentController::class, 'razorpayDummyComplete'])->name('pay.razorpay.dummy');
+        Route::get('/pay/razorpay/{order}', [PaymentController::class, 'razorpay'])->name('pay.razorpay');
+        Route::post('/pay/razorpay/verify', [PaymentController::class, 'razorpayVerify'])->name('pay.razorpay.verify');
+        Route::post('/pay/razorpay/order/{order}', [PaymentController::class, 'createRazorpayOrder'])->name('pay.razorpay.order');
+    });
     Route::post('/pay/razorpay/abandon/{order}', [PaymentController::class, 'razorpayAbandon'])->name('pay.razorpay.abandon');
 
     Route::get('/track-order', [OrderTrackingController::class, 'show'])->name('orders.track');
@@ -166,11 +182,42 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
     });
 });
 
+Route::middleware(['auth', 'role:admin,seo'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/menu-items', [MenuItemAdminController::class, 'index'])->name('menu-items.index');
+    Route::patch('/menu-items/{menuItem}', [MenuItemAdminController::class, 'update'])->name('menu-items.update');
+
+    Route::get('/products/table', [ProductAdminController::class, 'table'])->name('products.table');
+    Route::get('/products', [ProductAdminController::class, 'index'])->name('products.index');
+    Route::get('/products/{product}/edit', [ProductAdminController::class, 'edit'])->name('products.edit');
+    Route::patch('/products/{product}', [ProductAdminController::class, 'update'])->name('products.update');
+
+    Route::get('/blog-posts', [BlogPostAdminController::class, 'index'])->name('blog-posts.index');
+    Route::get('/blog-posts/create', [BlogPostAdminController::class, 'create'])->name('blog-posts.create');
+    Route::post('/blog-posts', [BlogPostAdminController::class, 'store'])->name('blog-posts.store');
+    Route::get('/blog-posts/{blogPost}/edit', [BlogPostAdminController::class, 'edit'])->name('blog-posts.edit');
+    Route::patch('/blog-posts/{blogPost}', [BlogPostAdminController::class, 'update'])->name('blog-posts.update');
+    Route::delete('/blog-posts/{blogPost}', [BlogPostAdminController::class, 'destroy'])->name('blog-posts.destroy');
+
+    Route::get('/seo', [SeoAdminController::class, 'index'])->name('seo.index');
+    Route::post('/seo', [SeoAdminController::class, 'update'])->name('seo.update');
+    Route::get('/seo/report', [SeoAdminController::class, 'report'])->name('seo.report');
+    Route::post('/seo/apply-fixes', [SeoAdminController::class, 'applyFixes'])->name('seo.apply-fixes');
+
+    Route::get('/about-page', [AboutPageAdminController::class, 'edit'])->name('about-page.edit');
+    Route::post('/about-page', [AboutPageAdminController::class, 'update'])->name('about-page.update');
+
+    Route::get('/contact-page', [ContactPageAdminController::class, 'edit'])->name('contact-page.edit');
+    Route::post('/contact-page', [ContactPageAdminController::class, 'update'])->name('contact-page.update');
+
+    Route::get('/settings', [SettingAdminController::class, 'edit'])->name('settings.edit');
+    Route::post('/settings', [SettingAdminController::class, 'update'])->name('settings.update');
+});
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::redirect('/categories', '/admin/menu-items')->name('categories.index');
     Route::redirect('/categories/subcategories', '/admin/menu-items');
-
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/vendors', [VendorAdminController::class, 'index'])->name('vendors.index');
     Route::get('/vendors/create', [VendorAdminController::class, 'create'])->name('vendors.create');
@@ -183,21 +230,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/vendors/{vendor}/commission', [VendorAdminController::class, 'updateCommission'])->name('vendors.commission');
 
     Route::get('/users', [UserAdminController::class, 'index'])->name('users.index');
+    Route::get('/users/admins', [UserAdminController::class, 'admins'])->name('users.admins');
+    Route::get('/users/customers', [UserAdminController::class, 'customers'])->name('users.customers');
     Route::post('/users/{user}/role', [UserAdminController::class, 'updateRole'])->name('users.role');
+    Route::delete('/users/{user}', [UserAdminController::class, 'destroy'])->name('users.destroy');
 
-    Route::get('/menu-items', [MenuItemAdminController::class, 'index'])->name('menu-items.index');
     Route::post('/menu-items', [MenuItemAdminController::class, 'store'])->name('menu-items.store');
     Route::post('/menu-items/reorder', [MenuItemAdminController::class, 'reorder'])->name('menu-items.reorder');
-    Route::patch('/menu-items/{menuItem}', [MenuItemAdminController::class, 'update'])->name('menu-items.update');
     Route::delete('/menu-items/{menuItem}', [MenuItemAdminController::class, 'destroy'])->name('menu-items.destroy');
 
-    Route::get('/products/table', [ProductAdminController::class, 'table'])->name('products.table');
-    Route::get('/products', [ProductAdminController::class, 'index'])->name('products.index');
     Route::post('/products/variants/generate-matrix', [ProductAdminController::class, 'generateVariantMatrix'])->name('products.variants.generate-matrix');
     Route::get('/products/create', [ProductAdminController::class, 'create'])->name('products.create');
     Route::post('/products', [ProductAdminController::class, 'store'])->name('products.store');
-    Route::get('/products/{product}/edit', [ProductAdminController::class, 'edit'])->name('products.edit');
-    Route::patch('/products/{product}', [ProductAdminController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductAdminController::class, 'destroy'])->name('products.destroy');
     Route::post('/products/{product}/toggle', [ProductAdminController::class, 'toggle'])->name('products.toggle');
     Route::post('/products/{product}/featured', [ProductAdminController::class, 'toggleFeatured'])->name('products.featured');
@@ -221,6 +265,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/inventory/export/variants.csv', [InventoryDashboardController::class, 'exportVariants'])->name('inventory.export.variants');
     Route::post('/inventory/bulk-adjust', [InventoryDashboardController::class, 'bulkAdjust'])->name('inventory.bulk-adjust');
 
+    Route::get('/suppliers/items', [SupplierAdminController::class, 'items'])->name('suppliers.items');
     Route::get('/suppliers', [SupplierAdminController::class, 'index'])->name('suppliers.index');
     Route::post('/suppliers', [SupplierAdminController::class, 'store'])->name('suppliers.store');
     Route::get('/suppliers/{supplier}', [SupplierAdminController::class, 'show'])->name('suppliers.show');
@@ -249,6 +294,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders/export', [OrderAdminController::class, 'export'])->name('orders.export');
     Route::post('/orders/bulk-status', [OrderAdminController::class, 'bulkUpdateStatus'])->name('orders.bulk-status');
     Route::post('/orders/bulk-shipping', [OrderAdminController::class, 'bulkUpdateShipping'])->name('orders.bulk-shipping');
+    Route::post('/orders/shipments', [CourierShipmentController::class, 'store'])->middleware('throttle:20,1')->name('orders.shipments.store');
+    Route::get('/orders/{order}/shipment', [CourierShipmentController::class, 'show'])->name('orders.shipments.show');
+    Route::post('/orders/{order}/shipment/track', [CourierShipmentController::class, 'track'])->middleware('throttle:20,1')->name('orders.shipments.track');
+    Route::post('/orders/{order}/shipment/cancel', [CourierShipmentController::class, 'cancel'])->middleware('throttle:10,1')->name('orders.shipments.cancel');
+    Route::post('/orders/{order}/shipment/retry', [CourierShipmentController::class, 'retry'])->middleware('throttle:20,1')->name('orders.shipments.retry');
     Route::get('/orders/{order}', [OrderAdminController::class, 'show'])->name('orders.show');
     Route::get('/orders/{order}/invoice/print', [OrderAdminController::class, 'printInvoice'])->name('orders.invoice.print');
     Route::get('/orders/{order}/invoice/pdf', [OrderAdminController::class, 'downloadInvoicePdf'])->name('orders.invoice.pdf');
@@ -256,16 +306,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/orders/{order}/status', [OrderAdminController::class, 'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/payment', [OrderAdminController::class, 'updatePayment'])->name('orders.payment');
     Route::post('/orders/{order}/shipping', [OrderAdminController::class, 'updateShipping'])->name('orders.shipping');
+    Route::post('/orders/{order}/tracking/refresh', [OrderAdminController::class, 'refreshTracking'])->name('orders.tracking.refresh');
 
     Route::get('/returns', [ReturnAdminController::class, 'index'])->name('returns.index');
     Route::patch('/returns/{refund}', [ReturnAdminController::class, 'update'])->name('returns.update');
-
-    Route::get('/blog-posts', [BlogPostAdminController::class, 'index'])->name('blog-posts.index');
-    Route::get('/blog-posts/create', [BlogPostAdminController::class, 'create'])->name('blog-posts.create');
-    Route::post('/blog-posts', [BlogPostAdminController::class, 'store'])->name('blog-posts.store');
-    Route::get('/blog-posts/{blogPost}/edit', [BlogPostAdminController::class, 'edit'])->name('blog-posts.edit');
-    Route::patch('/blog-posts/{blogPost}', [BlogPostAdminController::class, 'update'])->name('blog-posts.update');
-    Route::delete('/blog-posts/{blogPost}', [BlogPostAdminController::class, 'destroy'])->name('blog-posts.destroy');
 
     Route::prefix('showcase')->name('showcase.')->group(function () {
         Route::get('/home-promo', [HomePromoAdminController::class, 'index'])->name('home-promo.index');
@@ -284,33 +328,25 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/coupons', [CouponAdminController::class, 'index'])->name('coupons.index');
     Route::post('/coupons', [CouponAdminController::class, 'store'])->name('coupons.store');
     Route::post('/coupons/validate', [CouponAdminController::class, 'validateForOrder'])->name('coupons.validate');
+    Route::get('/coupons/{coupon}', [CouponAdminController::class, 'show'])->name('coupons.show');
     Route::patch('/coupons/{coupon}', [CouponAdminController::class, 'update'])->name('coupons.update');
     Route::delete('/coupons/{coupon}', [CouponAdminController::class, 'destroy'])->name('coupons.destroy');
     Route::post('/coupons/{coupon}/toggle', [CouponAdminController::class, 'toggle'])->name('coupons.toggle');
 
-    Route::get('/settings', [SettingAdminController::class, 'edit'])->name('settings.edit');
-    Route::post('/settings', [SettingAdminController::class, 'update'])->name('settings.update');
-
-    Route::get('/seo', [SeoAdminController::class, 'index'])->name('seo.index');
-    Route::post('/seo', [SeoAdminController::class, 'update'])->name('seo.update');
-    Route::get('/seo/report', [SeoAdminController::class, 'report'])->name('seo.report');
-    Route::post('/seo/apply-fixes', [SeoAdminController::class, 'applyFixes'])->name('seo.apply-fixes');
-
+    Route::get('/courier-partners', [CourierPartnerAdminController::class, 'index'])->name('courier-partners.index');
     Route::get('/shipping-settings', [ShippingSettingAdminController::class, 'edit'])->name('shipping-settings.edit');
     Route::post('/shipping-settings', [ShippingSettingAdminController::class, 'update'])->name('shipping-settings.update');
 
     Route::get('/pincodes', [PincodeServiceabilityAdminController::class, 'index'])->name('pincodes.index');
+    Route::get('/pincodes/export', [PincodeServiceabilityAdminController::class, 'export'])->name('pincodes.export');
+    Route::get('/pincodes/template', [PincodeServiceabilityAdminController::class, 'template'])->name('pincodes.template');
+    Route::post('/pincodes/import', [PincodeServiceabilityAdminController::class, 'import'])->name('pincodes.import');
     Route::post('/pincodes', [PincodeServiceabilityAdminController::class, 'store'])->name('pincodes.store');
     Route::patch('/pincodes/{pincode}', [PincodeServiceabilityAdminController::class, 'update'])->name('pincodes.update');
     Route::post('/pincodes/{pincode}/toggle', [PincodeServiceabilityAdminController::class, 'toggle'])->name('pincodes.toggle');
     Route::delete('/pincodes/{pincode}', [PincodeServiceabilityAdminController::class, 'destroy'])->name('pincodes.destroy');
 
-    Route::get('/about-page', [AboutPageAdminController::class, 'edit'])->name('about-page.edit');
-    Route::post('/about-page', [AboutPageAdminController::class, 'update'])->name('about-page.update');
     Route::delete('/about-page/gallery/{aboutGalleryItem}', [AboutPageAdminController::class, 'destroyGalleryItem'])->name('about-page.gallery.destroy');
-
-    Route::get('/contact-page', [ContactPageAdminController::class, 'edit'])->name('contact-page.edit');
-    Route::post('/contact-page', [ContactPageAdminController::class, 'update'])->name('contact-page.update');
     Route::post('/contact-inquiries/{contactInquiry}/read', [ContactPageAdminController::class, 'markInquiryRead'])->name('contact-inquiries.read');
 });
 

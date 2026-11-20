@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 372 40" fill="none" role="img" aria-label="UPI Visa Mastercard RuPay">
+  <g transform="translate(0,4)">
+    <text x="0" y="24" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="22" font-style="italic" font-weight="900" fill="#ffffff" letter-spacing="0.5">UPI</text>
+    <path d="M62 6 L76 16 L62 26 Z" fill="#F5B942"/>
+    <path d="M70 6 L84 16 L70 26 Z" fill="#7CB342"/>
+  </g>
+  <text x="108" y="28" font-family="Georgia, Times New Roman, serif" font-size="22" font-style="italic" font-weight="700" fill="#ffffff" letter-spacing="1.2">VISA</text>
+  <circle cx="214" cy="20" r="12" fill="#EB001B"/>
+  <circle cx="228" cy="20" r="12" fill="#F79E1B"/>
+  <g transform="translate(254,4)">
+    <text x="0" y="24" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#ffffff">RuPay</text>
+    <path d="M80 6 L94 16 L80 26 Z" fill="#F5B942"/>
+    <path d="M88 6 L102 16 L88 26 Z" fill="#7CB342"/>
+  </g>
+</svg>

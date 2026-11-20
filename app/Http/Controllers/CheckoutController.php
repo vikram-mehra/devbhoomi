@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\PincodeServiceability;
 use App\Models\OrderItem;
 use App\Models\ShippingAddress;
 use App\Models\Setting;
@@ -18,6 +19,7 @@ use App\Services\PincodeServiceabilityService;
 use App\Services\ShippingService;
 use App\Services\StockLedgerService;
 use App\Services\GoogleAnalyticsService;
+use App\Services\OrderConfirmationMailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -32,6 +34,10 @@ class CheckoutController extends Controller
 
     public function index(CartService $cart, ShippingService $shipping)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            return redirect()->route('cart.index')->with('error', \App\Services\HolidayModeService::message());
+        }
+
         $items = $cart->query()->get();
         if ($items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', __('Your cart is empty.'));
@@ -42,9 +48,16 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForSubtotal($subtotal);
-        $isFreeShipping = $shippingCharge <= 0;
         $addresses = auth()->user()->addresses()->orderByDesc('is_default')->get();
+        $checkoutPincode = optional($addresses->firstWhere('is_default') ?? $addresses->first())->pincode;
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $checkoutPincode);
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
+        $isFreeShipping = $deliveryBreakdown['is_free_shipping'];
+        $cartWeightGrams = $deliveryBreakdown['weight_grams'];
+        $cartWeightKg = $deliveryBreakdown['weight_kg'];
+        $shippingOriginal = $deliveryBreakdown['original_shipping'];
+        $shippingDiscountPercent = $deliveryBreakdown['discount_percent'];
+        $shippingDiscountAmount = $deliveryBreakdown['discount_amount'];
         $states = State::enabled()->orderBy('name')->get();
 
         $promoCoupons = Coupon::query()
@@ -61,7 +74,11 @@ class CheckoutController extends Controller
         $couponInput = old('coupon_code', session('checkout_coupon_code'));
         if ($couponInput) {
             try {
-                $resolved = app(CouponService::class)->resolveForCart($couponInput, $subtotal);
+                $resolved = app(CouponService::class)->resolveForCart($couponInput, $subtotal, [
+                    'user' => auth()->user(),
+                    'items' => $items,
+                    'guest_key' => app(CouponService::class)->guestKey(auth()->user()),
+                ]);
                 $couponDiscount = $resolved['discount'];
                 $appliedCouponCode = $resolved['coupon']->code;
             } catch (ValidationException $e) {
@@ -71,10 +88,12 @@ class CheckoutController extends Controller
 
         $validateCouponPath = parse_url(url('/checkout/validate-coupon'), PHP_URL_PATH) ?: '/checkout/validate-coupon';
         $removeCouponPath = parse_url(url('/checkout/remove-coupon'), PHP_URL_PATH) ?: '/checkout/remove-coupon';
+        $quoteShippingPath = parse_url(url('/checkout/quote-shipping'), PHP_URL_PATH) ?: '/checkout/quote-shipping';
 
         return view('market.checkout', compact(
             'items', 'subtotal', 'shippingCharge', 'isFreeShipping', 'taxAmount', 'addresses', 'promoCoupons', 'razorpayConfigured',
-            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath', 'states'
+            'couponDiscount', 'appliedCouponCode', 'validateCouponPath', 'removeCouponPath', 'quoteShippingPath', 'states',
+            'cartWeightGrams', 'cartWeightKg', 'checkoutPincode', 'shippingOriginal', 'shippingDiscountPercent', 'shippingDiscountAmount'
         ));
     }
 
@@ -92,10 +111,15 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForSubtotal($subtotal);
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $this->requestPincode($request));
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
 
         try {
-            $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal);
+            $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal, [
+                'user' => $request->user(),
+                'items' => $items,
+                'guest_key' => $coupons->guestKey($request->user()),
+            ]);
         } catch (ValidationException $e) {
             session()->forget('checkout_coupon_code');
 
@@ -116,19 +140,24 @@ class CheckoutController extends Controller
             'discount_formatted' => '₹'.number_format($discount, 2),
             'subtotal' => $subtotal,
             'shipping_charge' => $shippingCharge,
+            'shipping_original' => $deliveryBreakdown['original_shipping'],
+            'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+            'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
+            'weight_grams' => $deliveryBreakdown['weight_grams'],
+            'weight_kg' => $deliveryBreakdown['weight_kg'],
             'tax' => $taxAmount,
             'tax_formatted' => '₹'.number_format($taxAmount, 2),
             'total' => $total,
             'total_formatted' => '₹'.number_format($total, 2),
-            'is_free_shipping' => $shippingCharge <= 0,
-            'shipping_label' => $shippingCharge <= 0 ? 'FREE' : '₹'.number_format($shippingCharge, 2),
+            'is_free_shipping' => $deliveryBreakdown['is_free_shipping'],
+            'shipping_label' => $deliveryBreakdown['shipping_label'],
             'message' => $coupon->type === 'percent'
                 ? __(':code applied — :value% off', ['code' => $coupon->code, 'value' => rtrim(rtrim(number_format((float) $coupon->value, 2), '0'), '.')])
                 : __(':code applied — ₹:value off', ['code' => $coupon->code, 'value' => number_format((float) $coupon->value, 2)]),
         ]);
     }
 
-    public function removeCoupon(CartService $cart, ShippingService $shipping)
+    public function removeCoupon(Request $request, CartService $cart, ShippingService $shipping)
     {
         session()->forget('checkout_coupon_code');
 
@@ -142,7 +171,8 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shippingCharge = $shipping->chargeForSubtotal($subtotal);
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $this->requestPincode($request));
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
         $total = $pricing->grandTotal($subtotalExclusive, $shippingCharge, $taxAmount, 0);
 
         return response()->json([
@@ -150,17 +180,33 @@ class CheckoutController extends Controller
             'discount' => 0,
             'subtotal' => $subtotal,
             'shipping_charge' => $shippingCharge,
+            'shipping_original' => $deliveryBreakdown['original_shipping'],
+            'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+            'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
+            'weight_grams' => $deliveryBreakdown['weight_grams'],
+            'weight_kg' => $deliveryBreakdown['weight_kg'],
             'tax' => $taxAmount,
             'tax_formatted' => '₹'.number_format($taxAmount, 2),
             'total' => $total,
             'total_formatted' => '₹'.number_format($total, 2),
-            'is_free_shipping' => $shippingCharge <= 0,
-            'shipping_label' => $shippingCharge <= 0 ? 'FREE' : '₹'.number_format($shippingCharge, 2),
+            'is_free_shipping' => $deliveryBreakdown['is_free_shipping'],
+            'shipping_label' => $deliveryBreakdown['shipping_label'],
         ]);
     }
 
     public function store(Request $request, CartService $cart, CouponService $coupons, ShippingService $shipping)
     {
+        if (\App\Services\HolidayModeService::isEnabled()) {
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return response()->json([
+                    'error' => 'holiday_mode',
+                    'message' => \App\Services\HolidayModeService::message(),
+                ], 403);
+            }
+
+            return redirect()->route('cart.index')->with('error', \App\Services\HolidayModeService::message());
+        }
+
         if ($request->input('address_id') === '' || $request->input('address_id') === null) {
             $request->merge(['address_id' => null]);
         }
@@ -205,24 +251,6 @@ class CheckoutController extends Controller
         $subtotalExclusive = $pricing->subtotal($items);
         $taxAmount = $pricing->taxAmount($items);
         $subtotal = $pricing->inclusiveSubtotal($items);
-        $shipping = $shipping->chargeForSubtotal($subtotal);
-        $discount = 0.0;
-        $couponCode = null;
-
-        if ($coupons->normalizeCode($request->input('coupon_code')) !== '') {
-            try {
-                $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal);
-                $discount = $resolved['discount'];
-                $couponCode = $resolved['coupon']->code;
-            } catch (ValidationException $e) {
-                return back()->withInput()->withErrors($e->errors());
-            }
-        }
-
-        $grand = $pricing->grandTotal($subtotalExclusive, $shipping, $taxAmount, $discount);
-        $walletUse = 0.0;
-        $payable = round($grand - $walletUse, 2);
-
         $addressId = $request->address_id;
         if (! $addressId) {
             $pincodeToCheck = $request->pincode;
@@ -235,6 +263,33 @@ class CheckoutController extends Controller
         if (! $pinCheck['serviceable']) {
             return back()->withInput()->with('error', $pinCheck['message']);
         }
+
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $pincodeToCheck);
+        $shippingFinal = $deliveryBreakdown['final_shipping'];
+        $discount = 0.0;
+        $couponCode = null;
+        $resolvedCoupon = null;
+        $couponContext = [
+            'user' => $user,
+            'items' => $items,
+            'guest_key' => $coupons->guestKey($user),
+            'cart_subtotal' => $subtotal,
+        ];
+
+        if ($coupons->normalizeCode($request->input('coupon_code')) !== '') {
+            try {
+                $resolved = $coupons->resolveForCart($request->input('coupon_code'), $subtotal, $couponContext);
+                $discount = $resolved['discount'];
+                $couponCode = $resolved['coupon']->code;
+                $resolvedCoupon = $resolved['coupon'];
+            } catch (ValidationException $e) {
+                return back()->withInput()->withErrors($e->errors());
+            }
+        }
+
+        $grand = $pricing->grandTotal($subtotalExclusive, $shippingFinal, $taxAmount, $discount);
+        $walletUse = 0.0;
+        $payable = round($grand - $walletUse, 2);
 
         if (! $addressId) {
             $addr = Address::create([
@@ -253,14 +308,13 @@ class CheckoutController extends Controller
         }
 
         $defaultCommission = (float) Setting::getValue('default_commission_percent', '12');
-        $countCouponNow = $couponCode && ($payable <= 0);
 
         $order = null;
         $ledger = app(StockLedgerService::class);
 
         DB::transaction(function () use (
-            $items, $user, $addressId, $request, $subtotalExclusive, $shipping, $taxAmount, $discount, $grand,
-            $walletUse, $payable, $couponCode, $defaultCommission, &$order, $ledger
+            $items, $user, $addressId, $request, $subtotalExclusive, $shippingFinal, $deliveryBreakdown, $shipping, $taxAmount, $discount, $grand,
+            $walletUse, $payable, $couponCode, $defaultCommission, &$order, $ledger, $coupons, $resolvedCoupon, $couponContext
         ) {
             $adminCommission = 0.0;
 
@@ -272,7 +326,10 @@ class CheckoutController extends Controller
                 'payment_method' => $request->payment_method,
                 'payment_status' => $payable <= 0 ? 'paid' : 'unpaid',
                 'subtotal' => $subtotalExclusive,
-                'shipping' => $shipping,
+                'shipping' => $shippingFinal,
+                'shipping_original' => $deliveryBreakdown['original_shipping'],
+                'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+                'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
                 'discount' => $discount,
                 'tax_amount' => $taxAmount,
                 'total' => $grand,
@@ -310,6 +367,8 @@ class CheckoutController extends Controller
                 $comm = round($lineTotal * ($pct / 100), 2);
                 $adminCommission += $comm;
 
+                $itemWeightKg = $shipping->itemWeightKg($line);
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'vendor_id' => $vendor->id,
@@ -317,7 +376,7 @@ class CheckoutController extends Controller
                     'product_name' => $product->name,
                     'variant_label' => $variant->label(),
                     'sku' => $variant->sku,
-                    'weight_kg' => $product->weight_kg,
+                    'weight_kg' => $itemWeightKg ?: $product->weight_kg,
                     'product_image' => $variant->variantImageUrl(),
                     'unit_price' => $unit,
                     'qty' => $line->qty,
@@ -331,11 +390,14 @@ class CheckoutController extends Controller
 
             $order->update(['admin_commission' => $adminCommission]);
             CartItem::whereIn('id', $items->pluck('id'))->delete();
-        });
 
-        if ($countCouponNow) {
-            $coupons->markUsed($couponCode);
-        }
+            if ($resolvedCoupon && $couponCode) {
+                $coupons->reserveForOrder($resolvedCoupon, $order, $discount, $couponContext);
+                if ($payable <= 0) {
+                    $coupons->redeemForOrder($order);
+                }
+            }
+        });
 
         GoogleAnalyticsService::flashPlaceOrder($order);
 
@@ -347,5 +409,78 @@ class CheckoutController extends Controller
         }
 
         return redirect()->route('pay.razorpay', $order);
+    }
+
+    public function quoteShipping(Request $request, CartService $cart, ShippingService $shipping)
+    {
+        $items = $cart->query()->get();
+        if ($items->isEmpty()) {
+            return response()->json(['message' => __('Your cart is empty.')], 422);
+        }
+
+        $items->loadMissing('variant.product');
+        $pricing = app(CheckoutPricingService::class);
+        $subtotalExclusive = $pricing->subtotal($items);
+        $taxAmount = $pricing->taxAmount($items);
+        $subtotal = $pricing->inclusiveSubtotal($items);
+        $pincode = $this->requestPincode($request);
+        $deliveryBreakdown = $shipping->deliveryCalculationForCart($items, $subtotal, $pincode);
+        $shippingCharge = $deliveryBreakdown['final_shipping'];
+        $discount = 0.0;
+
+        $couponInput = $request->input('coupon_code', session('checkout_coupon_code'));
+        if ($couponInput) {
+            try {
+                $resolved = app(CouponService::class)->resolveForCart($couponInput, $subtotal, [
+                    'user' => $request->user(),
+                    'items' => $items,
+                    'guest_key' => app(CouponService::class)->guestKey($request->user()),
+                ]);
+                $discount = $resolved['discount'];
+            } catch (ValidationException $e) {
+                $discount = 0.0;
+            }
+        }
+
+        $total = $pricing->grandTotal($subtotalExclusive, $shippingCharge, $taxAmount, $discount);
+
+        return response()->json([
+            'pincode' => PincodeServiceability::normalizePincode($pincode),
+            'subtotal' => $subtotal,
+            'shipping_charge' => $shippingCharge,
+            'shipping_original' => $deliveryBreakdown['original_shipping'],
+            'shipping_discount_percent' => $deliveryBreakdown['discount_percent'],
+            'shipping_discount_amount' => $deliveryBreakdown['discount_amount'],
+            'tax' => $taxAmount,
+            'tax_formatted' => '₹'.number_format($taxAmount, 2),
+            'discount' => $discount,
+            'total' => $total,
+            'total_formatted' => '₹'.number_format($total, 2),
+            'is_free_shipping' => $deliveryBreakdown['is_free_shipping'],
+            'shipping_label' => $deliveryBreakdown['shipping_label'],
+            'weight_grams' => $deliveryBreakdown['weight_grams'],
+            'weight_kg' => $deliveryBreakdown['weight_kg'],
+        ]);
+    }
+
+    protected function requestPincode(Request $request): ?string
+    {
+        $user = $request->user();
+        if ($request->filled('address_id') && $user) {
+            $pin = optional($user->addresses()->find($request->input('address_id')))->pincode;
+            if ($pin) {
+                return $pin;
+            }
+        }
+
+        if ($request->filled('pincode')) {
+            return (string) $request->input('pincode');
+        }
+
+        if ($user) {
+            return optional($user->addresses()->orderByDesc('is_default')->first())->pincode;
+        }
+
+        return null;
     }
 }

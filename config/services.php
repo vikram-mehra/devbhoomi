@@ -51,4 +51,20 @@ return [
         'analytics_id' => env('GOOGLE_ANALYTICS_ID'),
     ],
 
+    'msg91' => [
+        'auth_key' => env('MSG91_AUTH_KEY'),
+        'template_id' => env('MSG91_OTP_TEMPLATE_ID'),
+        'otp_expiry' => (int) env('MSG91_OTP_EXPIRY', 5),
+        'otp_length' => (int) env('MSG91_OTP_LENGTH', 6),
+        'enabled' => filter_var(env('MSG91_OTP_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        'dummy' => filter_var(env('MSG91_OTP_DUMMY', false), FILTER_VALIDATE_BOOLEAN),
+        'dummy_code' => env('MSG91_OTP_DUMMY_CODE', '123456'),
+        'country_code' => env('MSG91_COUNTRY_CODE', '91'),
+        'base_url' => env('MSG91_BASE_URL', 'https://control.msg91.com/api/v5'),
+        'timeout' => (int) env('MSG91_TIMEOUT', 15),
+        'resend_cooldown' => (int) env('MSG91_RESEND_COOLDOWN', 45),
+        'send_hourly_limit' => (int) env('MSG91_SEND_HOURLY_LIMIT', 5),
+        'verify_max_attempts' => (int) env('MSG91_VERIFY_MAX_ATTEMPTS', 5),
+    ],
+
 ];

@@ -44,6 +44,26 @@
         </div>
     </header>
 
+    @if(strtolower((string) $order->payment_method) === 'razorpay'
+        && in_array($payStatusKey, ['unpaid', 'pending'], true)
+        && ! in_array($order->status, ['cancelled', 'returned'], true)
+        && $order->payableAmount() > 0)
+        <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-warning bg-opacity-25 p-2 text-warning d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                    <i class="bi bi-clock-history fs-4"></i>
+                </div>
+                <div>
+                    <strong class="d-block text-dark">{{ __('Payment Pending') }}</strong>
+                    <span class="text-muted small">{{ __('Payment of ₹:amount is pending for this order. You can complete your payment securely now.', ['amount' => number_format((float) $order->payableAmount(), 2)]) }}</span>
+                </div>
+            </div>
+            <a href="{{ route('pay.razorpay', $order) }}" class="btn btn-success fw-bold px-4 py-2 rounded-pill shadow-sm text-nowrap d-inline-flex align-items-center gap-2">
+                <i class="bi bi-credit-card"></i> {{ __('Complete Payment') }}
+            </a>
+        </div>
+    @endif
+
     {{-- Row 1: journey + address --}}
     <div class="row g-4 pro-order-detail__row-top">
         <div class="col-lg-6">
@@ -135,7 +155,10 @@
                                 </strong>
                             </div>
                         </div>
-                        <a href="{{ route('orders.track') }}" class="small">{{ __('Open Track order') }}</a>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            @include('market.partials.delhivery-track-button', ['url' => $shipment['courier_track_url'] ?? $order->publicCourierTrackUrl()])
+                            <a href="{{ route('orders.track') }}" class="small">{{ __('Open Track order') }}</a>
+                        </div>
                     </div>
                 @endif
             </div>
@@ -244,7 +267,15 @@
                     && in_array($payStatusKey, ['unpaid', 'pending'], true)
                     && ! in_array($order->status, ['cancelled', 'returned'], true)
                     && $order->payableAmount() > 0)
-                    <a href="{{ route('pay.razorpay', $order) }}" class="zm-btn zm-btn-primary w-100 mt-3">{{ __('Complete payment') }}</a>
+                    <div class="mt-3 p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-semibold text-muted">{{ __('Payment Due:') }}</span>
+                            <span class="fw-bold text-success fs-5">₹{{ number_format((float) $order->payableAmount(), 2) }}</span>
+                        </div>
+                        <a href="{{ route('pay.razorpay', $order) }}" class="btn btn-success w-100 py-2 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-credit-card"></i> {{ __('Complete Payment') }}
+                        </a>
+                    </div>
                 @endif
                 <div class="pro-order-detail__breakdown">
                     <div class="pro-order-detail__break-line">

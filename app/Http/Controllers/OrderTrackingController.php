@@ -10,9 +10,6 @@ class OrderTrackingController extends Controller
     public function show(OrderTrackingService $tracking)
     {
         return view('market.track-order', [
-            'dummyEnabled' => $tracking->dummyEnabled(),
-            'dummy' => $tracking->dummyCredentials(),
-            'courier' => $tracking->courierMeta(),
             'shipment' => session('tracking_shipment'),
         ]);
     }
@@ -29,7 +26,8 @@ class OrderTrackingController extends Controller
         if (! $shipment) {
             return back()
                 ->withInput()
-                ->withErrors(['order_number' => __('We could not find an order matching those details.')]);
+                ->with('track_error', __('We could not find an order matching those details. Check the order number and the email or mobile used at checkout.'))
+                ->withErrors(['order_number' => __('No matching order was found.')]);
         }
 
         return redirect()

@@ -45,14 +45,16 @@ class MarketController extends Controller
 
         $blogPosts = Cache::remember('home.blog_posts', 600, function () {
             return BlogPost::published()
-                ->orderByDesc('published_at')
+                ->orderByDesc('created_at')
                 ->orderByDesc('id')
                 ->take(4)
                 ->get();
         });
 
+        $topProducts = $trending->take(12);
+
         return view('market.home', compact(
-            'banners', 'promoBanners', 'featured', 'trending', 'newProducts', 'vendors', 'forYou', 'suggestedForYou', 'blogPosts'
+            'banners', 'promoBanners', 'featured', 'trending', 'newProducts', 'vendors', 'forYou', 'suggestedForYou', 'blogPosts', 'topProducts'
         ));
     }
 }

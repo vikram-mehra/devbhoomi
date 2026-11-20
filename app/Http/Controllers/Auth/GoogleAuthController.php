@@ -51,6 +51,9 @@ class GoogleAuthController extends Controller
                 ->redirectUrl($redirectUri)
                 ->user();
             $user = $googleAuth->resolveUser($googleUser);
+            if (! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
         } catch (\RuntimeException $e) {
             return redirect()->route('login')->with('error', $e->getMessage());
         } catch (\Throwable $e) {
@@ -68,6 +71,11 @@ class GoogleAuthController extends Controller
 
         if ($user->isAdmin()) {
             return AppUrl::redirectIntended(route('admin.dashboard'))
+                ->with('status', __('Signed in with Google.'));
+        }
+
+        if ($user->isSeo()) {
+            return AppUrl::redirectIntended(route('admin.seo.index'))
                 ->with('status', __('Signed in with Google.'));
         }
 

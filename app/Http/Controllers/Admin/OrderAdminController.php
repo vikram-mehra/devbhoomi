@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Services\Courier\CourierManager;
+use App\Services\CouponService;
 use App\Services\DelhiveryTrackingSyncService;
 use App\Services\StockLedgerService;
 use Illuminate\Http\Response;
@@ -17,8 +19,11 @@ class OrderAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::query()->with(['user', 'items', 'shippingAddress']);
+        $query = Order::query()->with(['user', 'items', 'shippingAddress', 'latestShipment']);
 
+        if (filled($request->user_id)) {
+            $query->where('user_id', $request->user_id);
+        }
         if (filled($request->order_id)) {
             $query->where(function ($q) use ($request) {
                 $q->where('id', $request->order_id)
@@ -61,7 +66,10 @@ class OrderAdminController extends Controller
             'today_orders' => (int) Order::whereDate('created_at', now()->toDateString())->count(),
         ];
 
-        return view('admin.orders.index', compact('orders', 'stats'));
+        $couriers = app(CourierManager::class)->availableDrivers();
+        $filteredUser = filled($request->user_id) ? \App\Models\User::find($request->user_id) : null;
+
+        return view('admin.orders.index', compact('orders', 'stats', 'couriers', 'filteredUser'));
     }
 
     public function show(Order $order)
@@ -97,6 +105,8 @@ class OrderAdminController extends Controller
             app(StockLedgerService::class)->restoreOrderCancellation($order->fresh(), optional($request->user())->id);
         }
 
+        app(CouponService::class)->syncUsageWithOrder($order->fresh());
+
         $this->sendOrderStatusEmail($order, $previous);
 
         return back()->with('status', 'Order status updated.');
@@ -106,6 +116,7 @@ class OrderAdminController extends Controller
     {
         $request->validate(['payment_status' => ['required', 'string', Rule::in(array_keys(Order::paymentStatusOptions()))]]);
         $order->update(['payment_status' => $request->payment_status]);
+        app(CouponService::class)->syncUsageWithOrder($order->fresh());
 
         return back()->with('status', 'Payment status updated.');
     }
@@ -137,17 +148,43 @@ class OrderAdminController extends Controller
             ]);
         }
 
-        if ($awb !== '') {
-            try {
-                $sync->pollOrder($order->fresh() ?: $order, true);
-            } catch (\Throwable $e) {
-                report($e);
-            }
+        if ($awb === '') {
+            return back()->with('status', 'Shipping details updated.');
         }
 
-        return back()->with('status', $awb !== ''
-            ? 'Delhivery AWB saved. Tracking will update from webhook and the scheduled poll.'
-            : 'Shipping details updated.');
+        return $this->respondWithTrackingPoll(
+            $sync,
+            $order->fresh() ?: $order,
+            'Delhivery AWB saved.'
+        );
+    }
+
+    public function refreshTracking(Order $order, DelhiveryTrackingSyncService $sync)
+    {
+        if (! $order->awb()) {
+            return back()->with('error', __('Save an AWB first, then refresh tracking.'));
+        }
+
+        return $this->respondWithTrackingPoll($sync, $order, __('Tracking refresh requested.'));
+    }
+
+    protected function respondWithTrackingPoll(DelhiveryTrackingSyncService $sync, Order $order, string $prefix)
+    {
+        try {
+            $result = $sync->pollOrder($order, true);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', $prefix.' '.__('Delhivery request failed: :message', ['message' => $e->getMessage()]));
+        }
+
+        if ($result['ok']) {
+            $status = $result['status'] ? ' '.$result['status'].'.' : '.';
+
+            return back()->with('status', $prefix.' '.__('Delhivery tracking updated:').$status);
+        }
+
+        return back()->with('error', $prefix.' '.$sync->pollErrorMessage($result['error']));
     }
 
     public function bulkUpdateStatus(Request $request)
@@ -179,6 +216,8 @@ class OrderAdminController extends Controller
             if ($validated['status'] === 'cancelled' && $previous !== 'cancelled') {
                 app(StockLedgerService::class)->restoreOrderCancellation($order->fresh(), optional($request->user())->id);
             }
+
+            app(CouponService::class)->syncUsageWithOrder($order->fresh());
 
             $this->sendOrderStatusEmail($order, $previous);
         }

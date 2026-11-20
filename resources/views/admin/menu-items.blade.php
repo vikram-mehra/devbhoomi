@@ -13,17 +13,18 @@
         </div>
     @endif
 
-    <div class="alert alert-warning py-2 small mb-3">
+    <!-- <div class="alert alert-warning py-2 small mb-3">
         <strong>{{ __('This store') }}:</strong>
         <code>{{ config('app.url') }}</code>
         · {{ __('Database') }}: <code>{{ config('database.connections.'.config('database.default').'.database') }}</code>
         — {{ __('Changes here only affect this site. Open the storefront using the same URL before checking the header menu.') }}
-    </div>
+    </div> -->
 
     <div class="alert alert-info py-2 small mb-3">
         <strong>{{ __('Website header') }}:</strong> {{ __('Only top-level items (Parent = “Top level”) appear as main nav tabs. Add children under a tab for a simple dropdown. Keep Active checked and set a slug (auto-filled from title if empty).') }}
     </div>
 
+    @if(auth()->user()->isAdmin())
     <form method="post" action="{{ route('admin.menu-items.store') }}" class="card p-3 mb-4">
         @csrf
         <div class="row g-2 align-items-end">
@@ -74,6 +75,7 @@
             </div>
         </div>
     </form>
+    @endif
 
     <div class="card border-0 shadow-sm admin-data-card mb-4">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -83,7 +85,9 @@
             </div>
             <span class="badge rounded-pill px-3 py-2 fw-semibold border" style="background: var(--admin-teal-soft); color: var(--admin-teal-hover); border-color: rgba(13, 148, 136, 0.25) !important;">{{ $items->count() }}</span>
         </div>
+        @if(auth()->user()->isAdmin())
         <form id="menuReorderForm" method="post" action="{{ route('admin.menu-items.reorder') }}" class="d-none">@csrf</form>
+        @endif
         <div class="card-body p-0">
             <div class="table-responsive">
     <table class="table table-hover align-middle mb-0 admin-table">
@@ -117,21 +121,27 @@
                         @if(!$row->is_active)<span class="badge bg-warning text-dark">{{ __('Off') }}</span>@else<span class="text-muted">—</span>@endif
                     </td>
                     <td style="width:5rem;">
+                        @if(auth()->user()->isAdmin())
                         <input type="number" form="menuReorderForm" name="sort[{{ $row->id }}]" value="{{ $row->sort_order }}" min="0" class="form-control form-control-sm" aria-label="{{ __('Sort order for :title', ['title' => $row->title]) }}">
+                        @else
+                        <span class="small">{{ $row->sort_order }}</span>
+                        @endif
                     </td>
                     <td class="text-end text-nowrap">
                         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editMenu{{ $row->id }}">{{ __('Edit') }}</button>
+                        @if(auth()->user()->isAdmin())
                         <form method="post" action="{{ route('admin.menu-items.destroy', $row) }}" class="d-inline" onsubmit="return confirm(@json(__('Delete this item?')));">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger">{{ __('Delete') }}</button>
                         </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
             </div>
-            @if($items->isNotEmpty())
+            @if($items->isNotEmpty() && auth()->user()->isAdmin())
                 <div class="border-top p-3 d-flex justify-content-end">
                     <button type="submit" form="menuReorderForm" class="btn btn-outline-primary btn-sm">{{ __('Save sort order') }}</button>
                 </div>

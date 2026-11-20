@@ -114,7 +114,7 @@
     @php
         $crumbs = [];
         if ($product->menuItem) {
-            $crumbs[] = ['label' => $product->menuItem->title, 'url' => route('shop.menu', $product->menuItem->slug)];
+            $crumbs[] = ['label' => $product->menuItem->title, 'url' => $product->menuItem->resolvedUrl()];
         }
         $crumbs[] = ['label' => $product->name];
     @endphp
@@ -185,6 +185,7 @@
                                     class="pro-pdp-gallery__cell {{ $loop->first ? 'is-active' : '' }}"
                                     data-img="{{ $url }}"
                                     aria-label="{{ __('View image :num', ['num' => $loop->iteration]) }}"
+                                    title="{{ $product->name }} — {{ __('Image :num', ['num' => $loop->iteration]) }}"
                                     role="listitem">
                                     <img src="{{ $url }}" alt="{{ $product->name }} — {{ __('Image :num', ['num' => $loop->iteration]) }}" title="{{ $product->name }}" loading="lazy" width="120" height="150" decoding="async">
                                 </button>
@@ -197,7 +198,7 @@
         <div class="col-md-7">
             <div class="small text-muted">
                 @if($product->menuItem)
-                    <a href="{{ route('shop.menu', $product->menuItem->slug) }}">{{ $product->menuItem->title }}</a>
+                    <a href="{{ $product->menuItem->resolvedUrl() }}">{{ $product->menuItem->title }}</a>
                     <span class="mx-1">·</span>
                 @endif
                 <span>{{ $product->vendor->shop_name }}</span>
@@ -230,17 +231,40 @@
                     ({{ $product->rating_count }} {{ __('reviews') }})
                 </a>
             </div>
-            @php $fp = $defaultVariant ? $defaultVariant->effectivePrice() : $product->effectivePrice(); @endphp
+            @php
+                $fp = $defaultVariant ? $defaultVariant->effectivePrice() : $product->effectivePrice();
+                $initialWeight = null;
+                if ($defaultVariant && filled($defaultVariant->size)) {
+                    $s = trim($defaultVariant->size);
+                    if (preg_match('/^(\d+(?:\.\d+)?)\s*(kg|gm|g|ml|l|ltr)$/i', $s, $m)) {
+                        $initialWeight = $m[1].' '.strtolower($m[2]);
+                    } else {
+                        $initialWeight = $s;
+                    }
+                }
+                if (! $initialWeight) {
+                    $initialWeight = $product->formattedWeightKg();
+                }
+
+                $defStock = $defaultVariant ? (int) $defaultVariant->stock_qty : (int) $product->stock_qty;
+                $defBuyable = $defaultVariant ? $defaultVariant->isBuyable() : true;
+                $isLowStock = $defBuyable && $defStock > 0 && $defStock <= 5;
+                $isOut = ! $defBuyable;
+            @endphp
             <div class="mb-3"><span class="zm-price fs-4" id="pdpPriceNow">{!! '&#8377;' !!}{{ number_format($fp, 0) }}</span>
                 <span class="zm-price-was @if(!($product->compare_price && (float) $product->compare_price > $fp)) d-none @endif" id="pdpPriceWas">@if($product->compare_price && (float) $product->compare_price > $fp){!! '&#8377;' !!}{{ number_format($product->compare_price, 0) }}@endif</span>
             </div>
-            @if($weightLabel = $product->formattedWeightKg())
-                <p class="small mb-2 pro-pdp-weight">
-                    <span class="text-muted">{{ __('Weight') }}:</span>
-                    <span class="fw-semibold text-dark">{{ $weightLabel }}</span>
-                </p>
-            @endif
-            <p class="small text-muted mb-2 d-none" id="pdpStockMsg" role="status"></p>
+            <p class="small mb-2 pro-pdp-weight @if(!$initialWeight) d-none @endif" id="pdpWeightRow">
+                <span class="text-muted">{{ __('Weight') }}:</span>
+                <span class="fw-semibold text-dark" id="pdpWeightVal">{{ $initialWeight }}</span>
+            </p>
+            <p class="small mb-2 pro-pdp-stock-alert @if($isLowStock) is-low-stock text-danger fw-bold @elseif($isOut) is-out-of-stock text-danger fw-bold @else d-none @endif" id="pdpStockMsg" role="status">
+                @if($isLowStock)
+                    <i class="bi bi-clock-history me-1" aria-hidden="true"></i>{{ __('Only :n left in stock', ['n' => $defStock]) }}
+                @elseif($isOut)
+                    <i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i>{{ __('Out of stock') }}
+                @endif
+            </p>
             @if(filled($product->short_description))
                 <div class="pro-pdp-short-block mb-3">
                     <h2 class="pro-pdp-short-block__title h6 fw-bold text-dark mb-2">{{ __('Product description') }}</h2>
@@ -386,15 +410,36 @@
                         <button class="zm-btn zm-btn-primary btn-sm mt-2" type="submit">{{ __('Submit review') }}</button>
                     </form>
                 @endauth
-                @forelse($product->reviews as $r)
-                    <div class="border-bottom py-3">
-                        <strong>{{ $r->user->name }}</strong> &mdash; <i class="bi bi-star-fill text-warning" aria-hidden="true"></i> {{ $r->rating }}
-                        <div class="small text-muted">{{ $r->title }}</div>
-                        <div>{{ $r->body }}</div>
+                @if($product->reviews->isNotEmpty())
+                    <div class="pro-pdp-reviews">
+                        <div class="pro-pdp-reviews__grid">
+                            @foreach($product->reviews as $r)
+                                <article class="pro-pdp-review-card">
+                                    <div class="pro-pdp-review-card__top">
+                                        <div class="pro-pdp-review-card__who">
+                                            <span class="pro-pdp-review-card__avatar" aria-hidden="true">{{ mb_substr(trim((string) ($r->user->name ?? __('C'))), 0, 1) }}</span>
+                                            <div class="pro-pdp-review-card__who-text min-w-0">
+                                                <strong>{{ $r->user->name }}</strong>
+                                                @if($r->createdOnLabel())
+                                                    <time class="pro-pdp-review-card__date" datetime="{{ $r->created_at->toDateString() }}">{{ $r->createdOnLabel() }}</time>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <span class="pro-pdp-review-card__rating"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ $r->rating }}</span>
+                                    </div>
+                                    @if(filled($r->title))
+                                        <div class="pro-pdp-review-card__title">{{ $r->title }}</div>
+                                    @endif
+                                    @if(filled($r->body))
+                                        <p class="pro-pdp-review-card__body">{{ $r->body }}</p>
+                                    @endif
+                                </article>
+                            @endforeach
+                        </div>
                     </div>
-                @empty
+                @else
                     <p class="text-muted mb-0">{{ __('No reviews yet. Be the first to review this product.') }}</p>
-                @endforelse
+                @endif
             </div>
             <div class="tab-pane fade" id="pdp-tab-qa" role="tabpanel" aria-labelledby="pdp-tab-qa-btn" tabindex="0">
                 <p class="text-muted mb-0">{{ __('Questions and answers will appear here. Chat with the seller for more help.') }}</p>
@@ -407,7 +452,7 @@
         @push('head')
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
         @endpush
-        <section class="zm-section-title mt-5"><h2>{{ __('Related products') }}</h2></section>
+        <section class="zm-section-title mt-4 mt-lg-5"><h2>{{ __('Related products') }}</h2></section>
         <div class="pro-pdp-related-swiper position-relative pro-page-pad-mobile">
             <div class="swiper pro-product-swiper" id="proPdpRelatedSwiper">
                 <div class="swiper-wrapper">
@@ -475,6 +520,9 @@
         var stickyPrice = document.getElementById('stickyPriceLabel');
         var pdpPriceNow = document.getElementById('pdpPriceNow');
         var pdpPriceWas = document.getElementById('pdpPriceWas');
+        var pdpWeightRow = document.getElementById('pdpWeightRow');
+        var pdpWeightVal = document.getElementById('pdpWeightVal');
+        var defaultWeight = @json($product->formattedWeightKg());
         var pdpStockMsg = document.getElementById('pdpStockMsg');
         var pdpQty = document.getElementById('pdpQtyInput');
         var stickyQtyHidden = document.getElementById('stickyQtyHidden');
@@ -522,19 +570,41 @@
         function updateStockUi(v) {
             if (!pdpStockMsg) return;
             if (!v) {
-                pdpStockMsg.classList.add('d-none');
+                pdpStockMsg.className = 'small mb-2 pro-pdp-stock-alert d-none';
+                pdpStockMsg.innerHTML = '';
                 return;
             }
-            pdpStockMsg.classList.remove('d-none');
             if (!v.buyable) {
-                pdpStockMsg.textContent = msgOut;
+                pdpStockMsg.className = 'small mb-2 pro-pdp-stock-alert is-out-of-stock text-danger fw-bold';
+                pdpStockMsg.innerHTML = '<i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i>' + msgOut;
                 return;
             }
             if (v.stock <= 5 && v.stock > 0) {
-                pdpStockMsg.textContent = msgLeft.replace(':n', String(v.stock));
+                pdpStockMsg.className = 'small mb-2 pro-pdp-stock-alert is-low-stock text-danger fw-bold';
+                var text = msgLeft.replace(':n', String(v.stock));
+                pdpStockMsg.innerHTML = '<i class="bi bi-clock-history me-1" aria-hidden="true"></i>' + text;
                 return;
             }
-            pdpStockMsg.classList.add('d-none');
+            pdpStockMsg.className = 'small mb-2 pro-pdp-stock-alert d-none';
+            pdpStockMsg.innerHTML = '';
+        }
+
+        function updateWeightUi(v) {
+            if (!pdpWeightVal) return;
+            var w = '';
+            if (v && v.size && v.size.trim()) {
+                var s = v.size.trim();
+                var m = s.match(/^(\d+(?:\.\d+)?)\s*(kg|gm|g|ml|l|ltr)$/i);
+                w = m ? (m[1] + ' ' + m[2].toLowerCase()) : s;
+            } else if (defaultWeight) {
+                w = defaultWeight;
+            }
+            if (w) {
+                pdpWeightVal.textContent = w;
+                if (pdpWeightRow) pdpWeightRow.classList.remove('d-none');
+            } else if (pdpWeightRow) {
+                pdpWeightRow.classList.add('d-none');
+            }
         }
 
         function updatePriceUi(v) {
@@ -565,6 +635,7 @@
             if (stickyVid) stickyVid.value = id;
             var v = findVariant(id);
             updatePriceUi(v);
+            updateWeightUi(v);
             setMainImageFromVariant(v);
             updateStockUi(v);
             syncQtyCap(v);
@@ -856,8 +927,8 @@
         if (typeof Swiper === 'undefined') return;
         function swiperOptions(el) {
             return {
-                slidesPerView: 1.5,
-                spaceBetween: 10,
+                slidesPerView: 'auto',
+                spaceBetween: 12,
                 watchOverflow: true,
                 observer: true,
                 observeParents: true,

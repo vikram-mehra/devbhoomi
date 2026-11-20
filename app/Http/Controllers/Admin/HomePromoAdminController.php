@@ -26,6 +26,7 @@ class HomePromoAdminController extends Controller
             'title' => 'required|string|max:255',
             'eyebrow' => 'nullable|string|max:255',
             'image' => ['required', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'mobile_image' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
             'link' => 'nullable|string|max:2048',
             'button_label' => 'nullable|string|max:120',
             'sort_order' => 'nullable|integer|min:0|max:65535',
@@ -33,10 +34,15 @@ class HomePromoAdminController extends Controller
             'image.required' => __('Choose an image file to upload.'),
             'image.mimes' => __('Use JPEG, PNG, GIF, or WebP.'),
             'image.max' => __('Image must be 5 MB or smaller.'),
+            'mobile_image.mimes' => __('Use JPEG, PNG, GIF, or WebP for the mobile image.'),
+            'mobile_image.max' => __('Mobile image must be 5 MB or smaller.'),
         ]);
 
         try {
             $imageValue = $request->file('image')->store('banners', 'public');
+            $mobileImageValue = $request->hasFile('mobile_image')
+                ? $request->file('mobile_image')->store('banners', 'public')
+                : null;
         } catch (\Throwable $e) {
             report($e);
 
@@ -50,6 +56,7 @@ class HomePromoAdminController extends Controller
             'eyebrow' => $request->eyebrow,
             'subtitle' => null,
             'image' => $imageValue,
+            'mobile_image' => $mobileImageValue,
             'link' => $request->link,
             'button_label' => $request->button_label ?: __('Shop now'),
             'secondary_button_label' => null,
@@ -72,6 +79,8 @@ class HomePromoAdminController extends Controller
             'title' => 'nullable|string|max:255',
             'eyebrow' => 'nullable|string|max:255',
             'image' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'mobile_image' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'remove_mobile_image' => 'nullable|boolean',
             'link' => 'nullable|string|max:2048',
             'button_label' => 'nullable|string|max:120',
             'sort_order' => 'nullable|integer|min:0|max:65535',
@@ -79,16 +88,26 @@ class HomePromoAdminController extends Controller
         ]);
 
         $imageValue = $banner->image;
+        $mobileImageValue = $banner->mobile_image;
 
         if ($request->hasFile('image')) {
             $this->deleteStoredFile($banner);
             $imageValue = $request->file('image')->store('banners', 'public');
         }
 
+        if ($request->hasFile('mobile_image')) {
+            $this->deleteStoredMobileFile($banner);
+            $mobileImageValue = $request->file('mobile_image')->store('banners', 'public');
+        } elseif ($request->boolean('remove_mobile_image')) {
+            $this->deleteStoredMobileFile($banner);
+            $mobileImageValue = null;
+        }
+
         $banner->update([
             'title' => $request->title,
             'eyebrow' => $request->eyebrow,
             'image' => $imageValue,
+            'mobile_image' => $mobileImageValue,
             'link' => $request->link,
             'button_label' => $request->button_label,
             'sort_order' => (int) $request->input('sort_order', $banner->sort_order),
@@ -105,6 +124,7 @@ class HomePromoAdminController extends Controller
     {
         $this->ensureHomePromo($banner);
         $this->deleteStoredFile($banner);
+        $this->deleteStoredMobileFile($banner);
         $banner->delete();
         $this->flushCache();
 
@@ -136,6 +156,13 @@ class HomePromoAdminController extends Controller
     {
         if ($banner->isStoredFile() && Storage::disk('public')->exists($banner->image)) {
             Storage::disk('public')->delete($banner->image);
+        }
+    }
+
+    private function deleteStoredMobileFile(Banner $banner): void
+    {
+        if ($banner->isStoredMobileFile() && Storage::disk('public')->exists($banner->mobile_image)) {
+            Storage::disk('public')->delete($banner->mobile_image);
         }
     }
 }

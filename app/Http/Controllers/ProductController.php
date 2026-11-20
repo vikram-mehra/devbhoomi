@@ -103,6 +103,9 @@ class ProductController extends Controller
             ->select('order_items.*')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.payment_status', 'paid')
+            ->whereHas('variant.product', function ($q) {
+                $q->where('is_active', true);
+            })
             ->orderByDesc('orders.created_at')
             ->with(['variant.product.images', 'order'])
             ->limit(30)
@@ -172,17 +175,14 @@ class ProductController extends Controller
     protected function recentPurchaseRowFromOrderItem(OrderItem $item): ?array
     {
         $product = $item->variant?->product;
-        $name = $item->product_name;
-
-        if ($product && $product->is_active) {
-            $name = $product->name;
-            $urls = $product->cardImageUrls();
-            $image = $urls[0] ?? $product->namedPlaceholderUrl(false);
-            $url = route('product.show', $product);
-        } else {
-            $image = 'https://placehold.co/96x96/14b8a6/ffffff?text='.rawurlencode(Str::limit($name, 6));
-            $url = route('shop.search', ['q' => Str::limit($name, 40)]);
+        if (! $product || ! $product->is_active) {
+            return null;
         }
+
+        $urls = $product->cardImageUrls();
+        $image = $urls[0] ?? $product->namedPlaceholderUrl(false);
+        $url = route('product.show', $product);
+        $name = $product->name;
 
         $at = $item->order?->created_at ?? $item->created_at;
         $ago = $at instanceof Carbon ? $at->diffForHumans() : __('Recently');

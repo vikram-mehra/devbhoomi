@@ -31,6 +31,12 @@
                     @error('image')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     <div class="form-text">{{ __('JPEG, PNG, GIF or WebP — max 5 MB.') }}</div>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">{{ __('Mobile image') }}</label>
+                    <input type="file" name="mobile_image" class="form-control @error('mobile_image') is-invalid @enderror" accept="image/jpeg,image/png,image/gif,image/webp">
+                    @error('mobile_image')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    <div class="form-text">{{ __('Optional. This image is shown on phones instead of the desktop image.') }}</div>
+                </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">{{ __('Button text') }}</label>
                     <input type="text" name="button_label" class="form-control" value="{{ old('button_label', __('Shop now')) }}" maxlength="120">
@@ -65,7 +71,22 @@
                         <label class="form-label small">{{ __('Replace image') }}</label>
                         <input type="file" name="image" class="form-control form-control-sm" accept="image/jpeg,image/png,image/gif,image/webp">
                     </div>
-                    <div class="col-lg-9 col-md-8">
+                    <div class="col-lg-3 col-md-4">
+                        @if($card->mobile_image)
+                            <div class="ratio ratio-4x3 bg-light rounded border overflow-hidden mb-2">
+                                <img src="{{ $card->mobileImageUrl() }}" alt="" class="object-fit-cover w-100 h-100">
+                            </div>
+                        @endif
+                        <label class="form-label small">{{ __('Replace mobile image') }}</label>
+                        <input type="file" name="mobile_image" class="form-control form-control-sm" accept="image/jpeg,image/png,image/gif,image/webp">
+                        @if($card->mobile_image)
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="remove_mobile_image" value="1" class="form-check-input" id="rm-promo-mob-{{ $card->id }}">
+                                <label class="form-check-label small text-danger" for="rm-promo-mob-{{ $card->id }}">{{ __('Remove mobile image') }}</label>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="col-lg-6 col-md-4">
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <label class="form-label small mb-0">{{ __('Offer label') }}</label>

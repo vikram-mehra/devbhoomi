@@ -20,6 +20,8 @@ class User extends Authenticatable
 
     public const ROLE_ADMIN = 'admin';
 
+    public const ROLE_SEO = 'seo';
+
     public const ACCOUNT_INACTIVE = 'inactive';
 
     public const ACCOUNT_ACTIVE = 'active';
@@ -77,6 +79,16 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isSeo(): bool
+    {
+        return $this->role === self::ROLE_SEO;
+    }
+
+    public function canAccessAdmin(): bool
+    {
+        return $this->isAdmin() || $this->isSeo();
     }
 
     public function isVendor(): bool

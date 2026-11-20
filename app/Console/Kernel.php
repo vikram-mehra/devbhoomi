@@ -19,6 +19,11 @@ class Kernel extends ConsoleKernel
             ->everyTwoHours()
             ->withoutOverlapping()
             ->runInBackground();
+
+        $schedule->command('app:send-abandoned-cart-reminders')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

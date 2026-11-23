@@ -1,3 +1,14 @@
+@php
+    $globalCartMapPayload = ($layoutCartItems ?? collect())->mapWithKeys(function ($item) {
+        $st = (int) ($item->variant->stock_qty ?? 10);
+        return [$item->product_variant_id => [
+            'id' => $item->id,
+            'qty' => $item->qty,
+            'stock' => $st,
+            'max_qty' => min(10, $st),
+        ]];
+    });
+@endphp
 <script>
         (function () {
             var csrf = document.querySelector('meta[name="csrf-token"]');
@@ -5,7 +16,7 @@
 
             var csrfToken = csrf.getAttribute('content');
 
-            window.globalCartMap = @json(($layoutCartItems ?? collect())->mapWithKeys(fn($item) => [$item->product_variant_id => ['id' => $item->id, 'qty' => $item->qty]]));
+            window.globalCartMap = {!! json_encode($globalCartMapPayload) !!};
 
             function formatMoney(n) {
                 return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -184,35 +195,41 @@
                         if (pdpCtas) pdpCtas.classList.add('d-none');
                         if (isPdp && pdpQtyCol) pdpQtyCol.classList.add('d-none');
 
+                        var stock = (item && typeof item.stock !== 'undefined') ? parseInt(item.stock, 10) : 10;
+                        var maxAllowed = (item && typeof item.max_qty !== 'undefined') ? parseInt(item.max_qty, 10) : Math.min(10, stock);
+                        var isMaxed = item.qty >= maxAllowed;
+                        var plusDisabled = isMaxed ? ' aria-disabled="true" style="opacity: 0.35; cursor: not-allowed;"' : '';
+                        var plusTitle = 'Increase quantity';
+
                         var html = '';
                         if (isHoverIcon) {
-                            html = '<div class="js-qty-pill-selector d-inline-flex align-items-center bg-light border rounded-pill px-1" style="height: 38px;" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            html = '<div class="js-qty-pill-selector d-inline-flex align-items-center bg-light border rounded-pill px-1" style="height: 38px;" data-variant-id="' + variantId + '" data-item-id="' + item.id + '" data-stock="' + stock + '" data-max="' + maxAllowed + '">' +
                                 '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 0.95rem; width: 24px; line-height: 1;"><i class="bi bi-dash"></i></button>' +
                                 '<span class="fw-semibold px-1 js-selector-qty-val" style="font-size: 0.85rem; min-width: 16px; text-align: center;">' + item.qty + '</span>' +
-                                '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 0.95rem; width: 24px; line-height: 1;"><i class="bi bi-plus"></i></button>' +
+                                '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus"' + plusDisabled + ' title="' + plusTitle + '" style="font-size: 0.95rem; width: 24px; line-height: 1;"><i class="bi bi-plus"></i></button>' +
                                 '</div>';
                         } else if (isPdp) {
-                            html = '<div class="js-qty-pill-selector d-flex gap-2" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            html = '<div class="js-qty-pill-selector d-flex gap-2" data-variant-id="' + variantId + '" data-item-id="' + item.id + '" data-stock="' + stock + '" data-max="' + maxAllowed + '">' +
                                 '<div class="d-inline-flex align-items-center bg-light border rounded-pill px-2" style="height: 48px; min-width: 130px;">' +
                                 '<button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-dash"></i></button>' +
                                 '<span class="fw-bold px-2 js-selector-qty-val" style="font-size: 1.1rem; min-width: 30px; text-align: center;">' + item.qty + '</span>' +
-                                '<button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>' +
+                                '<button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-plus"' + plusDisabled + ' title="' + plusTitle + '" style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>' +
                                 '</div>' +
                                 '</div>';
                         } else if (isSticky) {
-                            html = '<div class="js-qty-pill-selector d-flex gap-2 align-items-center" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            html = '<div class="js-qty-pill-selector d-flex gap-2 align-items-center" data-variant-id="' + variantId + '" data-item-id="' + item.id + '" data-stock="' + stock + '" data-max="' + maxAllowed + '">' +
                                 '<div class="d-inline-flex align-items-center bg-light border rounded-pill px-2" style="height: 38px; min-width: 100px;">' +
                                 '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-dash"></i></button>' +
                                 '<span class="fw-bold px-2 js-selector-qty-val" style="font-size: 0.95rem; min-width: 20px; text-align: center;">' + item.qty + '</span>' +
-                                '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>' +
+                                '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus"' + plusDisabled + ' title="' + plusTitle + '" style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>' +
                                 '</div>' +
                                 '</div>';
                         } else {
-                            html = '<div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="' + variantId + '" data-item-id="' + item.id + '">' +
+                            html = '<div class="js-qty-pill-selector d-flex gap-2 w-100" data-variant-id="' + variantId + '" data-item-id="' + item.id + '" data-stock="' + stock + '" data-max="' + maxAllowed + '">' +
                                 '<div class="d-flex align-items-center justify-content-between border rounded-pill bg-light px-2" style="height: 38px; width: 100%;">' +
                                 '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-dash"></i></button>' +
                                 '<span class="fw-semibold js-selector-qty-val" style="font-size: 0.95rem; min-width: 24px; text-align: center;">' + item.qty + '</span>' +
-                                '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>' +
+                                '<button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus"' + plusDisabled + ' title="' + plusTitle + '" style="font-size: 1.1rem; line-height: 1; height: 100%; display: flex; align-items: center; justify-content: center; width: 30px;"><i class="bi bi-plus"></i></button>' +
                                 '</div>' +
                                 '</div>';
                         }
@@ -239,7 +256,11 @@
                     body: JSON.stringify({ qty: qty })
                 })
                     .then(function (r) {
-                        if (!r.ok) throw new Error('Failed to update quantity');
+                        if (!r.ok) {
+                            return r.json().then(function (err) {
+                                throw new Error(err.error || err.message || 'Failed to update quantity');
+                            });
+                        }
                         return r.json();
                     })
                     .then(function (data) {
@@ -247,7 +268,12 @@
                         var totalQty = 0;
                         if (data.items) {
                             data.items.forEach(function (it) {
-                                window.globalCartMap[it.product_variant_id] = { id: it.id, qty: parseInt(it.qty, 10) || 0 };
+                                window.globalCartMap[it.product_variant_id] = {
+                                    id: it.id,
+                                    qty: parseInt(it.qty, 10) || 0,
+                                    stock: typeof it.stock !== 'undefined' ? parseInt(it.stock, 10) : 10,
+                                    max_qty: typeof it.max_qty !== 'undefined' ? parseInt(it.max_qty, 10) : Math.min(10, parseInt(it.stock, 10) || 10)
+                                };
                                 totalQty += parseInt(it.qty, 10) || 0;
                             });
                         }
@@ -298,6 +324,9 @@
                     })
                     .catch(function (err) {
                         console.error(err);
+                        if (typeof window.zmShowFlashToast === 'function') {
+                            window.zmShowFlashToast(err.message || 'Failed to update quantity', 'danger');
+                        }
                     });
             }
 
@@ -329,7 +358,12 @@
                         var totalQty = 0;
                         if (data.items) {
                             data.items.forEach(function (it) {
-                                window.globalCartMap[it.product_variant_id] = { id: it.id, qty: parseInt(it.qty, 10) || 0 };
+                                window.globalCartMap[it.product_variant_id] = {
+                                    id: it.id,
+                                    qty: parseInt(it.qty, 10) || 0,
+                                    stock: typeof it.stock !== 'undefined' ? parseInt(it.stock, 10) : 10,
+                                    max_qty: typeof it.max_qty !== 'undefined' ? parseInt(it.max_qty, 10) : Math.min(10, parseInt(it.stock, 10) || 10)
+                                };
                                 totalQty += parseInt(it.qty, 10) || 0;
                             });
                         }
@@ -355,6 +389,9 @@
                     })
                     .catch(function (err) {
                         console.error(err);
+                        if (typeof window.zmShowFlashToast === 'function') {
+                            window.zmShowFlashToast(err.message || 'Failed to update quantity', 'danger');
+                        }
                     });
             }
 
@@ -401,7 +438,12 @@
                         var totalQty = 0;
                         if (data.items) {
                             data.items.forEach(function (it) {
-                                window.globalCartMap[it.product_variant_id] = { id: it.id, qty: parseInt(it.qty, 10) || 0 };
+                                window.globalCartMap[it.product_variant_id] = {
+                                    id: it.id,
+                                    qty: parseInt(it.qty, 10) || 0,
+                                    stock: typeof it.stock !== 'undefined' ? parseInt(it.stock, 10) : 10,
+                                    max_qty: typeof it.max_qty !== 'undefined' ? parseInt(it.max_qty, 10) : Math.min(10, parseInt(it.stock, 10) || 10)
+                                };
                                 totalQty += parseInt(it.qty, 10) || 0;
                             });
                         }
@@ -587,15 +629,34 @@
                 var plusBtn = target.closest('.js-selector-qty-plus');
                 if (plusBtn) {
                     var selector = plusBtn.closest('.js-qty-pill-selector');
+                    var variantId = selector.getAttribute('data-variant-id');
+                    var item = window.globalCartMap[variantId];
+                    var stock = (item && typeof item.stock !== 'undefined') ? parseInt(item.stock, 10) : (parseInt(selector.getAttribute('data-stock'), 10) || 10);
+                    var maxAllowed = (item && typeof item.max_qty !== 'undefined') ? parseInt(item.max_qty, 10) : Math.min(10, stock);
                     var itemId = selector.getAttribute('data-item-id');
                     var valEl = selector.querySelector('.js-selector-qty-val');
                     if (valEl) {
                         var qty = parseInt(valEl.textContent, 10) || 1;
-                        if (qty < 99) {
-                            qty++;
-                            valEl.textContent = qty;
-                            patchDrawerCart(itemId, qty, selector);
+                        if (qty >= maxAllowed) {
+                            plusBtn.setAttribute('aria-disabled', 'true');
+                            plusBtn.style.opacity = '0.35';
+                            plusBtn.style.cursor = 'not-allowed';
+                            if (typeof window.zmShowFlashToast === 'function') {
+                                window.zmShowFlashToast('Maximum ' + maxAllowed + ' units allowed for this product.', 'danger');
+                            }
+                            return;
                         }
+                        qty++;
+                        valEl.textContent = qty;
+                        if (qty >= maxAllowed) {
+                            plusBtn.setAttribute('aria-disabled', 'true');
+                            plusBtn.style.opacity = '0.35';
+                            plusBtn.style.cursor = 'not-allowed';
+                            if (typeof window.zmShowFlashToast === 'function') {
+                                window.zmShowFlashToast('Maximum ' + maxAllowed + ' units allowed for this product.', 'danger');
+                            }
+                        }
+                        patchDrawerCart(itemId, qty, selector);
                     }
                     return;
                 }
@@ -603,10 +664,16 @@
                 var minusBtn = target.closest('.js-selector-qty-minus');
                 if (minusBtn) {
                     var selector = minusBtn.closest('.js-qty-pill-selector');
+                    var plusBtn = selector.querySelector('.js-selector-qty-plus');
                     var itemId = selector.getAttribute('data-item-id');
                     var valEl = selector.querySelector('.js-selector-qty-val');
                     if (valEl) {
                         var qty = parseInt(valEl.textContent, 10) || 1;
+                        if (plusBtn) {
+                            plusBtn.removeAttribute('aria-disabled');
+                            plusBtn.style.opacity = '';
+                            plusBtn.style.cursor = '';
+                        }
                         if (qty > 1) {
                             qty--;
                             valEl.textContent = qty;
@@ -627,28 +694,45 @@
                     var plusBtn = target.closest('.js-drawer-qty-plus');
                     if (plusBtn) {
                         var card = plusBtn.closest('.js-drawer-item-card');
+                        var stock = parseInt(card.getAttribute('data-stock'), 10) || 10;
+                        var maxAllowed = parseInt(card.getAttribute('data-max'), 10) || Math.min(10, stock);
                         var valEl = card.querySelector('.js-drawer-qty-val');
                         var minusBtn = card.querySelector('.js-drawer-qty-minus');
                         if (valEl) {
                             var qty = parseInt(valEl.textContent, 10) || 1;
-                            if (qty < 99) {
-                                qty++;
-                                valEl.textContent = qty;
-                                if (minusBtn) minusBtn.style.visibility = 'visible';
-
-                                var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
-                                var totalEl = card.querySelector('.js-drawer-item-total');
-                                if (totalEl) {
-                                    totalEl.textContent = '₹' + Math.round(unitPrice * qty).toLocaleString('en-IN');
+                            if (qty >= maxAllowed) {
+                                plusBtn.setAttribute('aria-disabled', 'true');
+                                plusBtn.style.opacity = '0.35';
+                                plusBtn.style.cursor = 'not-allowed';
+                                if (typeof window.zmShowFlashToast === 'function') {
+                                    window.zmShowFlashToast('Maximum ' + maxAllowed + ' units allowed for this product.', 'danger');
                                 }
-                                var compareEl = card.querySelector('.js-drawer-item-compare');
-                                if (compareEl) {
-                                    var compareUnit = parseFloat(compareEl.getAttribute('data-compare-unit')) || 0;
-                                    compareEl.textContent = '₹' + Math.round(compareUnit * qty).toLocaleString('en-IN');
-                                }
-
-                                patchDrawerCart(card.getAttribute('data-item-id'), qty, card);
+                                return;
                             }
+                            qty++;
+                            valEl.textContent = qty;
+                            if (qty >= maxAllowed) {
+                                plusBtn.setAttribute('aria-disabled', 'true');
+                                plusBtn.style.opacity = '0.35';
+                                plusBtn.style.cursor = 'not-allowed';
+                                if (typeof window.zmShowFlashToast === 'function') {
+                                    window.zmShowFlashToast('Maximum ' + maxAllowed + ' units allowed for this product.', 'danger');
+                                }
+                            }
+                            if (minusBtn) minusBtn.style.visibility = 'visible';
+
+                            var unitPrice = parseFloat(card.getAttribute('data-unit-price')) || 0;
+                            var totalEl = card.querySelector('.js-drawer-item-total');
+                            if (totalEl) {
+                                totalEl.textContent = '₹' + Math.round(unitPrice * qty).toLocaleString('en-IN');
+                            }
+                            var compareEl = card.querySelector('.js-drawer-item-compare');
+                            if (compareEl) {
+                                var compareUnit = parseFloat(compareEl.getAttribute('data-compare-unit')) || 0;
+                                compareEl.textContent = '₹' + Math.round(compareUnit * qty).toLocaleString('en-IN');
+                            }
+
+                            patchDrawerCart(card.getAttribute('data-item-id'), qty, card);
                         }
                         return;
                     }
@@ -656,9 +740,15 @@
                     var minusBtn = target.closest('.js-drawer-qty-minus');
                     if (minusBtn) {
                         var card = minusBtn.closest('.js-drawer-item-card');
+                        var plusBtn = card.querySelector('.js-drawer-qty-plus');
                         var valEl = card.querySelector('.js-drawer-qty-val');
                         if (valEl) {
                             var qty = parseInt(valEl.textContent, 10) || 1;
+                            if (plusBtn) {
+                                plusBtn.removeAttribute('aria-disabled');
+                                plusBtn.style.opacity = '';
+                                plusBtn.style.cursor = '';
+                            }
                             if (qty > 1) {
                                 qty--;
                                 valEl.textContent = qty;

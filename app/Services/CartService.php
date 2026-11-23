@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 class CartService
 {
     public const GUEST_SID_KEY = 'guest_cart_sid';
+    public const MAX_QTY_PER_PRODUCT = 10;
 
     public function sessionKey(): string
     {
@@ -81,6 +82,13 @@ class CartService
 
         if ($row) {
             $nextQty = $row->qty + $qty;
+            if ($nextQty > self::MAX_QTY_PER_PRODUCT) {
+                $remaining = max(0, self::MAX_QTY_PER_PRODUCT - (int) $row->qty);
+                $msg = $remaining > 0
+                    ? __('You can only add :n more unit(s) of this product (maximum :max allowed).', ['n' => $remaining, 'max' => self::MAX_QTY_PER_PRODUCT])
+                    : __('You already have the maximum limit of :max units of this product in your cart.', ['max' => self::MAX_QTY_PER_PRODUCT]);
+                throw ValidationException::withMessages(['qty' => [$msg]]);
+            }
             if ($nextQty > (int) $variant->stock_qty) {
                 throw ValidationException::withMessages([
                     'qty' => [__('Not enough stock. You can add up to :n for this option.', ['n' => $variant->stock_qty])],
@@ -88,6 +96,11 @@ class CartService
             }
             $row->update(['qty' => $nextQty]);
         } else {
+            if ($qty > self::MAX_QTY_PER_PRODUCT) {
+                throw ValidationException::withMessages([
+                    'qty' => [__('You can add a maximum of :max units of this product.', ['max' => self::MAX_QTY_PER_PRODUCT])],
+                ]);
+            }
             CartItem::create([
                 'user_id' => $userId,
                 'session_id' => $sessionId,
@@ -144,10 +157,12 @@ class CartService
                 ->first();
 
             if ($existing) {
-                $existing->update(['qty' => $existing->qty + $guest->qty]);
+                $mergedQty = min(self::MAX_QTY_PER_PRODUCT, $existing->qty + $guest->qty);
+                $existing->update(['qty' => $mergedQty]);
                 $guest->delete();
             } else {
-                $guest->update(['user_id' => $userId, 'session_id' => null]);
+                $initialQty = min(self::MAX_QTY_PER_PRODUCT, (int) $guest->qty);
+                $guest->update(['user_id' => $userId, 'session_id' => null, 'qty' => $initialQty]);
             }
         }
 

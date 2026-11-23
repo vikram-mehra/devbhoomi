@@ -244,6 +244,9 @@ class CheckoutController extends Controller
             if ($variant->stock_qty < $line->qty) {
                 return back()->with('error', __('Insufficient stock for :product.', ['product' => $variant->product->name]));
             }
+            if ($line->qty > 10) {
+                return back()->with('error', __('Maximum 10 units allowed for :product.', ['product' => $variant->product->name]));
+            }
         }
 
         $items->loadMissing('variant.product');

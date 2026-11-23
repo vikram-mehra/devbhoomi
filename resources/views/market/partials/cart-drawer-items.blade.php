@@ -5,9 +5,14 @@
         $im = $p->images->first();
         $cartThumb = \App\Models\Product::publicImageUrl($im?->path) ?? $p->namedPlaceholderUrl();
         $unit = $v->effectivePrice();
+        $stock = max(0, (int) ($v->stock_qty ?? 10));
+        $maxAllowed = min(10, $stock);
+        $isMaxed = $citem->qty >= $maxAllowed;
     @endphp
-    <div class="pro-cart-item js-drawer-item-card" data-item-id="{{ $citem->id }}" data-unit-price="{{ $unit }}">
-        <img src="{{ $cartThumb }}" alt="{{ $p->name }}" class="object-fit-cover flex-shrink-0" width="72" height="72" loading="lazy" decoding="async">
+    <div class="pro-cart-item js-drawer-item-card" data-item-id="{{ $citem->id }}" data-unit-price="{{ $unit }}" data-stock="{{ $stock }}" data-max="{{ $maxAllowed }}">
+        <div class="pro-cart-item-img-wrap flex-shrink-0">
+            <img src="{{ $cartThumb }}" alt="{{ $p->name }}" width="72" height="72" loading="lazy" decoding="async">
+        </div>
         <div class="flex-grow-1 min-w-0 d-flex flex-column justify-content-between">
             <div>
                 <div class="d-flex justify-content-between align-items-start gap-2">
@@ -26,7 +31,11 @@
                 <div class="pro-drawer-qty-container">
                     <button type="button" class="btn p-0 border-0 js-drawer-qty-minus" style="visibility: {{ $citem->qty < 2 ? 'hidden' : 'visible' }};"><i class="bi bi-dash"></i></button>
                     <span class="js-drawer-qty-val">{{ $citem->qty }}</span>
-                    <button type="button" class="btn p-0 border-0 js-drawer-qty-plus"><i class="bi bi-plus"></i></button>
+                    <button type="button" class="btn p-0 border-0 js-drawer-qty-plus" 
+                        @if($isMaxed) aria-disabled="true" style="opacity: 0.35; cursor: not-allowed;" @endif
+                        title="{{ __('Increase quantity') }}">
+                        <i class="bi bi-plus"></i>
+                    </button>
                 </div>
                 <div class="text-end">
                     @if($p->compare_price && (float) $p->compare_price > $unit)

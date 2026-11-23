@@ -224,7 +224,9 @@
             }
 
             function applyQvStockUi(buyable, stock) {
-                var max = buyable ? Math.max(1, parseInt(stock, 10) || 1) : 1;
+                var rawStock = parseInt(stock, 10);
+                if (isNaN(rawStock) || rawStock <= 0) rawStock = buyable ? 10 : 0;
+                var max = buyable ? Math.min(10, Math.max(1, rawStock)) : 1;
                 if (qtyInput) {
                     qtyInput.setAttribute('max', String(max));
                     var cur = parseInt(qtyInput.value, 10) || 1;
@@ -293,7 +295,7 @@
                 varIdInput.value = btn.getAttribute('data-qv-variant') || '';
                 
                 var isBuyable = btn.closest('.js-cart-add-container')?.getAttribute('data-buyable') !== '0';
-                applyQvStockUi(!!isBuyable, isBuyable ? 99 : 0);
+                applyQvStockUi(!!isBuyable, isBuyable ? 10 : 0);
             }
             if (window.bootstrap && bootstrap.Modal) {
                 bootstrap.Modal.getOrCreateInstance(m).show();
@@ -313,9 +315,27 @@
             });
             qvPlus.addEventListener('click', function() {
                 var val = parseInt(qvQtyInput.value, 10) || 1;
-                var max = parseInt(qvQtyInput.getAttribute('max'), 10) || 99;
-                if (val < max) {
-                    qvQtyInput.value = val + 1;
+                var max = Math.min(10, parseInt(qvQtyInput.getAttribute('max'), 10) || 10);
+                if (val >= max) {
+                    if (typeof window.zmShowFlashToast === 'function') {
+                        window.zmShowFlashToast('Maximum ' + max + ' units allowed for this product.', 'danger');
+                    }
+                    return;
+                }
+                val++;
+                qvQtyInput.value = val;
+                if (val >= max && typeof window.zmShowFlashToast === 'function') {
+                    window.zmShowFlashToast('Maximum ' + max + ' units allowed for this product.', 'danger');
+                }
+            });
+            qvQtyInput.addEventListener('input', function() {
+                var val = parseInt(qvQtyInput.value, 10) || 1;
+                var max = Math.min(10, parseInt(qvQtyInput.getAttribute('max'), 10) || 10);
+                if (val >= max) {
+                    if (val > max) qvQtyInput.value = max;
+                    if (typeof window.zmShowFlashToast === 'function') {
+                        window.zmShowFlashToast('Maximum ' + max + ' units allowed for this product.', 'danger');
+                    }
                 }
             });
         }

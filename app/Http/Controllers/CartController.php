@@ -36,7 +36,7 @@ class CartController extends Controller
     ) {
         $request->validate([
             'product_variant_id' => 'required|exists:product_variants,id',
-            'qty' => 'integer|min:1|max:99',
+            'qty' => 'integer|min:1|max:10',
             'buy_now' => 'nullable|boolean',
         ]);
         $qty = (int) ($request->qty ?? 1);
@@ -47,11 +47,32 @@ class CartController extends Controller
             }
             return back()->with('error', __('This option is unavailable or out of stock.'));
         }
-        if ($qty > (int) $variant->stock_qty) {
+
+        $maxStock = min(10, (int) $variant->stock_qty);
+        $existingItem = $cart->query()->where('product_variant_id', (int) $request->product_variant_id)->first();
+        $existingQty = (int) ($existingItem?->qty ?? 0);
+        if ($existingQty >= $maxStock) {
+            $msg = __('Maximum :qty units allowed for this product.', ['qty' => $maxStock]);
             if ($request->wantsJson()) {
-                return response()->json(['error' => __('Only :qty in stock for this option.', ['qty' => $variant->stock_qty])], 422);
+                return response()->json(['error' => $msg], 422);
             }
-            return back()->with('error', __('Only :qty in stock for this option.', ['qty' => $variant->stock_qty]));
+            return back()->with('error', $msg);
+        }
+        if ($existingQty + $qty > $maxStock) {
+            $allowed = $maxStock - $existingQty;
+            $msg = __('You can only add :qty more unit(s) of this product (maximum :max allowed).', ['qty' => $allowed, 'max' => $maxStock]);
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        if ($qty > (int) $variant->stock_qty || ($existingQty + $qty) > (int) $variant->stock_qty) {
+            $msg = __('Maximum :qty units allowed for this product.', ['qty' => $maxStock]);
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $msg], 422);
+            }
+            return back()->with('error', $msg);
         }
         $cart->add((int) $request->product_variant_id, $qty);
         GoogleAnalyticsService::flashAddToCart($variant, $qty, $request->boolean('buy_now'));
@@ -94,7 +115,9 @@ class CartController extends Controller
                 'items' => $items->map(fn ($it) => [
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
-                    'qty' => $it->qty
+                    'qty' => $it->qty,
+                    'stock' => (int) ($it->variant->stock_qty ?? 10),
+                    'max_qty' => min(10, (int) ($it->variant->stock_qty ?? 10)),
                 ]),
                 'ga_events' => session()->pull('ga_events', [])
             ]);
@@ -111,10 +134,21 @@ class CartController extends Controller
         ShippingService $shipping
     ) {
         $this->authorizeItem($item, $cart);
-        $request->validate(['qty' => 'required|integer|min:1|max:99']);
+        $request->validate(['qty' => 'required|integer|min:1|max:10']);
         
         $oldQty = (int) $item->qty;
         $newQty = (int) $request->qty;
+
+        $variant = $item->variant;
+        $maxStock = min(10, (int) ($variant?->stock_qty ?? 10));
+        if ($variant && $newQty > $maxStock) {
+            $msg = __('Maximum :qty units allowed for this product.', ['qty' => $maxStock]);
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
         $item->update(['qty' => $newQty]);
         if (auth()->check()) {
             $cart->recordUserActivity((int) auth()->id());
@@ -139,7 +173,9 @@ class CartController extends Controller
                 'items' => $items->map(fn ($it) => [
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
-                    'qty' => $it->qty
+                    'qty' => $it->qty,
+                    'stock' => (int) ($it->variant->stock_qty ?? 10),
+                    'max_qty' => min(10, (int) ($it->variant->stock_qty ?? 10)),
                 ]),
                 'ga_events' => session()->pull('ga_events', [])
             ]);
@@ -174,7 +210,9 @@ class CartController extends Controller
                 'items' => $items->map(fn ($it) => [
                     'id' => $it->id,
                     'product_variant_id' => $it->product_variant_id,
-                    'qty' => $it->qty
+                    'qty' => $it->qty,
+                    'stock' => (int) ($it->variant->stock_qty ?? 10),
+                    'max_qty' => min(10, (int) ($it->variant->stock_qty ?? 10)),
                 ])
             ]);
         }

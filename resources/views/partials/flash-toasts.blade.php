@@ -103,8 +103,13 @@
         setTimeout(function () { if (el.parentNode) el.remove(); }, 300);
     }
 
-    function showToast(body, type) {
+    function showToast(body, type, clearPrev) {
         if (!root || !body) return;
+        if (clearPrev !== false) {
+            while (root.firstChild) {
+                root.removeChild(root.firstChild);
+            }
+        }
         type = type || 'success';
         var el = document.createElement('div');
         el.className = 'zm-flash-toast zm-flash-toast--' + type;
@@ -129,7 +134,7 @@
     var items = @json($flashStack);
     items.forEach(function (item, i) {
         setTimeout(function () {
-            showToast(item.body || '', item.type || 'success');
+            showToast(item.body || '', item.type || 'success', false);
         }, i * 120);
     });
 })();

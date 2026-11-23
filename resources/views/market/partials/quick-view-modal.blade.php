@@ -38,7 +38,7 @@
                                 <input type="hidden" name="product_variant_id" class="js-qv-variant-id-input" value="">
                                 <div class="d-flex align-items-center border rounded-pill bg-light px-2 js-qv-qty-wrap" style="height: 38px; width: 110px;">
                                     <button type="button" class="btn btn-sm p-0 border-0 text-primary js-qv-qty-minus" style="font-size: 1.1rem; width: 25px; line-height: 1;"><i class="bi bi-dash"></i></button>
-                                    <input type="number" name="qty" class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold js-qv-qty-input" value="1" min="1" max="99" readonly style="box-shadow:none; padding:0; width:40px;">
+                                    <input type="number" name="qty" class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold js-qv-qty-input" value="1" min="1" max="10" readonly style="box-shadow:none; padding:0; width:40px;">
                                     <button type="button" class="btn btn-sm p-0 border-0 text-primary js-qv-qty-plus" style="font-size: 1.1rem; width: 25px; line-height: 1;"><i class="bi bi-plus"></i></button>
                                 </div>
                                 <button type="submit" class="btn btn-primary rounded-pill px-4 js-qv-add-to-cart-btn">{{ __('Add to cart') }}</button>

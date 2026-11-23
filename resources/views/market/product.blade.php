@@ -332,7 +332,7 @@
                 <div class="pro-pdp-purchase-row">
                 <div class="pro-pdp-purchase-row__qty @if($cartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="pdpQtyCol">
                     <label class="form-label mb-1">Qty</label>
-                    <input type="number" name="qty" id="pdpQtyInput" value="1" min="1" class="form-control" aria-label="{{ __('Qty') }}">
+                    <input type="number" name="qty" id="pdpQtyInput" value="1" min="1" max="10" class="form-control" aria-label="{{ __('Qty') }}">
                 </div>
                 <div class="js-cart-add-container pro-pdp-purchase-row__actions" id="pdpActionButtonsWrapper" data-variant-id="{{ $defaultVariant?->id }}" data-pdp="1" data-buyable="{{ ($defaultVariant && $defaultVariant->isBuyable()) ? '1' : '0' }}">
                     <div class="js-default-pdp-ctas d-flex gap-2 @if($cartItem || !$defaultVariant || !$defaultVariant->isBuyable()) d-none @endif" id="pdpNormalCtas">
@@ -340,11 +340,19 @@
                         <button class="zm-btn zm-btn-ghost pro-pdp-buy-now" type="submit" name="buy_now" value="1" id="pdpBuyNowBtn">{{ __('Buy now') }}</button>
                     </div>
                     @if($cartItem)
-                        <div class="js-qty-pill-selector d-flex gap-2" data-variant-id="{{ $defaultVariant->id }}" data-item-id="{{ $cartItem->id }}">
+                        @php
+                            $pdpStock = max(0, (int) ($defaultVariant?->stock_qty ?? 10));
+                            $pdpMax = min(10, $pdpStock);
+                            $pdpMaxed = $cartItem->qty >= $pdpMax;
+                        @endphp
+                        <div class="js-qty-pill-selector d-flex gap-2" data-variant-id="{{ $defaultVariant->id }}" data-item-id="{{ $cartItem->id }}" data-stock="{{ $pdpStock }}" data-max="{{ $pdpMax }}">
                             <div class="d-inline-flex align-items-center bg-light border rounded-pill px-2" style="height: 48px; min-width: 130px;">
                                 <button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-dash"></i></button>
                                 <span class="fw-bold px-2 js-selector-qty-val" style="font-size: 1.1rem; min-width: 30px; text-align: center;">{{ $cartItem->qty }}</span>
-                                <button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>
+                                <button type="button" class="btn btn-lg p-0 border-0 text-primary js-selector-qty-plus" 
+                                    @if($pdpMaxed) disabled style="opacity: 0.35; cursor: not-allowed;" @endif
+                                    title="{{ __('Increase quantity') }}"
+                                    style="font-size: 1.3rem; width: 35px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>
                             </div>
                         </div>
                     @endif
@@ -485,11 +493,19 @@
                 <button type="submit" name="buy_now" value="1" class="btn btn-outline-primary rounded-pill pro-pdp-sticky-buy" id="stickyBuyBtn">{{ __('Buy now') }}</button>
             </form>
             @if($stickyCartItem)
-                <div class="js-qty-pill-selector d-flex gap-2 align-items-center" data-variant-id="{{ $defaultVariant->id }}" data-item-id="{{ $stickyCartItem->id }}">
+                @php
+                    $pdpStock = max(0, (int) ($defaultVariant?->stock_qty ?? 10));
+                    $pdpMax = min(10, $pdpStock);
+                    $pdpStickyMaxed = $stickyCartItem->qty >= $pdpMax;
+                @endphp
+                <div class="js-qty-pill-selector d-flex gap-2 align-items-center" data-variant-id="{{ $defaultVariant->id }}" data-item-id="{{ $stickyCartItem->id }}" data-stock="{{ $pdpStock }}" data-max="{{ $pdpMax }}">
                     <div class="d-inline-flex align-items-center bg-light border rounded-pill px-2" style="height: 38px; min-width: 100px;">
                         <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-minus" style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-dash"></i></button>
                         <span class="fw-bold px-2 js-selector-qty-val" style="font-size: 0.95rem; min-width: 20px; text-align: center;">{{ $stickyCartItem->qty }}</span>
-                        <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>
+                        <button type="button" class="btn btn-sm p-0 border-0 text-primary js-selector-qty-plus" 
+                            @if($pdpStickyMaxed) disabled style="opacity: 0.35; cursor: not-allowed;" @endif
+                            title="{{ __('Increase quantity') }}"
+                            style="font-size: 1.1rem; width: 30px; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-plus"></i></button>
                     </div>
                 </div>
             @endif
@@ -622,10 +638,15 @@
 
         function syncQtyCap(v) {
             if (!pdpQty || !v) return;
-            var max = v.buyable ? Math.max(1, parseInt(v.stock, 10) || 0) : 1;
+            var max = v.buyable ? Math.min(10, Math.max(1, parseInt(v.stock, 10) || 0)) : 1;
             pdpQty.max = String(max);
             var q = parseInt(pdpQty.value, 10) || 1;
-            if (q > max) pdpQty.value = String(max);
+            if (q > max) {
+                pdpQty.value = String(max);
+                if (typeof window.zmShowFlashToast === 'function') {
+                    window.zmShowFlashToast('Maximum ' + max + ' units allowed for this product.', 'danger');
+                }
+            }
             if (stickyQtyHidden) stickyQtyHidden.value = pdpQty.value;
         }
 
@@ -759,9 +780,19 @@
         }
 
         if (pdpQty && stickyQtyHidden) {
-            pdpQty.addEventListener('input', function () {
+            var handlePdpQtyCheck = function () {
+                var val = parseInt(pdpQty.value, 10);
+                var max = parseInt(pdpQty.max, 10) || 10;
+                if (val >= max) {
+                    if (val > max) pdpQty.value = String(max);
+                    if (typeof window.zmShowFlashToast === 'function') {
+                        window.zmShowFlashToast('Maximum ' + max + ' units allowed for this product.', 'danger');
+                    }
+                }
                 stickyQtyHidden.value = pdpQty.value;
-            });
+            };
+            pdpQty.addEventListener('input', handlePdpQtyCheck);
+            pdpQty.addEventListener('change', handlePdpQtyCheck);
         }
     })();
     </script>

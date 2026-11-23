@@ -16,18 +16,26 @@ input.js-cart-qty-input {
 }
 
 .cart-item-img-container {
-    width: 90px;
+    width: auto;
     height: 90px;
-    background-color: #f8f9fa;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
     overflow: hidden;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* padding: 6px; */
 }
 
 .cart-item-img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
 }
 
 /* Modern quantity input */
@@ -158,8 +166,11 @@ input.js-cart-qty-input {
                         $p = $v->product;
                         $unit = $v->effectivePrice();
                         $cartImg = \App\Models\Product::publicImageUrl($p->images->first()?->path) ?? $p->namedPlaceholderUrl();
+                        $stock = max(0, (int) ($v->stock_qty ?? 10));
+                        $maxAllowed = min(10, $stock);
+                        $isMaxed = $item->qty >= $maxAllowed;
                     @endphp
-                    <div class="cart-item-card p-3 mb-3 js-cart-item-card" data-item-id="{{ $item->id }}">
+                    <div class="cart-item-card p-3 mb-3 js-cart-item-card" data-item-id="{{ $item->id }}" data-stock="{{ $stock }}" data-max="{{ $maxAllowed }}">
                         <div class="d-flex gap-3 align-items-center align-items-md-start position-relative">
                             
                             <!-- Image -->
@@ -192,8 +203,12 @@ input.js-cart-qty-input {
                                         @csrf @method('PATCH')
                                         <div class="qty-selector">
                                             <button type="button" class="js-qty-minus" aria-label="Decrease quantity" style="visibility: {{ $item->qty < 2 ? 'hidden' : 'visible' }};"><i class="bi bi-dash"></i></button>
-                                            <input type="number" name="qty" value="{{ $item->qty }}" min="1" max="99" class="js-cart-qty-input" aria-label="Quantity">
-                                            <button type="button" class="js-qty-plus" aria-label="Increase quantity"><i class="bi bi-plus"></i></button>
+                                            <input type="number" name="qty" value="{{ $item->qty }}" min="1" max="{{ $maxAllowed }}" class="js-cart-qty-input" aria-label="Quantity">
+                                            <button type="button" class="js-qty-plus" aria-label="Increase quantity"
+                                                @if($isMaxed) aria-disabled="true" style="opacity: 0.35; cursor: not-allowed;" @endif
+                                                title="{{ __('Increase quantity') }}">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
                                         </div>
                                     </form>
                                     
@@ -348,7 +363,9 @@ input.js-cart-qty-input {
                     window.globalCartMap = {};
                     var totalQty = 0;
                     res.data.items.forEach(function (it) {
-                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: parseInt(it.qty, 10) || 0 };
+                        var st = typeof it.stock !== 'undefined' ? parseInt(it.stock, 10) : 10;
+                        var mq = typeof it.max_qty !== 'undefined' ? parseInt(it.max_qty, 10) : Math.min(10, st);
+                        window.globalCartMap[it.product_variant_id] = { id: it.id, qty: parseInt(it.qty, 10) || 0, stock: st, max_qty: mq };
                         totalQty += parseInt(it.qty, 10) || 0;
                     });
                     
@@ -379,6 +396,11 @@ input.js-cart-qty-input {
                         window.syncCartCTAContainers(window.globalCartMap);
                     }
                 }
+            } else {
+                var errTxt = (res.data && (res.data.error || res.data.message)) || 'Unable to update quantity';
+                if (typeof window.zmShowFlashToast === 'function') {
+                    window.zmShowFlashToast(errTxt, 'danger');
+                }
             }
             return res;
         });
@@ -388,12 +410,33 @@ input.js-cart-qty-input {
 
     document.querySelectorAll('.js-cart-qty-input').forEach(function (input) {
         input.addEventListener('change', function () {
-            updateItemTotal(input);
             var card = input.closest('.js-cart-item-card');
+            var stock = parseInt(card && card.getAttribute('data-stock'), 10) || 10;
+            var maxAllowed = Math.min(10, stock);
+            var val = parseInt(input.value, 10) || 1;
+            var plusBtn = card && card.querySelector('.js-qty-plus');
+
+            if (val >= maxAllowed) {
+                val = maxAllowed;
+                input.value = maxAllowed;
+                if (plusBtn) {
+                    plusBtn.setAttribute('aria-disabled', 'true');
+                    plusBtn.style.opacity = '0.35';
+                    plusBtn.style.cursor = 'not-allowed';
+                }
+                if (typeof window.zmShowFlashToast === 'function') {
+                    window.zmShowFlashToast('Maximum ' + maxAllowed + ' units allowed for this product.', 'danger');
+                }
+            } else if (plusBtn) {
+                plusBtn.removeAttribute('aria-disabled');
+                plusBtn.style.opacity = '';
+                plusBtn.style.cursor = '';
+            }
+
+            updateItemTotal(input);
             if (card) {
                 var minusBtn = card.querySelector('.js-qty-minus');
                 if (minusBtn) {
-                    var val = parseInt(input.value, 10) || 1;
                     if (val < 2) {
                         minusBtn.style.visibility = 'hidden';
                     } else {
@@ -405,7 +448,7 @@ input.js-cart-qty-input {
             if (!form) return;
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(function () {
-                patchCart(form.getAttribute('data-update-url'), parseInt(input.value, 10) || 1);
+                patchCart(form.getAttribute('data-update-url'), val);
             }, 300);
         });
     });
@@ -413,10 +456,16 @@ input.js-cart-qty-input {
     document.querySelectorAll('.js-qty-minus').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var input = btn.closest('.qty-selector').querySelector('.js-cart-qty-input');
+            var plusBtn = btn.closest('.qty-selector').querySelector('.js-qty-plus');
             if (input) {
                 var val = parseInt(input.value, 10) || 1;
                 if (val > 1) {
                     input.value = val - 1;
+                    if (plusBtn) {
+                        plusBtn.removeAttribute('aria-disabled');
+                        plusBtn.style.opacity = '';
+                        plusBtn.style.cursor = '';
+                    }
                     input.dispatchEvent(new Event('change'));
                 }
             }
@@ -425,13 +474,24 @@ input.js-cart-qty-input {
 
     document.querySelectorAll('.js-qty-plus').forEach(function (btn) {
         btn.addEventListener('click', function () {
+            var card = btn.closest('.js-cart-item-card');
+            var stock = parseInt(card && card.getAttribute('data-stock'), 10) || 10;
+            var maxAllowed = Math.min(10, stock);
             var input = btn.closest('.qty-selector').querySelector('.js-cart-qty-input');
             if (input) {
                 var val = parseInt(input.value, 10) || 1;
-                if (val < 99) {
-                    input.value = val + 1;
-                    input.dispatchEvent(new Event('change'));
+                if (val >= maxAllowed) {
+                    btn.setAttribute('aria-disabled', 'true');
+                    btn.style.opacity = '0.35';
+                    btn.style.cursor = 'not-allowed';
+                    if (typeof window.zmShowFlashToast === 'function') {
+                        window.zmShowFlashToast('Maximum ' + maxAllowed + ' units allowed for this product.', 'danger');
+                    }
+                    return;
                 }
+                val++;
+                input.value = val;
+                input.dispatchEvent(new Event('change'));
             }
         });
     });
